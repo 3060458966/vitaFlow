@@ -2,7 +2,7 @@
 
 **Refernce Git** : https://github.com/argman/EAST  
 **Paper** : https://arxiv.org/abs/1704.03155v2   
-**Dataset ICDAR ** : [Text Localization 1: 2013](http://rrc.cvc.uab.es/?ch=2&com=downloads),[2015](http://rrc.cvc.uab.es/?ch=4&com=introduction), [2019](http://rrc.cvc.uab.es/?ch=13)  
+**Dataset ICDAR** : [Text Localization 1: 2013](http://rrc.cvc.uab.es/?ch=2&com=downloads),[2015](http://rrc.cvc.uab.es/?ch=4&com=introduction), [2019](http://rrc.cvc.uab.es/?ch=13)  
 **Imaginea Folks** :   
 
 - Use Google Drive Link: https://drive.google.com/drive/folders/1CmEkiDHWQB-miGQRSU3pK7qoAfoifb-R?usp=sharing and download the  files
@@ -153,7 +153,7 @@ tensorflow_model_server   \
 python grpc_predict.py \
   --image /opt/tmp/test/img_967.jpg \
   --output_dir /opt/tmp/icdar/ \
-  --model "$MODEL_NAME"  \
+  --model EAST  \
   --host "localhost" \
   --signature_name serving_default
 
@@ -161,7 +161,7 @@ python grpc_predict.py \
 python grpc_predict.py \
   --images_dir /opt/tmp/test/ \
   --output_dir /opt/tmp/icdar/ \
-  --model "$MODEL_NAME"  \
+  --model EAST  \
   --host "localhost" \
   --signature_name serving_default 
 ```
