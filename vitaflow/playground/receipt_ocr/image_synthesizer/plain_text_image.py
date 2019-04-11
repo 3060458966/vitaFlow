@@ -6,13 +6,21 @@ import random
 import shutil
 import string
 import time
-import xml.etree.ElementTree as ET
 
 import requests
 from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
 
-from config import ALL_MERCHANTS_ADDR, ALL_MERCHANTS_NAMES, ALL_LINE_ITEMS, OUT_DIR
+# import xml.etree.ElementTree as ET
+
+try:
+    from vitaflow.image_synthesizer.config import ALL_MERCHANTS_ADDR, ALL_MERCHANTS_NAMES, ALL_LINE_ITEMS, OUT_DIR
+except ImportError:
+    try:
+        from config import ALL_MERCHANTS_ADDR, ALL_MERCHANTS_NAMES, ALL_LINE_ITEMS, OUT_DIR
+    except ImportError:
+        print('Not able to find config - variables!!')
+        os._exit(1)
 
 
 def get_random_merchant_name():
@@ -109,7 +117,7 @@ def generate_ann(text_data):
     res_bag.append('T{}\tDate {} {}\t{}'.format(_counter, _d1, _d2, _date))
 
     # LineItems
-    _t1 = text_data.find('Item  Price\n') + len('Item  Price\n')
+    _t1 = text_data.find('Items  Prices\n') + len('Items  Prices\n')
     _t2 = text_data.find('Tax') - 1
     _line1 = _t1
     for line in text_data[_t1:_t2].splitlines():
@@ -119,9 +127,10 @@ def generate_ann(text_data):
         _line1 = _line1 + len(line) + 1
 
     # Total
-    _total = text_data.splitlines()[-1]
+    _total = text_data.splitlines()[-1].strip()
     _t1 = text_data.find(_total)
     _t2 = _t1 + len(_total)
+    # _t2 = len(text_data)
     _counter += 1
     res_bag.append('T{}\tTotal {} {}\t{}'.format(_counter, _t1, _t2, _total))
 
@@ -240,14 +249,14 @@ def create_naive_receipt(file_path):
     image.save(file_path, "PNG")
 
 
-def replicate_xml(out_file_path, image_store_path="images", in_file_pathh="0.xml"):
-    tree = ET.parse(in_file_pathh)
-    root = tree.getroot()
-    for elem in root.iter('filename'):
-        elem.text = out_file_path.split("/")[-1]
-    for elem in root.iter('path'):
-        elem.text = image_store_path + "/" + out_file_path.split("/")[-1]
-    tree.write(out_file_path, encoding='utf-8', xml_declaration=True)
+# def replicate_xml(out_file_path, image_store_path="images", in_file_pathh="0.xml"):
+#     tree = ET.parse(in_file_pathh)
+#     root = tree.getroot()
+#     for elem in root.iter('filename'):
+#         elem.text = out_file_path.split("/")[-1]
+#     for elem in root.iter('path'):
+#         elem.text = image_store_path + "/" + out_file_path.split("/")[-1]
+#     tree.write(out_file_path, encoding='utf-8', xml_declaration=True)
 
 
 def train():
@@ -270,17 +279,17 @@ def test():
 
 def eval():
     number_files = 25
-    os.makedirs(OUT_DIR + "/eval/")
+    os.makedirs(OUT_DIR + "/val/")
 
     for i in tqdm(range(number_files)):
-        create_naive_receipt(OUT_DIR + "/eval/" + str(i) + ".png")
+        create_naive_receipt(OUT_DIR + "/val/" + str(i) + ".png")
         # replicate_xml(out_file_path=OUT_DIR + "/eval/" + str(i) + ".xml")
 
 
 def main():
     if os.path.exists(OUT_DIR):
         shutil.rmtree(OUT_DIR)
-    os.mkdir(OUT_DIR)
+    os.makedirs(OUT_DIR)
     train()
     test()
     eval()

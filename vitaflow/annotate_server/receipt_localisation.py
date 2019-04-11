@@ -17,6 +17,8 @@ import numpy as np
 
 import config
 from bin.utils import trim_file_ext
+from common import verify_input_file, verify_image_ext
+from .bin.plugin import pluginApplication
 
 
 def get_slope(x2, x3, y2, y3):
@@ -183,6 +185,24 @@ def rotate_image_with_east(img_filename, text_filename, save_file=None):
     else:
         plt.figure(figsize=(10, 10))
         plt.imshow(warped)
+
+
+class receiptLocalisationPlugin(pluginApplication):
+    def inputs(self, img_filename, text_filename, save_file):
+        # TODO - Include - Tensorflow Model required for transformation of Images
+        # plugin is supposed to take only one input and one output
+        if not all([
+            verify_input_file(img_filename),
+            verify_image_ext(img_filename),
+            verify_input_file(text_file)
+        ]):
+            raise ValueError('Input validation failed !!')
+        self._inputs = (img_filename, text_filename, save_file)
+
+    def run(self):
+        self.validate_inputs()
+        rotate_image_with_east(*self._inputs)
+
 
 
 if __name__ == '__main__':

@@ -131,6 +131,14 @@ pip install grpcio
 
 Check this [file](config.gin)!
 
+##Compile lanms
+
+```sh
+cd lanms
+make
+```
+If you get compilation issues with lanms, follow this [link](https://github.com/argman/EAST/issues/156#issuecomment-404166990)! to resolve it.
+
 ## Running
 
 ```sh

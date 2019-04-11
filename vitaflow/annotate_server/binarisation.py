@@ -83,6 +83,30 @@ def main(image_loc, dest_image_loc=None):
         print('bineraisation - Failed - Generated file {}'.format(dest_image_loc))
 
 
+from .bin.plugin import pluginApplication
+from common import verify_image_ext, verify_input_file
+
+
+class imageBineraisePlugin(pluginApplication):
+    def inputs(self, image_loc, dest_image_loc=None):
+        self._inputs = (image_loc, dest_image_loc)
+
+        if not all([
+            verify_input_file(image_loc),
+            verify_image_ext(image_loc)
+        ]):
+            raise ValueError('inputs are ')
+        if dest_image_loc is None:
+            filename = os.path.basename(image_loc)
+            dest_image_loc = os.path.join(config.ROOT_DIR, config.BINARIZE_ROOT_DIR, filename)
+
+        self._inputs_validated = True
+
+    def run(self):
+        self.validate_inputs()
+        binarisation(*self._inputs)
+
+
 if __name__ == '__main__':
     from glob import glob
     import os

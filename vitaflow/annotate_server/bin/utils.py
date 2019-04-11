@@ -2,6 +2,13 @@ import glob
 import os
 
 
+def get_file_ext(x):
+    if '.' in os.path.basename(x):
+        return x.rsplit('.')[-1]
+    else:
+        return ''
+
+
 def trim_file_ext(x):
     if '.' in x:
         return x.rsplit('.')[-2]
