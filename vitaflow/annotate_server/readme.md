@@ -113,5 +113,16 @@ In our new plan of action, as we are doing identification of text line, we are o
 
 # Project Dashboard
 
+* https://github.com/Imaginea/vitaFlow/projects/10
+* https://github.com/Imaginea/vitaFlow/projects/8
 
+# References
+
+* https://github.com/frederictost/images_annotation_programme
+* https://fengyuanchen.github.io/cropperjs/
+* http://www.fmwconcepts.com/imagemagick/textcleaner/
+* https://imagemagick.org
+* https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_tutorials.html
+* https://github.com/tesseract-ocr/tesseract
+* https://github.com/Calamari-OCR/calamari
 
