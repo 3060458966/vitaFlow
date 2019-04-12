@@ -71,8 +71,8 @@ mkdir val
 #2013,2015
 # unzip 2013/task2/Challenge2_Training_Task12_Images.zip -d 2013_train/
 # unzip 2013/task2/Challenge2_Training_Task2_GT.zip -d 2013_train/
-unzip 2015/ch4_training_images.zip -d 2015_train/
-unzip 2015/ch4_training_localization_transcription_gt.zip -d 2015_train/
+# unzip 2015/ch4_training_images.zip -d 2015_train/
+# unzip 2015/ch4_training_localization_transcription_gt.zip -d 2015_train/
 unzip 2019/0319updated.task1train\(628p\)-20190320T064205Z-001.zip -d 2019_train/
 cd 2019_train/0319updated.task1train\(628p\)/
 mv * ../
@@ -84,31 +84,36 @@ cd ../
 # rename 's/GT/gt/' *
 # cd ..
 # mv 2013_train/* train/
-mv 2015_train/* train/
+# mv 2015_train/* train/
+
+cd 2019_train/
+mv `ls  | head -50` ../test/
+mv `ls  | head -100` ../val/
+cd ..
 mv 2019_train/* train/
 
 # rm -rf 2013_train/
-rm -rf 2015_train/
+# rm -rf 2015_train/
 rm -rf 2019_train/
 
 
 # test and validation
-unzip 2015/ch4_test_images.zip -d 2015_test_images/
-unzip 2015/Challenge4_Test_Task1_GT.zip -d 2015_test_txt/
+#unzip 2015/ch4_test_images.zip -d 2015_test_images/
+#unzip 2015/Challenge4_Test_Task1_GT.zip -d 2015_test_txt/
 
 #move first 100 images for testing and rest for validation
-cd 2015_test_images/
-mv `ls  | head -100` ../test/
-mv *.* ../val/
-cd ..
+#cd 2015_test_images/
+#mv `ls  | head -100` ../test/
+#mv *.* ../val/
+#cd ..
 
-cd 2015_test_txt/
-mv `ls  | head -100` ../test/
-mv *.* ../val/
-cd ..
+#cd 2015_test_txt/
+#mv `ls  | head -100` ../test/
+#mv *.* ../val/
+#cd ..
 
-rm -rf 2015_test_images/
-rm -rf 2015_test_txt/
+#rm -rf 2015_test_images/
+#rm -rf 2015_test_txt/
 ls
 ```
 

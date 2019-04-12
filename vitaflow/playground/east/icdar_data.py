@@ -610,7 +610,7 @@ def image_2_data(image_file_path,
                  min_crop_side_ratio,
                  input_size=512,
                  background_ratio=3./8,
-                 random_scale=np.array([0.5, 1, 2.0, 3.0]),
+                 random_scale=np.array([0.5, 1, 2.0]),#, 3.0]),
                  vis=False):
 
     images = []
@@ -642,9 +642,12 @@ def image_2_data(image_file_path,
             # img_1.txt -> gt_img_01.txt
             txt_file_name = txt_file_name.replace(os.path.basename(txt_file_name).split('.')[0], 'gt_' +
                                                   os.path.basename(txt_file_name).split('.')[0])
-            text_polys, text_tags = load_annoataion(txt_file_path=txt_file_name)
-            if os.path.exists(txt_file_name):
-                found_text_file = True
+            try:
+                text_polys, text_tags = load_annoataion(txt_file_path=txt_file_name)
+                if os.path.exists(txt_file_name):
+                    found_text_file = True
+            except:
+                found_text_file = False
 
         if not found_text_file:
             return
@@ -657,61 +660,61 @@ def image_2_data(image_file_path,
         text_polys *= rd_scale
 
         # random crop a area from image
-        if np.random.rand() < background_ratio:
-            print("Dummy score map and geo map...")
-            # crop background
-            im, text_polys, text_tags = crop_area(im, text_polys, text_tags,
-                                                  min_crop_side_ratio=min_crop_side_ratio,
-                                                  crop_background=True)
-            if text_polys.shape[0] > 0:
-                # cannot find background
-                return
+        # if np.random.rand() < background_ratio:
+        #     print("Dummy score map and geo map...")
+        #     # crop background
+        #     im, text_polys, text_tags = crop_area(im, text_polys, text_tags,
+        #                                           min_crop_side_ratio=min_crop_side_ratio,
+        #                                           crop_background=True)
+        #     if text_polys.shape[0] > 0:
+        #         # cannot find background
+        #         return
+        #
+        #     # pad and resize image
+        #     new_h, new_w, _ = im.shape
+        #     max_h_w_i = np.max([new_h, new_w, input_size])
+        #     im_padded = np.zeros((max_h_w_i, max_h_w_i, 3), dtype=np.uint8)
+        #     im_padded[:new_h, :new_w, :] = im.copy()
+        #     im = cv2.resize(im_padded, dsize=(input_size, input_size))
+        #
+        #     score_map = np.zeros((input_size, input_size), dtype=np.uint8)
+        #
+        #     geo_map_channels = 5 if geometry == 'RBOX' else 8
+        #     geo_map = np.zeros((input_size, input_size, geo_map_channels), dtype=np.float32)
+        #
+        #     training_mask = np.ones((input_size, input_size), dtype=np.uint8)
+        # else:
+        im, text_polys, text_tags = crop_area(im, text_polys, text_tags,
+                                              min_crop_side_ratio=min_crop_side_ratio,
+                                              crop_background=False)
+        if text_polys.shape[0] == 0:
+            return
+        h, w, _ = im.shape
 
-            # pad and resize image
-            new_h, new_w, _ = im.shape
-            max_h_w_i = np.max([new_h, new_w, input_size])
-            im_padded = np.zeros((max_h_w_i, max_h_w_i, 3), dtype=np.uint8)
-            im_padded[:new_h, :new_w, :] = im.copy()
-            im = cv2.resize(im_padded, dsize=(input_size, input_size))
+        # pad the image to the training input size or the longer side of image
+        new_h, new_w, _ = im.shape
+        max_h_w_i = np.max([new_h, new_w, input_size])
+        im_padded = np.zeros((max_h_w_i, max_h_w_i, 3), dtype=np.uint8)
+        im_padded[:new_h, :new_w, :] = im.copy()
+        im = im_padded
 
-            score_map = np.zeros((input_size, input_size), dtype=np.uint8)
+        # resize the image to input size
+        new_h, new_w, _ = im.shape
+        resize_h = input_size
+        resize_w = input_size
+        im = cv2.resize(im, dsize=(resize_w, resize_h))
 
-            geo_map_channels = 5 if geometry == 'RBOX' else 8
-            geo_map = np.zeros((input_size, input_size, geo_map_channels), dtype=np.float32)
+        resize_ratio_3_x = resize_w/float(new_w)
+        resize_ratio_3_y = resize_h/float(new_h)
 
-            training_mask = np.ones((input_size, input_size), dtype=np.uint8)
-        else:
-            im, text_polys, text_tags = crop_area(im, text_polys, text_tags,
-                                                  min_crop_side_ratio=min_crop_side_ratio,
-                                                  crop_background=False)
-            if text_polys.shape[0] == 0:
-                return
-            h, w, _ = im.shape
+        text_polys[:, :, 0] *= resize_ratio_3_x
+        text_polys[:, :, 1] *= resize_ratio_3_y
+        new_h, new_w, _ = im.shape
 
-            # pad the image to the training input size or the longer side of image
-            new_h, new_w, _ = im.shape
-            max_h_w_i = np.max([new_h, new_w, input_size])
-            im_padded = np.zeros((max_h_w_i, max_h_w_i, 3), dtype=np.uint8)
-            im_padded[:new_h, :new_w, :] = im.copy()
-            im = im_padded
-
-            # resize the image to input size
-            new_h, new_w, _ = im.shape
-            resize_h = input_size
-            resize_w = input_size
-            im = cv2.resize(im, dsize=(resize_w, resize_h))
-
-            resize_ratio_3_x = resize_w/float(new_w)
-            resize_ratio_3_y = resize_h/float(new_h)
-
-            text_polys[:, :, 0] *= resize_ratio_3_x
-            text_polys[:, :, 1] *= resize_ratio_3_y
-            new_h, new_w, _ = im.shape
-
-            score_map, geo_map, training_mask = generate_rbox((new_h, new_w),
-                                                              text_polys,
-                                                              text_tags,
-                                                              min_text_size=min_text_size)
+        score_map, geo_map, training_mask = generate_rbox((new_h, new_w),
+                                                          text_polys,
+                                                          text_tags,
+                                                          min_text_size=min_text_size)
 
         if vis:
             plt.imshow(im)
@@ -794,7 +797,7 @@ class ICDARTFDataset():
                  out_dir=gin.REQUIRED,
                  max_image_large_side=1280,
                  max_text_size=800,
-                 min_text_size=10,
+                 min_text_size=5,
                  min_crop_side_ratio=0.1,
                  geometry="RBOX"):
         self._data_dir = data_dir
