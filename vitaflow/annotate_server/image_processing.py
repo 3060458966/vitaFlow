@@ -1,5 +1,5 @@
 import cv2
-
+import numpy as np
 
 def show_img(data):
     import matplotlib.pyplot as plt

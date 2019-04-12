@@ -5,6 +5,11 @@ from calamari_ocr.ocr.datasets import DataSetType
 from calamari_ocr.scripts.predict import run
 
 
+# TODO:
+# - convert to gray scale images
+# - fixed width input 42 px
+
+
 class args:
     batch_size = 1
     checkpoint = ['/Users/sampathm/model_00131400.ckpt']  # Add your files here

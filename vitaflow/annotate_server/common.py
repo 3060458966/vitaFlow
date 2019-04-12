@@ -1,7 +1,7 @@
 import os
 
 import config
-from .bin import utils
+from bin import utils
 
 
 def verify_input_file(file_with_fullpath):

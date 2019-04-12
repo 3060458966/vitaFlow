@@ -22,6 +22,9 @@ ANNOTATIONS_DIR = "static/data/annotations"
 # EAST IMAGES
 EAST_DIR = "static/data/east"
 
+# To store text images
+TEXT_IMAGES = "static/data/text_images"
+
 # To store annotation xml files
 TEXT_DIR = "static/data/text_data"
 
@@ -46,6 +49,8 @@ for each_dir in [IMAGE_ROOT_DIR,
                  CROPPER_ROOT_DIR,
                  BINARIZE_ROOT_DIR,
                  ANNOTATIONS_DIR,
-                 TEXT_DIR]:
+                 TEXT_DIR,
+                 TEXT_IMAGES
+                 ]:
     each_dir = os.path.join(ROOT_DIR, each_dir)
     check_n_create(each_dir)
