@@ -4,6 +4,7 @@ import time
 import tqdm
 
 import config
+from bin.plugin import pluginApplication
 
 
 def rename_images(images_path):
@@ -39,5 +40,20 @@ def _get_file_newname(filename, add_prefix=None):
     return new_filename
 
 
+class filesProcessing(pluginApplication):
+    def inputs(self, images_path=None):
+        if images_path:
+            self.source = images_path
+        else:
+            self.source = config.IMAGE_ROOT_DIR
+
+    def run(self):
+        rename_images(self.source)
+
+
+
+
 if __name__ == '__main__':
-    rename_images(config.IMAGE_ROOT_DIR)
+    # rename_images(config.IMAGE_ROOT_DIR)
+    fp = filesProcessing()
+    fp.quick_run()

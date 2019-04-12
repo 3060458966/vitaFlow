@@ -28,6 +28,14 @@ class pluginApplication(ABC):
         # write code here
         raise NotImplementedError('Plugin.run method is not implemented')
 
-    def quick_run(self, input_file, output_file):
-        self.inputs(input_file, output_file)
+    def quick_run(self, *args):
+        self.inputs(*args)
+        self.run()
+
+
+class textExtraction(pluginApplication):
+    '''OCR Abstract Class'''
+
+    def quick_run(self):
+        self.inputs()
         self.run()

@@ -1,8 +1,19 @@
 '''
 Demo sample example of how to include calamari_ocr into python code
 '''
+import os
+from glob import glob
+
 from calamari_ocr.ocr.datasets import DataSetType
-from calamari_ocr.scripts.predict import run
+from calamari_ocr.scripts.predict import calamari_ocr
+
+import config
+from bin.plugin import textExtraction
+
+
+# TODO:
+# - convert to gray scale images
+# - fixed width input 42 px
 
 
 class args:
@@ -25,4 +36,15 @@ class args:
     voter = 'confidence_voter_default_ctc'
 
 
-run(args)
+class ocrTesseract(textExtraction):
+    def inputs(self):
+        self._inputs = glob(os.path.join(config.TEXT_IMAGES, '*'))[:10]
+        print('collected files {}'.format(len(self._inputs)))
+
+    def run(self):
+        args.files = self._inputs
+        calamari_ocr(args)
+
+
+if __name__ == '__main__':
+    calamari_ocr(args)
