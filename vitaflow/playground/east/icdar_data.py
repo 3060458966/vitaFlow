@@ -19,10 +19,11 @@ import numpy as np
 
 
 def get_images(data_path):
-    '''
+    """
     find image files in test data path
     :return: list of files found
-    '''
+    """
+
     files = []
     exts = ['jpg', 'png', 'jpeg', 'JPG']
     for parent, dirnames, filenames in os.walk(data_path):
@@ -36,13 +37,14 @@ def get_images(data_path):
 
 
 def load_annoataion(txt_file_path):
-    '''
+    """
     load annotation from the text file
     "x1, y1, x2, y2, x3, y3, x4, y4, transcription"
 
     :param txt_file_path:
     :return:
-    '''
+    """
+
     text_polys = []
     text_tags = []
     # if not os.path.exists(p):
@@ -62,19 +64,21 @@ def load_annoataion(txt_file_path):
 
                 x1, y1, x2, y2, x3, y3, x4, y4 = list(map(float, line[:8]))
                 text_polys.append([[x1, y1], [x2, y2], [x3, y3], [x4, y4]])
+                # In ICDAR 2015 dataset unreadable text regions are annotated with either * or #
                 if label == '*' or label == '###':
                     text_tags.append(True)
                 else:
                     text_tags.append(False)
+
             return np.array(text_polys, dtype=np.float32), np.array(text_tags, dtype=np.bool)
 
 
 def polygon_area(poly):
-    '''
+    """
     compute area of a polygon
     :param poly:
     :return:
-    '''
+    """
 
     """
     https://math.stackexchange.com/questions/1259094/coordinate-geometry-area-of-a-quadrilateral
@@ -94,6 +98,7 @@ def polygon_area(poly):
     ----------------------------------
     x4,y4                         x3,y3
     """
+
     edge = [
         #  (x2 - x1) * (y2 + y1)
         (poly[1][0] - poly[0][0]) * (poly[1][1] + poly[0][1]),
@@ -117,22 +122,24 @@ def check_and_validate_polys(polys, tags, height_weight_tuple):
     """
 
     (h, w) = height_weight_tuple
+
     if polys.shape[0] == 0:
         return polys
+
     polys[:, :, 0] = np.clip(polys[:, :, 0], 0, w-1)
     polys[:, :, 1] = np.clip(polys[:, :, 1], 0, h-1)
 
     validated_polys = []
     validated_tags = []
+
     for poly, tag in zip(polys, tags):
         p_area = polygon_area(poly)
-        #         print(p_area)
         if abs(p_area) < 1:
-            # print poly
             print('invalid poly')
             continue
-        if p_area > 0:
+        if p_area > 0: # TODO what maths is involved?
             print('poly in wrong direction')
+            # rows are inter changed
             poly = poly[(0, 3, 2, 1), :]
         validated_polys.append(poly)
         validated_tags.append(tag)
@@ -145,6 +152,7 @@ def crop_area(im, polys, tags, min_crop_side_ratio, crop_background=False, max_t
     :param im:
     :param polys:
     :param tags:
+    :param min_crop_side_ratio
     :param crop_background:
     :param max_tries:
     :return:
@@ -210,13 +218,25 @@ def shrink_poly(poly, r):
     :param r: r in the paper
     :return: the shrinked poly
     """
+
+    """
+    
+      p0                         p1
+       --------------------------
+      |                          |
+      |                          |
+      |                          |
+       --------------------------  
+      p3                         p2 
+    """
     # shrink ratio
     R = 0.3
     # find the longer pair
     if np.linalg.norm(poly[0] - poly[1]) + np.linalg.norm(poly[2] - poly[3]) > \
             np.linalg.norm(poly[0] - poly[3]) + np.linalg.norm(poly[1] - poly[2]):
         # first move (p0, p1), (p2, p3), then (p0, p3), (p1, p2)
-        # p0, p1
+        # p0, p1               p1_y - p0_y    p1_x - p0_x
+        # https://en.wikipedia.org/wiki/Atan2
         theta = np.arctan2((poly[1][1] - poly[0][1]), (poly[1][0] - poly[0][0]))
         poly[0][0] += R * r[0] * np.cos(theta)
         poly[0][1] += R * r[0] * np.sin(theta)
@@ -279,7 +299,7 @@ def fit_line(p1, p2):
     if p1[0] == p1[1]:
         return [1., 0., -p1[0]]
     else:
-        [k, b] = np.polyfit(p1, p2, deg=1)
+        [k, b] = np.polyfit(p1, p2, deg=1) # TODO find some simple example
         return [k, -1., b]
 
 
@@ -325,15 +345,16 @@ def rectangle_from_parallelogram(poly):
     """
     p0, p1, p2, p3 = poly
     angle_p0 = np.arccos(np.dot(p1-p0, p3-p0)/(np.linalg.norm(p0-p1) * np.linalg.norm(p3-p0)))
+
     if angle_p0 < 0.5 * np.pi:
         if np.linalg.norm(p0 - p1) > np.linalg.norm(p0-p3):
             # p0 and p2
-            ## p0
+            # p0
             p2p3 = fit_line([p2[0], p3[0]], [p2[1], p3[1]])
             p2p3_verticle = line_verticle(p2p3, p0)
 
             new_p3 = line_cross_point(p2p3, p2p3_verticle)
-            ## p2
+            # p2
             p0p1 = fit_line([p0[0], p1[0]], [p0[1], p1[1]])
             p0p1_verticle = line_verticle(p0p1, p2)
 
@@ -352,12 +373,12 @@ def rectangle_from_parallelogram(poly):
     else:
         if np.linalg.norm(p0-p1) > np.linalg.norm(p0-p3):
             # p1 and p3
-            ## p1
+            # p1
             p2p3 = fit_line([p2[0], p3[0]], [p2[1], p3[1]])
             p2p3_verticle = line_verticle(p2p3, p1)
 
             new_p2 = line_cross_point(p2p3, p2p3_verticle)
-            ## p3
+            # p3
             p0p1 = fit_line([p0[0], p1[0]], [p0[1], p1[1]])
             p0p1_verticle = line_verticle(p0p1, p3)
 
@@ -410,105 +431,39 @@ def sort_rectangle(poly):
             return poly[[p0_index, p1_index, p2_index, p3_index]], angle
 
 
-def restore_rectangle_rbox(origin, geometry):
-    d = geometry[:, :4]
-    angle = geometry[:, 4]
-    # for angle > 0
-    origin_0 = origin[angle >= 0]
-    d_0 = d[angle >= 0]
-    angle_0 = angle[angle >= 0]
-    if origin_0.shape[0] > 0:
-        p = np.array([np.zeros(d_0.shape[0]), -d_0[:, 0] - d_0[:, 2],
-                      d_0[:, 1] + d_0[:, 3], -d_0[:, 0] - d_0[:, 2],
-                      d_0[:, 1] + d_0[:, 3], np.zeros(d_0.shape[0]),
-                      np.zeros(d_0.shape[0]), np.zeros(d_0.shape[0]),
-                      d_0[:, 3], -d_0[:, 2]])
-        p = p.transpose((1, 0)).reshape((-1, 5, 2))  # N*5*2
-
-        rotate_matrix_x = np.array([np.cos(angle_0), np.sin(angle_0)]).transpose((1, 0))
-        rotate_matrix_x = np.repeat(rotate_matrix_x, 5, axis=1).reshape(-1, 2, 5).transpose((0, 2, 1))  # N*5*2
-
-        rotate_matrix_y = np.array([-np.sin(angle_0), np.cos(angle_0)]).transpose((1, 0))
-        rotate_matrix_y = np.repeat(rotate_matrix_y, 5, axis=1).reshape(-1, 2, 5).transpose((0, 2, 1))
-
-        p_rotate_x = np.sum(rotate_matrix_x * p, axis=2)[:, :, np.newaxis]  # N*5*1
-        p_rotate_y = np.sum(rotate_matrix_y * p, axis=2)[:, :, np.newaxis]  # N*5*1
-
-        p_rotate = np.concatenate([p_rotate_x, p_rotate_y], axis=2)  # N*5*2
-
-        p3_in_origin = origin_0 - p_rotate[:, 4, :]
-        new_p0 = p_rotate[:, 0, :] + p3_in_origin  # N*2
-        new_p1 = p_rotate[:, 1, :] + p3_in_origin
-        new_p2 = p_rotate[:, 2, :] + p3_in_origin
-        new_p3 = p_rotate[:, 3, :] + p3_in_origin
-
-        new_p_0 = np.concatenate([new_p0[:, np.newaxis, :], new_p1[:, np.newaxis, :],
-                                  new_p2[:, np.newaxis, :], new_p3[:, np.newaxis, :]], axis=1)  # N*4*2
-    else:
-        new_p_0 = np.zeros((0, 4, 2))
-    # for angle < 0
-    origin_1 = origin[angle < 0]
-    d_1 = d[angle < 0]
-    angle_1 = angle[angle < 0]
-    if origin_1.shape[0] > 0:
-        p = np.array([-d_1[:, 1] - d_1[:, 3], -d_1[:, 0] - d_1[:, 2],
-                      np.zeros(d_1.shape[0]), -d_1[:, 0] - d_1[:, 2],
-                      np.zeros(d_1.shape[0]), np.zeros(d_1.shape[0]),
-                      -d_1[:, 1] - d_1[:, 3], np.zeros(d_1.shape[0]),
-                      -d_1[:, 1], -d_1[:, 2]])
-        p = p.transpose((1, 0)).reshape((-1, 5, 2))  # N*5*2
-
-        rotate_matrix_x = np.array([np.cos(-angle_1), -np.sin(-angle_1)]).transpose((1, 0))
-        rotate_matrix_x = np.repeat(rotate_matrix_x, 5, axis=1).reshape(-1, 2, 5).transpose((0, 2, 1))  # N*5*2
-
-        rotate_matrix_y = np.array([np.sin(-angle_1), np.cos(-angle_1)]).transpose((1, 0))
-        rotate_matrix_y = np.repeat(rotate_matrix_y, 5, axis=1).reshape(-1, 2, 5).transpose((0, 2, 1))
-
-        p_rotate_x = np.sum(rotate_matrix_x * p, axis=2)[:, :, np.newaxis]  # N*5*1
-        p_rotate_y = np.sum(rotate_matrix_y * p, axis=2)[:, :, np.newaxis]  # N*5*1
-
-        p_rotate = np.concatenate([p_rotate_x, p_rotate_y], axis=2)  # N*5*2
-
-        p3_in_origin = origin_1 - p_rotate[:, 4, :]
-        new_p0 = p_rotate[:, 0, :] + p3_in_origin  # N*2
-        new_p1 = p_rotate[:, 1, :] + p3_in_origin
-        new_p2 = p_rotate[:, 2, :] + p3_in_origin
-        new_p3 = p_rotate[:, 3, :] + p3_in_origin
-
-        new_p_1 = np.concatenate([new_p0[:, np.newaxis, :], new_p1[:, np.newaxis, :],
-                                  new_p2[:, np.newaxis, :], new_p3[:, np.newaxis, :]], axis=1)  # N*4*2
-    else:
-        new_p_1 = np.zeros((0, 4, 2))
-    return np.concatenate([new_p_0, new_p_1])
-
-
-def restore_rectangle(origin, geometry):
-    return restore_rectangle_rbox(origin, geometry)
-
-
 def generate_rbox(im_size, polys, tags, min_text_size):
     h, w = im_size
     poly_mask = np.zeros((h, w), dtype=np.uint8)
     score_map = np.zeros((h, w), dtype=np.uint8)
     geo_map = np.zeros((h, w, 5), dtype=np.float32)
-    # mask used during traning, to ignore some hard areas
+    # mask used during training, to ignore some hard areas
     training_mask = np.ones((h, w), dtype=np.uint8)
 
     for poly_idx, poly_tag in enumerate(zip(polys, tags)):
         poly = poly_tag[0]
         tag = poly_tag[1]
 
-        # Section 3.3.1
-        r = [None, None, None, None]
+        # ------------------------------------------------------------------------------------------------
+        # Section 3.3.1 of EAST paper
+        # Clockwise distance between two points and anti clockwise distance between two points
+        reference_length = [None, None, None, None]
         for i in range(4):
-            r[i] = min(np.linalg.norm(poly[i] - poly[(i + 1) % 4]),
-                       np.linalg.norm(poly[i] - poly[(i - 1) % 4]))
-        # score map
-        shrinked_poly = shrink_poly(poly.copy(), r).astype(np.int32)[np.newaxis, :, :]
+            # Minimum vertically i.e find the shorted edge
+            # (0,1) | (1,2) | (2,3) | (3,0)
+            # (0,3) | (1,0) | (2,1) | (3,2)
+            reference_length[i] = min(np.linalg.norm(poly[i] - poly[(i + 1) % 4]),
+                                      np.linalg.norm(poly[i] - poly[(i - 1) % 4]))
 
-        cv2.fillPoly(score_map, shrinked_poly, 1)
+        # ------------------------------------------------------------------------------------------------
+
+        # score map
+        shrinked_poly = shrink_poly(poly.copy(), reference_length).astype(np.int32)[np.newaxis, :, :]
+        cv2.fillPoly(score_map, shrinked_poly, 1) # TODO ?
+
+        # ------------------------------------------------------------------------------------------------
+
         cv2.fillPoly(poly_mask, shrinked_poly, poly_idx + 1)
-        # if the poly is too small, then ignore it during training
+        # if the poly is too small or unreadable text is found, then ignore it during training
         poly_h = min(np.linalg.norm(poly[0] - poly[3]), np.linalg.norm(poly[1] - poly[2]))
         poly_w = min(np.linalg.norm(poly[0] - poly[1]), np.linalg.norm(poly[2] - poly[3]))
 
@@ -517,6 +472,8 @@ def generate_rbox(im_size, polys, tags, min_text_size):
 
         if tag:
             cv2.fillPoly(training_mask, poly.astype(np.int32)[np.newaxis, :, :], 0)
+
+        # ------------------------------------------------------------------------------------------------
 
         xy_in_poly = np.argwhere(poly_mask == (poly_idx + 1))
 
@@ -533,9 +490,16 @@ def generate_rbox(im_size, polys, tags, min_text_size):
             p1 = poly[(i + 1) % 4]
             p2 = poly[(i + 2) % 4]
             p3 = poly[(i + 3) % 4]
+
+            # [p0_x, p1_x], [p0_y, p0_y]
             edge = fit_line([p0[0], p1[0]], [p0[1], p1[1]])
+            # [p0_x, p3_x], [p0_y, p3_y]
             backward_edge = fit_line([p0[0], p3[0]], [p0[1], p3[1]])
+            # [p1_x, p2_x], [p1_y, p2_y]
             forward_edge = fit_line([p1[0], p2[0]], [p1[1], p2[1]])
+
+            # --------------------------------------------------------------------------------------
+
             if point_dist_to_line(p0, p1, p2) > point_dist_to_line(p0, p1, p3):
                 # 平行线经过p2 - parallel lines through p2
                 if edge[1] == 0:
@@ -548,12 +512,16 @@ def generate_rbox(im_size, polys, tags, min_text_size):
                     edge_opposite = [1, 0, -p3[0]]
                 else:
                     edge_opposite = [edge[0], -1, p3[1] - edge[0] * p3[0]]
+
             # move forward edge
             new_p0 = p0
             new_p1 = p1
             new_p2 = p2
             new_p3 = p3
             new_p2 = line_cross_point(forward_edge, edge_opposite)
+
+            # --------------------------------------------------------------------------------------
+
             if point_dist_to_line(p1, new_p2, p0) > point_dist_to_line(p1, new_p2, p3):
                 # across p0
                 if forward_edge[1] == 0:
@@ -566,15 +534,21 @@ def generate_rbox(im_size, polys, tags, min_text_size):
                     forward_opposite = [1, 0, -p3[0]]
                 else:
                     forward_opposite = [forward_edge[0], -1, p3[1] - forward_edge[0] * p3[0]]
+
             new_p0 = line_cross_point(forward_opposite, edge)
             new_p3 = line_cross_point(forward_opposite, edge_opposite)
+
             fitted_parallelograms.append([new_p0, new_p1, new_p2, new_p3, new_p0])
+
             # or move backward edge
             new_p0 = p0
             new_p1 = p1
             new_p2 = p2
             new_p3 = p3
             new_p3 = line_cross_point(backward_edge, edge_opposite)
+
+            # --------------------------------------------------------------------------------------
+
             if point_dist_to_line(p0, p3, p1) > point_dist_to_line(p0, p3, p2):
                 # across p1
                 if backward_edge[1] == 0:
@@ -587,9 +561,12 @@ def generate_rbox(im_size, polys, tags, min_text_size):
                     backward_opposite = [1, 0, -p2[0]]
                 else:
                     backward_opposite = [backward_edge[0], -1, p2[1] - backward_edge[0] * p2[0]]
+
             new_p1 = line_cross_point(backward_opposite, edge)
             new_p2 = line_cross_point(backward_opposite, edge_opposite)
             fitted_parallelograms.append([new_p0, new_p1, new_p2, new_p3, new_p0])
+
+        # --------------------------------------------------------------------------------------------------
 
         areas = [Polygon(t).area for t in fitted_parallelograms]
         parallelogram = np.array(fitted_parallelograms[np.argmin(areas)][:-1], dtype=np.float32)
@@ -604,6 +581,8 @@ def generate_rbox(im_size, polys, tags, min_text_size):
         rectangle, rotate_angle = sort_rectangle(rectangle)
 
         p0_rect, p1_rect, p2_rect, p3_rect = rectangle
+
+        # --------------------------------------------------------------------------------------------------
 
         for y, x in xy_in_poly:
             point = np.array([x, y], dtype=np.float32)
@@ -649,13 +628,6 @@ def image_2_data(image_file_path,
         # img_1.png -> img_1.txt
         txt_file_name = image_file_path.replace(os.path.basename(image_file_path).split('.')[1], 'txt')
 
-        # img_1.txt -> gt_img_01.txt
-        # txt_file_name = txt_file_name.replace(os.path.basename(txt_file_name).split('.')[0], 'gt_' +
-        #                       os.path.basename(txt_file_name).split('.')[0])
-        # text_polys, text_tags = load_annoataion(txt_file_name)
-
-        # if not os.path.exists(txt_file_name):
-        # return
 
         # TODO clean this out!
         try:
@@ -665,6 +637,7 @@ def image_2_data(image_file_path,
                 found_text_file = True
         except:
             # 2015 dataset : #img_1.txt -> gt_img_01.txt
+            # img_1.png -> img_1.txt
             txt_file_name = image_file_path.replace(os.path.basename(image_file_path).split('.')[1], 'txt')
             # img_1.txt -> gt_img_01.txt
             txt_file_name = txt_file_name.replace(os.path.basename(txt_file_name).split('.')[0], 'gt_' +
@@ -677,8 +650,7 @@ def image_2_data(image_file_path,
             return
 
         text_polys, text_tags = check_and_validate_polys(text_polys, text_tags, (h, w))
-        # if text_polys.shape[0] == 0:
-        #     continue
+
         # random scale this image
         rd_scale = np.random.choice(random_scale)
         im = cv2.resize(im, dsize=None, fx=rd_scale, fy=rd_scale)
@@ -778,7 +750,6 @@ def image_2_data(image_file_path,
             plt.close()
 
         image = im[:, :, ::-1].astype(np.float32)
-        image_fn = image_file_path
         score_map = score_map[::4, ::4, np.newaxis].astype(np.float32)
         geo_map = geo_map[::4, ::4, :].astype(np.float32)
         training_mask = training_mask[::4, ::4, np.newaxis].astype(np.float32)
@@ -814,7 +785,7 @@ def make_dirs(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-#########################################################################################3
+# ======================================================================================================================
 
 @gin.configurable
 class ICDARTFDataset():
@@ -846,10 +817,10 @@ class ICDARTFDataset():
         """
         """
         return {
-            "images"  : _mat_feature(image_mat),
-            "score_maps" : _mat_feature(score_map_mat),
-            "geo_maps" : _mat_feature(geo_map_mat),
-            "training_masks" : _mat_feature(training_masks_mat)
+            "images": _mat_feature(image_mat),
+            "score_maps": _mat_feature(score_map_mat),
+            "geo_maps": _mat_feature(geo_map_mat),
+            "training_masks": _mat_feature(training_masks_mat)
         }
 
     def write_tf_records(self, images, file_path_name):
@@ -876,7 +847,6 @@ class ICDARTFDataset():
 
         print("Number of files skipped : ", num_of_files_skipped)
 
-
     def prepare_data(self, data_path, out_path):
 
         print("Serializing data found in ", data_path)
@@ -889,8 +859,6 @@ class ICDARTFDataset():
             self.write_tf_records(images=images[i:i+number_images_per_tfrecords],
                                   file_path_name=out_path + "/" + str(index) + ".tfrecords")
             index += 1
-
-
 
     def run(self):
         self.prepare_data(data_path=self._data_dir+"/train/", out_path=self._train_out_dir)
