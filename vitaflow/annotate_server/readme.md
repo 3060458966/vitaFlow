@@ -106,10 +106,30 @@ In our new plan of action, as we are doing identification of text line, we are o
 2. Using Annotation Server - correct & convert the images for binarisation
 3. Post binarisation - convert image to text files using `image_to_text.py`
 
-##### Step3:
-1. Pass these text files to `Annotation Model` for Annotation(_WIP_) & generate annoatation
 
 ##### Step3: Annotation Server
+1. Pass these text files to `Annotation Model` for Annotation(_WIP_) & generate annoatation
+
+
+## How to use Calamari OCR / Tesseract OCR
+
+1. (Optional) Add images & east-text files to `static/data/east`
+
+        python receipt_localisation.py
+   
+   Output shall be stored to `static/data/images` 
+
+2. Binerise images
+
+        python binarisation.py
+        
+3. Convert bineraise images to Text-Lines
+
+        python image_to_textlines.py
+
+4. Generate Text
+
+        python calamari_ocr.py
 
 # Project Dashboard
 

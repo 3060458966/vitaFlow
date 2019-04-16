@@ -124,3 +124,8 @@ vitaflow/annotate_server/notebooks/*
 # Ignore annotation - tags
 vitaflow/annotate_server/resources/list_of_tags.json
 vitaflow/playground/receipt_ocr/image_synthesizer/
+
+
+# repo
+vitaflow/brat
+vitaflow/standoff2conll

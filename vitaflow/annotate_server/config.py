@@ -4,10 +4,7 @@ from bin.utils import check_n_create
 
 ROOT_DIR = os.path.dirname(__file__)
 
-# Image path to be used in the HTML client
-# IMAGE_WEB_DIR = "data/images"
-
-# Image path for internal PHP use
+# Image path for processing
 IMAGE_ROOT_DIR = "static/data/images"
 
 # To store cropped images - original images
@@ -21,6 +18,9 @@ ANNOTATIONS_DIR = "static/data/annotations"
 
 # EAST IMAGES
 EAST_DIR = "static/data/east"
+
+# DOC2TEXT IMAGES
+DOC2TEXT_DIR = "static/data/preprocess"
 
 # To store text images
 TEXT_IMAGES = "static/data/text_images"
@@ -50,7 +50,8 @@ for each_dir in [IMAGE_ROOT_DIR,
                  BINARIZE_ROOT_DIR,
                  ANNOTATIONS_DIR,
                  TEXT_DIR,
-                 TEXT_IMAGES
+                 TEXT_IMAGES,
+                 DOC2TEXT_DIR
                  ]:
     each_dir = os.path.join(ROOT_DIR, each_dir)
     check_n_create(each_dir)
