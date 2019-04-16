@@ -15,7 +15,7 @@ EASTModel.learning_rate = 0.0001
 # main
 run.test_iterator = False
 run.test_images_dir = "/opt/tmp/test/"
-run.num_epochs = 40
+run.num_epochs = 80
 run.save_checkpoints_steps=10
 run.keep_checkpoint_max=5
 run.save_summary_steps=5
