@@ -13,10 +13,8 @@ import cv2
 from bin.plugin import pluginApplication
 from common import verify_input_file, verify_image_ext
 from image_processing import get_line_segments
-import config
 from bin.utils import trim_file_ext
 import matplotlib.pyplot as plt
-import os
 
 
 # def image_to_text_lines_images(image):
@@ -142,19 +140,20 @@ class imageToTextImagesPlugin(pluginApplication):
 
 
 if __name__ == '__main__':
-    # from glob import glob
-    # import os
-    # import config
-    # from multiprocessing import Pool
-    #
-    # raw_images = glob(os.path.join(config.BINARIZE_ROOT_DIR + '/*jpg'))
-    # raw_images = sorted(raw_images)
-    # multi_threading = False
-    # if not multi_threading:
-    #     for each in raw_images[:5]:
-    #         main(each)
-    # else:
-    #     with Pool(5) as p:
-    #         print(p.map(main, raw_images))
-    im2tl = imageToTextImagesPlugin()
-    im2tl.quick_run()
+    from glob import glob
+    import os
+    import config
+    from multiprocessing import Pool
+
+    raw_images = glob(os.path.join(config.BINARIZE_ROOT_DIR + '/*jpg'))
+    raw_images = sorted(raw_images)
+    multi_threading = False
+    if not multi_threading:
+        for each in raw_images:
+            print(each)
+            main(each)
+    else:
+        with Pool(5) as p:
+            print(p.map(main, raw_images))
+    # im2tl = imageToTextImagesPlugin()
+    # im2tl.quick_run()

@@ -5,28 +5,33 @@ import os
 from glob import glob
 
 from calamari_ocr.ocr.datasets import DataSetType
-from calamari_ocr.scripts.predict import calamari_ocr
+from calamari_ocr.scripts.predict import run as calamari_ocr
 
 import config
 from bin.plugin import textExtraction
-
 
 # TODO:
 # - convert to gray scale images
 # - fixed width input 42 px
 
 
+# Add your files here
+calamari_models = ['/Users/sampathm/model_00037200.ckpt',
+                   '/Users/sampathm/model_00045600.ckpt',
+                   '/Users/sampathm/model_00114400.ckpt',
+                   '/Users/sampathm/model_00123200.ckpt',
+                   '/Users/sampathm/model_00131400.ckpt']
+
+calamari_input_images = glob(os.path.join(config.ROOT_DIR, config.TEXT_IMAGES) + '/*/*')  # Add your files here
+
+
 class args:
     batch_size = 1
-    checkpoint = ['/Users/sampathm/model_00131400.ckpt']  # Add your files here
+    checkpoint = calamari_models
     dataset = DataSetType.FILE
     extended_prediction_data = False
     extended_prediction_data_format = 'json'
-    files = ['/Users/sampathm/10005.jpg',
-             '/Users/sampathm/10006.jpg',
-             '/Users/sampathm/10504.jpg',
-             '/Users/sampathm/new2.png',
-             '/Users/sampathm/X51008123447.jpg']  # Add your files here
+    files = calamari_input_images
     no_progress_bars = False
     output_dir = None
     pagexml_text_index = 1

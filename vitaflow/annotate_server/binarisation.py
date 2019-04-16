@@ -1,7 +1,5 @@
-import os
 import subprocess
 
-import config
 from bin.plugin import pluginApplication
 from common import verify_image_ext, verify_input_file
 
@@ -109,23 +107,23 @@ class imageBinarisePlugin(pluginApplication):
 
 
 if __name__ == '__main__':
-    # from glob import glob
-    # import os
-    # import config
-    #
-    # raw_images = glob(os.path.join(config.IMAGE_ROOT_DIR + '/*jpg'))
-    # raw_images = sorted(raw_images)
-    # from multiprocessing import Pool
-    #
-    # # for each in raw_images:
-    # #     filename = os.path.basename(each)
-    # #     new_file_name = os.path.join(config.ROOT_DIR, config.BINARIZE_ROOT_DIR, filename)
-    # #     src_file_name = os.path.join(config.ROOT_DIR, config.IMAGE_ROOT_DIR, filename)
-    # #     binarisation(src_file_name, new_file_name)
-    # all_src_images = [
-    #     os.path.join(config.ROOT_DIR, config.IMAGE_ROOT_DIR, os.path.basename(each)) for each in raw_images
-    # ]
-    # with Pool(5) as p:
-    #     print(p.map(main, all_src_images))
-    imbp = imageBinarisePlugin()
-    imbp.quick_run()
+    from glob import glob
+    import os
+    import config
+
+    raw_images = glob(os.path.join(config.IMAGE_ROOT_DIR + '/*jpg'))
+    raw_images = sorted(raw_images)
+    from multiprocessing import Pool
+
+    # for each in raw_images:
+    #     filename = os.path.basename(each)
+    #     new_file_name = os.path.join(config.ROOT_DIR, config.BINARIZE_ROOT_DIR, filename)
+    #     src_file_name = os.path.join(config.ROOT_DIR, config.IMAGE_ROOT_DIR, filename)
+    #     binarisation(src_file_name, new_file_name)
+    all_src_images = [
+        os.path.join(config.ROOT_DIR, config.IMAGE_ROOT_DIR, os.path.basename(each)) for each in raw_images
+    ]
+    with Pool(5) as p:
+        print(p.map(main, all_src_images))
+    # imbp = imageBinarisePlugin()
+    # imbp.quick_run(None)

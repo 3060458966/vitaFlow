@@ -16,9 +16,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import config
+from bin.plugin import pluginApplication
 from bin.utils import trim_file_ext
 from common import verify_input_file, verify_image_ext
-from .bin.plugin import pluginApplication
 
 
 def get_slope(x2, x3, y2, y3):
@@ -238,5 +238,5 @@ if __name__ == '__main__':
         else:
             print(message)
             error_log.append(message)
-    with open('receip_localisation.log', 'a+') as fp:
+    with open('receipt_localisation.log', 'a+') as fp:
         fp.writelines(error_log)
