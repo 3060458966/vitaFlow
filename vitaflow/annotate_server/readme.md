@@ -85,7 +85,7 @@ Option 1: Add images & east-text files to `static/data/east`
 
 Option 2: Add images & east-text files to `static/data/preprocess`
 
-    python receipt_localisation.py
+    python doc2text.py
 
 In both cases, the output shall be stored to `static/data/images`
 
