@@ -1,7 +1,4 @@
-
-
 # VF Image Annotation Tool
-
 
 Initial goal of this Annotation tool was to provide a simple annotation tool that can do the following
 
@@ -78,58 +75,56 @@ For example, `binarisation`, `receipt localisation` and `image_to_text` features
 
 WIP
 
-## Workflow
+## Workflow for doing OCR
 
-Previous Plan of Work
+__1. Receipt Localisation / Document Orientation__
 
-         Image >> Image Processing  >> DL Model for Image Annotations >> Extract Annotated Images >> Text >> Receipt csv
+Option 1: Add images & east-text files to `static/data/east`
 
-New Plan of Action
+    python receipt_localisation.py
 
-         Image >> Image Processing  >> Line to Line Text Extraction >> Annotation Model >> Receipt csv
+Option 2: Add images & east-text files to `static/data/preprocess`
 
-In Previous Plan, we are expecting following from DL Model
+    python receipt_localisation.py
 
-1. Identify the regions of text with in a large Image and then 
-2. Classify these text into categories (Merchant/Line Items/Total)
+In both cases, the output shall be stored to `static/data/images`
 
-In our new plan of action, as we are doing identification of text line, we are only expecting the model to only 2 step in above.    
+__1.1. Rename Files__
 
-### Lifecycle for Images
+For some images it is possible to contain space, dots and other non ascii charecter in the image name. To fix this issues, once case following.
 
-##### Step1: (Optional)For Automatic Receipt Localisation
-1. East Folder - All the images along with east-text files are placed here.
-2. Images Folder - using `receipt_localisation.py` generated the images here.
+    python rename_imagefiles.py
 
-##### Step2: Annotation Server
-1. Images Folder - Store all the images required to be annotated here.
-2. Using Annotation Server - correct & convert the images for binarisation
-3. Post binarisation - convert image to text files using `image_to_text.py`
+It is expected that files in `static/data/images`. As the name says, all image files are only rename and not moved.
 
-
-##### Step3: Annotation Server
-1. Pass these text files to `Annotation Model` for Annotation(_WIP_) & generate annoatation
-
-
-## How to use Calamari OCR / Tesseract OCR
-
-1. (Optional) Add images & east-text files to `static/data/east`
-
-        python receipt_localisation.py
-   
-   Output shall be stored to `static/data/images` 
-
-2. Binerise images
+__2. Binarise images/ Text Cleaner__
 
         python binarisation.py
-        
-3. Convert bineraise images to Text-Lines
+
+It's expected that input images are in `static/data/images` and the output shall be stored to `static/data/binarisation`
+
+__3. Convert bineraise images to Text-Lines__
 
         python image_to_textlines.py
 
-4. Generate Text
+It's expected that input images are in `static/data/binarisation` and the output shall be stored to `static/data/text_images`
+
+__4. OCR__
+
+All input files are expected to be in `static/data/text_images`
+
+Option 1: For Tessaract OCR
+
+        python ocr.py
+
+Output files will to generated to `static/data/text_data`
+
+Option 2: For Calamari OCR
 
         python calamari_ocr.py
+
+Output files will to generated to same location where images are
+
 
 # Project Dashboard
 
