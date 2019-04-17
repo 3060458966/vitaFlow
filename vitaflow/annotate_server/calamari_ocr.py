@@ -16,11 +16,11 @@ from bin.plugin import textExtraction
 
 
 # Add your files here
-calamari_models = ['/Users/sampathm/model_00037200.ckpt',
-                   '/Users/sampathm/model_00045600.ckpt',
-                   '/Users/sampathm/model_00114400.ckpt',
-                   '/Users/sampathm/model_00123200.ckpt',
-                   '/Users/sampathm/model_00131400.ckpt']
+calamari_models = ['vitaflow/annotate_server/static/data/calamari_models/model_00037200.ckpt',
+                   'vitaflow/annotate_server/static/data/calamari_models/model_00045600.ckpt',
+                   'vitaflow/annotate_server/static/data/calamari_models/model_00114400.ckpt',
+                   'vitaflow/annotate_server/static/data/calamari_models/model_00123200.ckpt',
+                   'vitaflow/annotate_server/static/data/calamari_models/model_00131400.ckpt']
 
 calamari_input_images = glob(os.path.join(config.ROOT_DIR, config.TEXT_IMAGES) + '/*/*')  # Add your files here
 
