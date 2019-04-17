@@ -17,7 +17,6 @@ def find_files_with_ext(search_folder, exts=None):
     return bag
 
 
-
 class pluginApplication(ABC):
     '''Simple image processing plugin application
 
@@ -107,7 +106,6 @@ class pluginApplication(ABC):
         all_source_images = self.recursive_image_search(self.source_folder)
         for source_image in all_source_images:
             self.quick_run(source_image, None)
-
 
 
 class textExtraction(pluginApplication):

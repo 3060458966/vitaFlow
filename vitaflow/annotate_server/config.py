@@ -28,8 +28,10 @@ TEXT_IMAGES = "static/data/text_images"
 # To store annotation xml files
 TEXT_DIR = "static/data/text_data"
 
-# Tesseract Config
+# Testing Purposes
+DUMMY_DIR = "static/data/DUMMY"
 
+# Tesseract Config
 TESSERACT_CONFIG = '-c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyz -c preserve_interword_spaces=1'
 
 # Collection name
