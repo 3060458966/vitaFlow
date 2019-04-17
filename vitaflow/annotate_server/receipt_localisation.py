@@ -9,7 +9,6 @@ image files are processed and save to Images folder.
 """
 
 import os
-from glob import glob
 
 import cv2
 import matplotlib.pyplot as plt
@@ -18,7 +17,6 @@ import numpy as np
 import config
 from bin.plugin import pluginApplication
 from bin.utils import trim_file_ext
-from common import verify_input_file, verify_image_ext
 
 
 def get_slope(x2, x3, y2, y3):
@@ -171,8 +169,11 @@ def trim_outliers1(raw_data):
     return new_plot_points
 
 
-def rotate_image_with_east(img_filename, text_filename, save_file=None):
+def rotate_image_with_east(img_filename, save_file=None):
     image = plt.imread(img_filename)
+    text_filename = os.path.join(
+        os.path.dirname(img_filename),
+        trim_file_ext(os.path.basename(img_filename)) + '.txt')
     raw_data, bag = read_data(text_filename)
     new_plot_points = trim_outliers1(raw_data)
     cnt = np.array(new_plot_points)
@@ -188,55 +189,56 @@ def rotate_image_with_east(img_filename, text_filename, save_file=None):
 
 
 class receiptLocalisationPlugin(pluginApplication):
-    def inputs(self, img_filename, text_filename, save_file):
-        # TODO - Include - Tensorflow Model required for transformation of Images
-        # plugin is supposed to take only one input and one output
-        if not all([
-            verify_input_file(img_filename),
-            verify_image_ext(img_filename),
-            verify_input_file(text_file)
-        ]):
-            raise ValueError('Input validation failed !!')
-        self._inputs = (img_filename, text_filename, save_file)
 
-    def run(self):
-        self.validate_inputs()
-        rotate_image_with_east(*self._inputs)
+    def plugin_inputs(self):
+        # Custom location according to need
+        self.source_folder = config.EAST_DIR
+        self.destination_folder = config.IMAGE_ROOT_DIR
+        # Transformation function for converting source_image to destination_image
+        self.operator_func = rotate_image_with_east
 
+
+#
+#
+# if __name__ == '__main__':
+#     import traceback
+#
+#     raw_images = glob(os.path.join(config.EAST_DIR + '/*jpg'))
+#     raw_images = sorted(raw_images)
+#     for each in raw_images:
+#         #     break
+#         if ('_act' in each) or ('_predict' in each):
+#             continue
+#         error_log = []
+#         filename = os.path.basename(each)
+#         new_file_name = os.path.join(config.ROOT_DIR, config.IMAGE_ROOT_DIR, filename)
+#         text_file = os.path.join(
+#             os.path.dirname(each),
+#             trim_file_ext(os.path.basename(each)) + '.txt')
+#
+#         message = '--------  ' * 5
+#         message += 'Not able to find text file for {}'.format(each)
+#         if os.path.isfile(text_file):
+#             try:
+#                 if not os.path.isfile(new_file_name):
+#                     rotate_image_with_east(each, new_file_name)
+#                 else:
+#                     print('File is already present {}'.format(each))
+#             except Exception as err:
+#                 message = '--------  ' * 5
+#                 message += 'Error while running for {}'.format(each)
+#                 error_log.append(message)
+#                 traceback.print_tb(err.__traceback__)
+#                 error_log.append(str(traceback.format_exc()))
+#         else:
+#             print(message)
+#             error_log.append(message)
+#     with open('receipt_localisation.log', 'a+') as fp:
+#         fp.writelines(error_log)
 
 
 if __name__ == '__main__':
-    import traceback
-
-    raw_images = glob(os.path.join(config.EAST_DIR + '/*jpg'))
-    raw_images = sorted(raw_images)
-    for each in raw_images:
-        #     break
-        if ('_act' in each) or ('_predict' in each):
-            continue
-        error_log = []
-        filename = os.path.basename(each)
-        new_file_name = os.path.join(config.ROOT_DIR, config.IMAGE_ROOT_DIR, filename)
-        text_file = os.path.join(
-            os.path.dirname(each),
-            trim_file_ext(os.path.basename(each)) + '.txt')
-
-        message = '--------  ' * 5
-        message += 'Not able to find text file for {}'.format(each)
-        if os.path.isfile(text_file):
-            try:
-                if not os.path.isfile(new_file_name):
-                    rotate_image_with_east(each, text_file, new_file_name)
-                else:
-                    print('File is already present {}'.format(each))
-            except Exception as err:
-                message = '--------  ' * 5
-                message += 'Error while running for {}'.format(each)
-                error_log.append(message)
-                traceback.print_tb(err.__traceback__)
-                error_log.append(str(traceback.format_exc()))
-        else:
-            print(message)
-            error_log.append(message)
-    with open('receipt_localisation.log', 'a+') as fp:
-        fp.writelines(error_log)
+    t = receiptLocalisationPlugin()
+    t.plugin_inputs()
+    print('--' * 55)
+    t.bulk_run()

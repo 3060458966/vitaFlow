@@ -11,10 +11,12 @@ to run
 
 import cv2
 from bin.plugin import pluginApplication
-from common import verify_input_file, verify_image_ext
+from common import verify_isfile, verify_isimagefile
 from image_processing import get_line_segments
 from bin.utils import trim_file_ext
 import matplotlib.pyplot as plt
+import os
+from vitaflow.annotate_server import config
 
 
 # def image_to_text_lines_images(image):
@@ -34,51 +36,35 @@ import matplotlib.pyplot as plt
 #     return collected_text_data
 
 
-def main(image_filename):
+def main(image_filename, image_dir):
     """
     convert image -> text file
 
     :param image_filename: filename with path
     :return:
     """
-    _text_file_name = (os.path.basename(image_filename)).rsplit('.')[0] + '.txt'
-    text_file_name = os.path.join(config.TEXT_DIR, _text_file_name)
-    # if os.path.isfile(text_file_name):
-    #     print('Found the text file for {}'.format(image_filename))
-    #     return
-    # try:
-    #     image = cv2.imread(image_filename, 0)
-    #     collected_text_data = image_to_text_lines_images(image)
-    # except:
-    #     collected_text_data = []
-    #     print('Failed - Image2Text {} {}'.format(image_filename, text_file_name))
-    # with open(text_file_name, 'w', encoding='utf-8') as fp:
-    #     fp.write(u'\n'.join(collected_text_data))
-    #     # import pdb
-    #     # pdb.set_trace()
-    #     # print(u'\n'.join(collected_text_data))
-    #     print('Image2Text {} {}'.format(image_filename, text_file_name))
     source_image = image_filename
     image = cv2.imread(source_image, 0)
     line_segments = get_line_segments(image)
+    line_image_offset = 0
     i = 1
-    image_dir = os.path.join(config.TEXT_IMAGES, trim_file_ext(os.path.basename(source_image)))
+    if not image_dir:
+        image_dir = os.path.join(config.TEXT_IMAGES, trim_file_ext(os.path.basename(source_image)))
     os.mkdir(image_dir)
     for start, end in line_segments:
         if abs(start - end) < 10:
             continue
-        text_image = image[start - 2: end + 2, :]
+        text_image = image[start - line_image_offset: end + line_image_offset, :]
         plt.imsave(os.path.join(image_dir, str(i) + '.png'), text_image)
         i += 1
 
 
 class imageToTextImagesPlugin(pluginApplication):
     '''converts Input Image to '''
-
     def inputs(self, source_image, desct_file=None):
         validation_fns = [
-            verify_input_file,
-            verify_image_ext
+            verify_isfile,
+            verify_isimagefile
         ]
         if not all([f(source_image) for f in validation_fns]):
             raise ValueError('Source Image {} Failed validation fns')
@@ -90,7 +76,7 @@ class imageToTextImagesPlugin(pluginApplication):
         self._input_validated = True
 
     def run(self):
-        self.validate_inputs()
+        self._validate_inputs()
         (source_image, desct_file) = self._inputs
         # try:
         #     image = cv2.imread(source_image, 0)
@@ -137,23 +123,48 @@ class imageToTextImagesPlugin(pluginApplication):
 #              in dict.items()]
 #     loop.run_until_complete(asyncio.wait(tasks))
 #     loop.close()
+#
+#
+# if __name__ == '__main__':
+#     from glob import glob
+#     import os
+#     import config
+#     from multiprocessing import Pool
+#
+#     raw_images = glob(os.path.join(config.BINARIZE_ROOT_DIR + '/*jpg'))
+#     raw_images = sorted(raw_images)
+#     multi_threading = False
+#     if not multi_threading:
+#         for each in raw_images:
+#             print(each)
+#             main(each)
+#     else:
+#         with Pool(5) as p:
+#             print(p.map(main, raw_images))
+#     # im2tl = imageToTextImagesPlugin()
+#     # im2tl.quick_run()
+
+
+class imageToTextLinesImages(pluginApplication):
+
+    def plugin_inputs(self):
+        # Custom location according to need
+        self.source_folder = config.BINARIZE_ROOT_DIR
+        self.destination_folder = config.TEXT_IMAGES
+        # Transformation function for converting source_image to destination_image
+        self.operator_func = main
+
+    def run(self):
+        """Execute of Code logic"""
+        source, dest = self._inputs
+        dest = trim_file_ext(self._inputs[1])
+        print('New Dest {}'.format(dest))
+        self._inputs = (source, dest)
+        super().run()
 
 
 if __name__ == '__main__':
-    from glob import glob
-    import os
-    import config
-    from multiprocessing import Pool
-
-    raw_images = glob(os.path.join(config.BINARIZE_ROOT_DIR + '/*jpg'))
-    raw_images = sorted(raw_images)
-    multi_threading = False
-    if not multi_threading:
-        for each in raw_images:
-            print(each)
-            main(each)
-    else:
-        with Pool(5) as p:
-            print(p.map(main, raw_images))
-    # im2tl = imageToTextImagesPlugin()
-    # im2tl.quick_run()
+    t = imageToTextLinesImages()
+    t.plugin_inputs()
+    print('--' * 55)
+    t.bulk_run()

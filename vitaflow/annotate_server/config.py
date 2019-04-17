@@ -39,7 +39,7 @@ TESSERACT_CONFIG = '-c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvw
 # ratio_new_old = 80
 
 # Acceptable file extension
-IMAGE_EXTS = ['.jpg', '.jpg']
+IMAGE_EXTS = ['.JPG', '.jpg', '.png']
 
 # Time inverval to re-check images
 OS_FILE_REFRESH_TIME_INVTERVAL = 2 * 60  # Shift to inotify
