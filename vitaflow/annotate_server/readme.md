@@ -1,21 +1,5 @@
 # VF Image Annotation Tool
 
-Initial goal of this Annotation tool was to provide a simple annotation tool that can do the following
-
-* A Image Annotation - Web tool (can run in local or over web for a group collaboration)
-* Generation of XML-annotation file for each image file
-
-As the growth continued, we added following image features to it.
-
-* Fix rotation images
-* Crop the image to user required size
-* Automated Binarisation of images
-
-Other pages
-
-* A Summary page: To review how well the cropping & binarisation are working
-* A Stats page: To know the statistics of on annotation completed
-
 # History
 
 Today, Image(document) Annotation has become of the important tool & job required for machine learning models to learn and try to predict. But as of 2019, we find only a limited number of tools that fit into out category that would help quickly annotated the image.
@@ -23,20 +7,26 @@ Today, Image(document) Annotation has become of the important tool & job require
 We have inspired from the works of `Image Annotation Programme` and wished to take forward, meeting our needs and increasing it capability by assisting users in their work.
 
 
-
-# Project Development Page.
-
-To know more the works in development, please check the following Project Page
-
-[https://github.com/Imaginea/vitaFlow/projects/10](https://github.com/Imaginea/vitaFlow/projects/10)
-
-## Experiment Feature
-
-* TF Records Generation
-* Support for HDFS files
-* Support for Spark for image process/text extraction
-
 # User Guide
+
+## User Pages & features
+
+Initial goal of this Annotation tool was to provide a simple annotation tool that can do the following
+
+* A Web tool (can run in local or over web for a group collaboration)
+* Generation of XML-annotation file for each image file
+
+As the growth continued, we added following image features to it.
+
+* Fix rotation images
+* Crop the image to user required size
+
+Other pages
+
+* A Summary page: To review how well the cropping & binarisation are working
+* A Stats page: To know the statistics of on annotation completed
+
+
 
 ## How to start Annotation Server
 
@@ -60,18 +50,7 @@ After starting Annotation server, while Annotating Images - Cropper Option is sh
 
 Cropper has very versatile set of rotation and crop option.
 
-## Functionality - How the folder structure is
-
-Annotation Tool is build with a flexible design to keep adding features as well as scalable.
-
-For example, `binarisation`, `receipt localisation` and `image_to_text` features are added as an option feature but can run seperately with out whole pipeline or can be hosted as a micro-service.
-
-- Folder: Image(Core): Location for storing images required to be annotated.
-- Folder: Cropper(Optional): Location where cropped images are stored.
-- Folder: Binarisation(Core): Location where cropped and gray scaled images are stored.
-- Folder: Annotation(Core): Location where one can find .xml files.
-
-## How to use existing ML/DL Models to auto tag images
+## Generation of Tensorflow Records to use for training ML/DL Models
 
 WIP
 
@@ -125,9 +104,30 @@ Option 2: For Calamari OCR
 
         python calamari_ocr.py
 
-Output files will to generated to same location where images are
+Output files will to generated to same location where images are present
+
+__5. Text Annotation__
+
+WIP
 
 ## Developer Guide
+
+### Configuration
+
+All configuration related to folders required all plugin are store in `vitaflow/annotation_tool/config.py` including tesseract ocr config and creation of required folders if required.
+
+### Functionality
+
+#### Folder Structure
+
+Annotation Tool is build with a flexible design to keep adding features as well as scalable.
+
+For example, `binarisation`, `receipt localisation` and `image_to_text` features are added as an option feature but can run seperately with out whole pipeline or can be hosted as a micro-service.
+
+- Folder: Image(Core): Location for storing images required to be annotated.
+- Folder: Cropper(Optional): Location where cropped images are stored.
+- Folder: Binarisation(Core): Location where cropped and gray scaled images are stored.
+- Folder: Annotation(Core): Location where one can find .xml files.
 
 ![](../../docs/images/PluginModels.png)
 
@@ -150,11 +150,29 @@ For adding a new plugin following are required
     3. _destination folder_
 2. Its expected that _transformation function_ can handle if `None` if given as destination_file
 
+### Available Plugins
+
+* Binerisation
+* Document Localisation
+* Image to Text Line Images
+* OCR: Text Line Images to Text
+
+### Experiment Feature
+
+* TF Records Generation
+* Support for HDFS files
+* Support for Spark for image process/text extraction
 
 # Project Dashboard
 
 * https://github.com/Imaginea/vitaFlow/projects/10
 * https://github.com/Imaginea/vitaFlow/projects/8
+
+## Next Steps
+
+* Add __trained ML/DL Models__ to pipeline for Text Extraction for generating Annotated Data.
+* Generation of __Tensorflow Records__
+
 
 # References
 
