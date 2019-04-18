@@ -35,13 +35,13 @@ It is expected that files in `static/data/images`. As the name says, all image f
 
 __2. Binarise images/ Text Cleaner__
 
-        python binarisation.py
+    python binarisation.py
 
 It's expected that input images are in `static/data/images` and the output shall be stored to `static/data/binarisation`
 
 __3. Convert bineraise images to Text-Lines__
 
-        python image_to_textlines.py
+    python image_to_textlines.py
 
 It's expected that input images are in `static/data/binarisation` and the output shall be stored to `static/data/text_images`
 
@@ -51,13 +51,13 @@ All input files are expected to be in `static/data/text_images`
 
 Option 1: For Tessaract OCR
 
-        python ocr.py
+    python ocr.py
 
 Output files will to generated to `static/data/text_data`
 
 Option 2: For Calamari OCR
 
-        python calamari_ocr.py
+    python calamari_ocr.py
 
 Output files will to generated to same location where images are present
 
