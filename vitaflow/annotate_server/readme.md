@@ -9,52 +9,7 @@ We have inspired from the works of `Image Annotation Programme` and wished to ta
 
 # User Guide
 
-## User Pages & features
-
-Initial goal of this Annotation tool was to provide a simple annotation tool that can do the following
-
-* A Web tool (can run in local or over web for a group collaboration)
-* Generation of XML-annotation file for each image file
-
-As the growth continued, we added following image features to it.
-
-* Fix rotation images
-* Crop the image to user required size
-
-Other pages
-
-* A Summary page: To review how well the cropping & binarisation are working
-* A Stats page: To know the statistics of on annotation completed
-
-
-
-## How to start Annotation Server
-
-Please check for `requirement.txt` for installing required packages for Annotation Server.
-
-```
-$ pwd
-vitaFlow/vitaflow/annotate_server
-
-$ ~/anaconda3/bin/python vitaFlow/vitaflow/annotate_server/run.py
-...
- * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
-...
-```
-
-This Annotation Server is developed in Python3 using Flask. 
-
-## How to Cropper Image
-
-After starting Annotation server, while Annotating Images - Cropper Option is show to crop that specific Image.
-
-Cropper has very versatile set of rotation and crop option.
-
-## Generation of Tensorflow Records to use for training ML/DL Models
-
-WIP
-
-## Workflow for doing OCR
+## Workflow
 
 ![](../../docs/images/annotation_tool_ocr_pipeline.png)
 
@@ -109,6 +64,55 @@ Output files will to generated to same location where images are present
 __5. Text Annotation__
 
 WIP
+
+# Customisation
+
+## Training: Web UI - Annotation Tool
+
+Initial goal of this Annotation tool was to provide a simple annotation tool that can do the following
+
+* A Web tool (can run in local or over web for a group collaboration)
+* Generation of XML-annotation file for each image file
+
+As the growth continued, we added following image features to it.
+
+* Fix rotation images
+* Crop the image to user required size
+
+Other pages
+
+* A Summary page: To review how well the cropping & binarisation are working
+* A Stats page: To know the statistics of on annotation completed
+
+
+
+### How to start Annotation Server
+
+Please check for `requirement.txt` for installing required packages for Annotation Server.
+
+```
+$ pwd
+vitaFlow/vitaflow/annotate_server
+
+$ ~/anaconda3/bin/python vitaFlow/vitaflow/annotate_server/run.py
+...
+ * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+...
+```
+
+This Annotation Server is developed in Python3 using Flask. 
+
+### How to Cropper Image
+
+After starting Annotation server, while Annotating Images - Cropper Option is show to crop that specific Image.
+
+Cropper has very versatile set of rotation and crop option.
+
+### Generation of Tensorflow Records to use for training ML/DL Models
+
+WIP
+
+
 
 ## Developer Guide
 
