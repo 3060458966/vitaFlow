@@ -9,7 +9,7 @@ import pytesseract
 from PIL import Image
 from scipy.ndimage.filters import rank_filter
 
-from bin.plugin import pluginApplication
+from bin.plugin import pluginAppModel
 from vitaflow.annotate_server import config
 
 
@@ -334,7 +334,7 @@ def main(fname, out_name=None):
 #             print(p.map(main, all_src_images))
 
 
-class docToTextReceiptLocalisation(pluginApplication):
+class docToTextReceiptLocalisation(pluginAppModel):
 
     def plugin_inputs(self):
         # Custom location according to need

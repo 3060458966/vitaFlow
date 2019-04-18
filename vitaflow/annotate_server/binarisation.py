@@ -2,7 +2,7 @@ import os
 import subprocess
 
 import config
-from bin.plugin import pluginApplication
+from bin.plugin import pluginAppModel
 
 _command_convert = ['/usr/local/bin/convert',
                     '-auto-level',
@@ -63,7 +63,7 @@ def main(image_loc, dest_image_loc=None):
         print('Binarisation - Failed - Generated file {}'.format(dest_image_loc))
 
 
-class imageBinarisePlugin(pluginApplication):
+class imageBinarisePlugin(pluginAppModel):
 
     def plugin_inputs(self):
         # Custom location according to need

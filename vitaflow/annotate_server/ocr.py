@@ -7,7 +7,7 @@ import pytesseract
 from matplotlib import pyplot as plt
 
 import config
-from bin.plugin import textExtraction
+from bin.plugin import textExtPluginModel
 
 
 def tesseract_ocr(image_filename):
@@ -30,7 +30,7 @@ def calamari_ocr(image):
 image_ocr = tesseract_ocr
 
 
-class ocrTesseract(textExtraction):
+class ocrTesseract(textExtPluginModel):
 
     def inputs(self):
         self._inputs = glob(os.path.join(config.TEXT_IMAGES, '*'))[:10]

@@ -17,7 +17,7 @@ def find_files_with_ext(search_folder, exts=None):
     return bag
 
 
-class pluginApplication(ABC):
+class pluginAppModel(ABC):
     '''Simple image processing plugin application
 
     Must implement `run` method for using.'''
@@ -108,7 +108,7 @@ class pluginApplication(ABC):
             self.quick_run(source_image, None)
 
 
-class textExtraction(pluginApplication):
+class textExtPluginModel(pluginAppModel):
     '''OCR Abstract Class'''
 
     def quick_run(self):

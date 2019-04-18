@@ -8,7 +8,7 @@ from calamari_ocr.ocr.datasets import DataSetType
 from calamari_ocr.scripts.predict import run as calamari_ocr
 
 import config
-from bin.plugin import textExtraction
+from bin.plugin import textExtPluginModel
 
 # TODO:
 # - convert to gray scale images
@@ -41,7 +41,7 @@ class args:
     voter = 'confidence_voter_default_ctc'
 
 
-class ocrTesseract(textExtraction):
+class ocrTesseract(textExtPluginModel):
     def inputs(self):
         self._inputs = glob(os.path.join(config.TEXT_IMAGES, '*'))[:10]
         print('collected files {}'.format(len(self._inputs)))

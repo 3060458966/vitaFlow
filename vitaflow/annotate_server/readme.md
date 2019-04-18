@@ -77,6 +77,8 @@ WIP
 
 ## Workflow for doing OCR
 
+![](../../docs/images/annotation_tool_ocr_pipeline.png)
+
 __1. Receipt Localisation / Document Orientation__
 
 Option 1: Add images & east-text files to `static/data/east`
@@ -124,6 +126,29 @@ Option 2: For Calamari OCR
         python calamari_ocr.py
 
 Output files will to generated to same location where images are
+
+## Developer Guide
+
+![](../../docs/images/PluginModels.png)
+
+All the above script follow two plugin architectures defined in 'annotation_server.bin.plugin'
+
+1. Plugin for files(images) processing
+2. Plugin for OCR
+
+Features provided with these plugins
+
+1. Execution: Based on preference, one can do step by step transformation as well as bulk processing
+2. Exception Handling wrapper
+3. 
+
+For adding a new plugin following are required
+
+1. Every plugin is takes 3 inputs
+    1. _transformation function_ that is expected to take two inputs - source_file, destination_file.
+    2. _source folder_
+    3. _destination folder_
+2. Its expected that _transformation function_ can handle if `None` if given as destination_file
 
 
 # Project Dashboard

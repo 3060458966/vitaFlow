@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-from bin.plugin import pluginApplication
+from bin.plugin import pluginAppModel
 from bin.utils import trim_file_ext
 from vitaflow.annotate_server import config
 
@@ -167,7 +167,7 @@ def main(image_filename, image_dir=None):
 #     # im2tl.quick_run()
 
 
-class imageToTextLinesImages(pluginApplication):
+class imageToTextLinesImages(pluginAppModel):
 
     def plugin_inputs(self):
         # Custom location according to need
