@@ -160,6 +160,7 @@ For adding a new plugin following are required
 
 * https://github.com/frederictost/images_annotation_programme
 * https://fengyuanchen.github.io/cropperjs/
+* https://github.com/jlsutherland/doc2text
 * http://www.fmwconcepts.com/imagemagick/textcleaner/
 * https://imagemagick.org
 * https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_tutorials.html

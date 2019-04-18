@@ -4,7 +4,7 @@ import time
 import tqdm
 
 import config
-from bin.plugin import pluginAppModel
+from bin.plugin import PluginAppModel
 
 
 def rename_images(images_path):
@@ -61,7 +61,7 @@ def main(source_file, destination_file=None):
 #     rename_images(config.IMAGE_ROOT_DIR)
 
 
-class fileNamesProcessingPlugin(pluginAppModel):
+class fileNamesProcessingPlugin(PluginAppModel):
 
     def plugin_inputs(self):
         # Custom location according to need

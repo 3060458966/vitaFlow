@@ -17,7 +17,7 @@ def find_files_with_ext(search_folder, exts=None):
     return bag
 
 
-class pluginAppModel(ABC):
+class PluginAppModel(ABC):
     '''Simple image processing plugin application
 
     Must implement `run` method for using.'''
@@ -40,7 +40,7 @@ class pluginAppModel(ABC):
         self.operator_func = None
 
     @staticmethod
-    def recursive_image_search(path):
+    def image_search(path):
         """Inputs should be collected as a list of tuples.
 
         Each tuple items shall contains args to pass to input method
@@ -99,18 +99,20 @@ class pluginAppModel(ABC):
         """For automated runs"""
         if (not self.source_folder) or (not self.operator_func):
             raise RuntimeError('self.source_folder or self.operator_func is not defined !!')
-        all_args = [
-            # ("something here", "something here", "something else"),
-            # write code here
-        ]
-        all_source_images = self.recursive_image_search(self.source_folder)
+        all_source_images = self.image_search(self.source_folder)
         for source_image in all_source_images:
             self.quick_run(source_image, None)
 
 
-class textExtPluginModel(pluginAppModel):
+class TextExtPluginModel(PluginAppModel):
     '''OCR Abstract Class'''
 
-    def quick_run(self):
-        self.inputs()
-        self.run()
+    def __init__(self):
+        super().__init__()
+        self.parallel_operator_func = None
+
+    def bulk_run(self):
+        if (not self.source_folder) or (not self.operator_func):
+            raise RuntimeError('self.source_folder or self.operator_func is not defined !!')
+        all_images = self.image_search(self.source_folder + '/*')
+        self.parallel_operator_func(all_images)

@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import config
-from bin.plugin import pluginAppModel
+from bin.plugin import PluginAppModel
 from bin.utils import trim_file_ext
 
 
@@ -188,7 +188,7 @@ def rotate_image_with_east(img_filename, save_file=None):
         plt.imshow(warped)
 
 
-class receiptLocalisationPlugin(pluginAppModel):
+class receiptLocalisationPlugin(PluginAppModel):
 
     def plugin_inputs(self):
         # Custom location according to need
