@@ -5,10 +5,10 @@ import os
 from glob import glob
 
 from calamari_ocr.ocr.datasets import DataSetType
-from calamari_ocr.scripts.predict import run as calamari_ocr
+from calamari_ocr.scripts.predict import run as calamari_ocr_run
 
 import config
-from bin.plugin import textExtPluginModel
+from bin.plugin import TextExtPluginModel
 
 # TODO:
 # - convert to gray scale images
@@ -41,15 +41,27 @@ class args:
     voter = 'confidence_voter_default_ctc'
 
 
-class ocrTesseract(textExtPluginModel):
-    def inputs(self):
-        self._inputs = glob(os.path.join(config.TEXT_IMAGES, '*'))[:10]
-        print('collected files {}'.format(len(self._inputs)))
+def main(source_file, destination_file=None):
+    args.files = [source_file]
+    calamari_ocr_run(args)
 
-    def run(self):
-        args.files = self._inputs
-        calamari_ocr(args)
+
+def main_parallel(source_files):
+    args.files = source_files
+    calamari_ocr_run(args)
+
+
+class OCR_Calamari(TextExtPluginModel):
+    def plugin_inputs(self):
+        # Custom location according to need
+        self.source_folder = config.TEXT_IMAGES
+        self.destination_folder = config.TEXT_IMAGES
+        # Transformation function for converting source_image to destination_image
+        self.operator_func = main
+        self.parallel_operator_func = main_parallel
 
 
 if __name__ == '__main__':
-    calamari_ocr(args)
+    tt = OCR_Calamari()
+    tt.plugin_inputs()
+    tt.bulk_run()

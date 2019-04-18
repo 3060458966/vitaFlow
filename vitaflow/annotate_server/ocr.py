@@ -1,59 +1,68 @@
+# -*- coding: utf-8 -*-
+# coding=utf-8
+from __future__ import unicode_literals
+
+"""
+To run
+    `PYTHONIOENCODING=utf-8 python3`
+
+"""
+import concurrent.futures
 import os
-import tempfile
-from glob import glob
+import unicodedata
 
 import cv2
 import pytesseract
-from matplotlib import pyplot as plt
 
 import config
-from bin.plugin import textExtPluginModel
+from bin.plugin import TextExtPluginModel
+from bin.utils import trim_file_ext
+
+os.environ['OMP_THREAD_LIMIT'] = '1'
 
 
-def tesseract_ocr(image_filename):
-    "A single text line image is provided for extracted text"
-    image = cv2.imread(image_filename, 0)
-    return pytesseract.image_to_string(image, config=config.TESSERACT_CONFIG)
-
-
-def calamari_ocr(image):
-    fd, filename = tempfile.mkstemp(suffix='.png')
+def string_parser(text):
+    debug = False
+    if debug:
+        print('--' * 15)
+        print(text)
+        print('--' * 15)
     try:
-        plt.imsave()
-        os.write(fd, someStuff)
-        os.close(fd)
-        # ...run the subprocess and wait for it to complete...
-    finally:
-        os.remove(filename)
+        text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore')
+    except:
+        text = ""
+    return str(text)
 
 
-image_ocr = tesseract_ocr
+def main(source_file, destination_file=None):
+    img = cv2.imread(source_file)
+    out_path = trim_file_ext(source_file) + '.tesseract.txt'
+    text = pytesseract.image_to_string(img, lang='eng', config=config.TESSERACT_CONFIG)
+    fd = open(out_path, "w")
+    fd.write(string_parser(text))
+    return out_path
 
 
-class ocrTesseract(textExtPluginModel):
+def main_parallel(image_list):
+    completed_jobs = []
+    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+        for img_path, out_file in zip(image_list, executor.map(main, image_list)):
+            completed_jobs.append(
+                (img_path.split("\\")[-1], ',', out_file, ', processed')
+            )
 
-    def inputs(self):
-        self._inputs = glob(os.path.join(config.TEXT_IMAGES, '*'))[:10]
-        print('collected files {}'.format(len(self._inputs)))
 
-    def run(self):
-        for image_dir in self._inputs:
-            _image_files = glob(os.path.join(image_dir, '*'))
-            _image_files = sorted(_image_files)
-
-            _text_file_name = image_dir + '.txt'
-            text_file_name = os.path.join(config.TEXT_DIR, os.path.basename(_text_file_name))
-            if os.path.isfile(text_file_name):
-                print('Found the text file for {}'.format(_text_file_name))
-            else:
-                collected_text_data = []
-                for _line_image in _image_files:
-                    collected_text_data.append(tesseract_ocr(_line_image))
-                with open(text_file_name, 'w', encoding='utf-8') as fp:
-                    fp.write(u'\n'.join(collected_text_data))
-                print('File: {}'.format(text_file_name))
+class OcrTessaract(TextExtPluginModel):
+    def plugin_inputs(self):
+        # Custom location according to need
+        self.source_folder = config.TEXT_IMAGES
+        self.destination_folder = config.TEXT_IMAGES
+        # Transformation function for converting source_image to destination_image
+        self.operator_func = main
+        self.parallel_operator_func = main_parallel
 
 
 if __name__ == '__main__':
-    t = ocrTesseract()
-    t.quick_run()
+    tt = OcrTessaract()
+    tt.plugin_inputs()
+    tt.bulk_run()
