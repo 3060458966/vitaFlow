@@ -188,4 +188,5 @@ For adding a new plugin following are required
 * https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_tutorials.html
 * https://github.com/tesseract-ocr/tesseract
 * https://github.com/Calamari-OCR/calamari
+* https://github.com/tmbdev/ocropy/wiki
 
