@@ -90,7 +90,11 @@ def main(image_filename, image_dir=None):
     i = 1
     if not image_dir:
         image_dir = os.path.join(config.TEXT_IMAGES, trim_file_ext(os.path.basename(source_image)))
-    os.mkdir(image_dir)
+    if os.path.isdir(image_dir):
+        print('Skipping the run as {} already exists'.format(image_dir))
+        return
+    else:
+        os.mkdir(image_dir)
     for start, end in line_segments:
         if abs(start - end) < 10:
             continue

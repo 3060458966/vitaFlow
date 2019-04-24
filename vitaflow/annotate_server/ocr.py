@@ -65,4 +65,5 @@ class OcrTessaract(TextExtPluginModel):
 if __name__ == '__main__':
     tt = OcrTessaract()
     tt.plugin_inputs()
+    print('--' * 55)
     tt.bulk_run()
