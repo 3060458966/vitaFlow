@@ -25,6 +25,28 @@ _command_textcleaner = ['./textcleaner',
                         '-p',
                         '10']
 
+# TODO: need to optimise
+#  http://www.fmwconcepts.com/imagemagick/color2gray/index.php
+_command_color2gray = ['./color2gray',
+                       '-f',
+                       'colorspace',
+                       '-c',
+                       'ohta']
+
+# TODO: need to optimise
+# http://www.fmwconcepts.com/imagemagick/graytoning/index.php
+_command_graytoning = ['./graytoning',
+                       '-r 60',
+                       '-g 20',
+                       '-b 20']
+
+def _color2gray(image_loc, dest_image_loc):
+    subprocess.check_call(_command_color2gray + [image_loc, dest_image_loc])
+
+
+def _graytoning(image_loc, dest_image_loc):
+    subprocess.check_call(_command_graytoning + [image_loc, dest_image_loc])
+
 
 def _convert(image_loc, dest_image_loc):
     subprocess.check_call(_command_convert + [image_loc, dest_image_loc])
@@ -39,6 +61,7 @@ def binarisation(image_loc, dest_image_loc):
     # TODO: experiment & optimize below
     _convert(image_loc, dest_image_loc)
     _convert(dest_image_loc, dest_image_loc)
+    # _color2gray(dest_image_loc, dest_image_loc)
 
 
 # noinspection PyUnusedLocal

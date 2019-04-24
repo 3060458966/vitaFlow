@@ -40,7 +40,7 @@ calmari:		### OCR Pipeline - OCR with Calamari OCR
 	python vitaflow/annotate_server/ocr_calamari.py
 
 
-ocr_pipeline: preprocess binarisation text2lineimages tesseract calmari		### OCR Pipeline - Run complete pipeline
+ocr_pipeline: data_cleanup preprocess binarisation text2lineimages tesseract calmari		### OCR Pipeline - Run complete pipeline
 	@echo "Starting OCR Pipeline(All Step)"
 	python vitaflow/annotate_server/ocr_calamari.py
 
