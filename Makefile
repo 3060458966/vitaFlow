@@ -50,5 +50,5 @@ data_cleanup:		### OCR Pipeline - Clean all sub folder
 	rm -rf vitaflow/annotate_server/static/data/binarisation/*
 	rm -rf vitaflow/annotate_server/static/data/text_images/*
 
-ocr_pipeline_input:		### OCR Pipeline - Run complete pipeline
-	@echo "Starting " $1
+show_input:		### OCR Pipeline - Run complete pipeline
+	ls -l vitaflow/annotate_server/static/data/preprocess/
