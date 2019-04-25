@@ -59,6 +59,13 @@ class Executor(object):
         self._estimator = tf.estimator.Estimator(
             model_fn=self._model, config=config, params=None)
 
+        hook = tf.contrib.estimator.stop_if_no_decrease_hook(self._estimator, "loss", 1000)
+
+        if self._train_hooks is None:
+            self._train_hooks = [hook]
+        else:
+            self._train_hooks.append(hook)
+
     @property
     def model(self):
         return self._model

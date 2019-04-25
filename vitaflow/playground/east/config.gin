@@ -9,7 +9,6 @@ CIDARIterator.prefetch_size = 1
 
 # Model
 EASTModel.model_root_directory = "/opt/tmp/icdar/"
-EASTModel.experiment_name = "east"
 EASTModel.learning_rate = 0.0001
 
 # main

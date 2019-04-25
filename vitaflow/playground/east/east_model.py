@@ -16,12 +16,12 @@ def unpool(inputs):
 
 
 def mean_image_subtraction(images, means=[123.68, 116.78, 103.94]):
-    '''
+    """
     image normalization
     :param images:
     :param means:
     :return:
-    '''
+    """
     num_channels = images.get_shape().as_list()[-1]
     if len(means) != num_channels:
       raise ValueError('len(means) must match the number of channels')
@@ -32,9 +32,9 @@ def mean_image_subtraction(images, means=[123.68, 116.78, 103.94]):
 
 
 def model(images, text_scale=512, weight_decay=1e-5, is_training=True):
-    '''
+    """
     define the model, we use slim's implemention of resnet
-    '''
+    """
     images = mean_image_subtraction(images)
 
     with slim.arg_scope(resnet_v1.resnet_arg_scope(weight_decay=weight_decay)):
@@ -89,15 +89,14 @@ def model(images, text_scale=512, weight_decay=1e-5, is_training=True):
     return F_score, F_geometry
 
 
-def dice_coefficient(y_true_cls, y_pred_cls,
-                     training_mask):
-    '''
+def dice_coefficient(y_true_cls, y_pred_cls, training_mask):
+    """
     dice loss
     :param y_true_cls:
     :param y_pred_cls:
     :param training_mask:
     :return:
-    '''
+    """
     eps = 1e-5
     intersection = tf.reduce_sum(y_true_cls * y_pred_cls * training_mask)
     union = tf.reduce_sum(y_true_cls * training_mask) + \
@@ -108,9 +107,9 @@ def dice_coefficient(y_true_cls, y_pred_cls,
 
 
 def get_loss(y_true_cls, y_pred_cls,
-         y_true_geo, y_pred_geo,
-         training_mask):
-    '''
+             y_true_geo, y_pred_geo,
+             training_mask):
+    """
     define the loss used for training, contraning two part,
     the first part we use dice loss instead of weighted logloss,
     the second part is the iou loss defined in the paper
@@ -120,30 +119,50 @@ def get_loss(y_true_cls, y_pred_cls,
     :param y_pred_geo: prediction of geometry
     :param training_mask: mask used in training, to ignore some text annotated by ###
     :return:
-    '''
-    classification_loss = dice_coefficient(
-        y_true_cls, y_pred_cls, training_mask)
+    """
+
+    """
+    Section: EAST : 3.4.2 Loss for Geometries
+      p0 : d1                  p1 : d2
+       --------------------------
+      |                          |
+      |                          |
+      |                          |
+       --------------------------  
+     p3 : d4                   p2 : d3
+     
+     where d1,d2,d3 and d4 represents the distance from a pixel to the top, right, bottom and 
+     left boundary of its corresponding rectangle, respectively. 
+    """
+
+    classification_loss = dice_coefficient(y_true_cls, y_pred_cls, training_mask)
+
     # scale classification loss to match the iou loss part
     classification_loss *= 0.01
 
-    # d1 -> top, d2->right, d3->bottom, d4->left
-    d1_gt, d2_gt, d3_gt, d4_gt, theta_gt = tf.split(
+    # p0 -> top, p1->right, p2->bottom, p3->left
+    p0_gt, p1_gt, p2_gt, p3_gt, theta_gt = tf.split(
         value=y_true_geo, num_or_size_splits=5, axis=3)
-    d1_pred, d2_pred, d3_pred, d4_pred, theta_pred = tf.split(
+    p0_pred, p1_pred, p2_pred, p3_pred, theta_pred = tf.split(
         value=y_pred_geo, num_or_size_splits=5, axis=3)
-    area_gt = (d1_gt + d3_gt) * (d2_gt + d4_gt)
-    area_pred = (d1_pred + d3_pred) * (d2_pred + d4_pred)
-    w_union = tf.minimum(d2_gt, d2_pred) + tf.minimum(d4_gt, d4_pred)
-    h_union = tf.minimum(d1_gt, d1_pred) + tf.minimum(d3_gt, d3_pred)
+
+    area_gt = (p0_gt + p2_gt) * (p1_gt + p3_gt)
+    area_pred = (p0_pred + p2_pred) * (p1_pred + p3_pred)
+
+    w_union = tf.minimum(p1_gt, p1_pred) + tf.minimum(p3_gt, p3_pred)
+    h_union = tf.minimum(p0_gt, p0_pred) + tf.minimum(p2_gt, p2_pred)
     area_intersect = w_union * h_union
+
     area_union = area_gt + area_pred - area_intersect
+
     L_AABB = -tf.log((area_intersect + 1.0)/(area_union + 1.0))
     L_theta = 1 - tf.cos(theta_pred - theta_gt)
+    L_g = L_AABB + 20 * L_theta
+
     tf.summary.scalar('geometry_AABB', tf.reduce_mean(
         L_AABB * y_true_cls * training_mask))
     tf.summary.scalar('geometry_theta', tf.reduce_mean(
         L_theta * y_true_cls * training_mask))
-    L_g = L_AABB + 20 * L_theta
 
     return tf.reduce_mean(L_g * y_true_cls * training_mask) + classification_loss
 
@@ -165,24 +184,7 @@ def average_gradients(tower_grads):
 
     return average_grads
 
-def average_gradients(tower_grads):
-    average_grads = []
-    for grad_and_vars in zip(*tower_grads):
-        grads = []
-        for g, _ in grad_and_vars:
-            expanded_g = tf.expand_dims(g, 0)
-            grads.append(expanded_g)
-
-        grad = tf.concat(grads, 0)
-        grad = tf.reduce_mean(grad, 0)
-
-        v = grad_and_vars[0][1]
-        grad_and_var = (grad, v)
-        average_grads.append(grad_and_var)
-
-    return average_grads
-
-###############################################################################################
+# -----------------------------------------------------------------------------------------------------------
 
 
 @gin.configurable
@@ -190,34 +192,21 @@ class EASTModel:
     def __init__(self,
                  learning_rate=0.0001,
                  model_root_directory=gin.REQUIRED,
-                 experiment_name=gin.REQUIRED,
                  moving_average_decay=0.997):
         self._model_root_directory = model_root_directory
-        self._experiment_name = experiment_name
         self._learning_rate = learning_rate
         self._moving_average_decay = moving_average_decay
 
     def _get_optimizer(self, loss):
         tower_grads = []
         with tf.name_scope("optimizer") as scope:
-            # try:
-            #     global_step = tf.get_variable('global_step', 
-            #                         [], 
-            #                         initializer=tf.constant_initializer(0), 
-            #                         trainable=False)
-            # except ValueError:
-            #     scope.reuse_variables()
-            #     global_step = tf.get_variable('global_step', 
-            #                         [], 
-            #                         initializer=tf.constant_initializer(0), 
-            #                         trainable=False)
 
             global_step=tf.train.get_global_step()
             learning_rate = tf.train.exponential_decay(self._learning_rate, 
-                                                        global_step, 
-                                                        decay_steps=10000, 
-                                                        decay_rate=0.94, 
-                                                        staircase=True)
+                                                       global_step,
+                                                       decay_steps=100,
+                                                       decay_rate=0.94,
+                                                       staircase=True)
             # add summary
             tf.summary.scalar('learning_rate', learning_rate)
 
@@ -226,12 +215,6 @@ class EASTModel:
                 beta1=0.9,
                 beta2=0.999,
                 epsilon=1e-8)
-
-            # gradients, v = zip(*optimizer.compute_gradients(loss))
-            # gradients, _ = tf.clip_by_global_norm(gradients, 200)
-            # train_op = optimizer.apply_gradients(
-            #     zip(gradients, v),
-            #     global_step=tf.train.get_global_step())
             
             batch_norm_updates_op = tf.group(*tf.get_collection(tf.GraphKeys.UPDATE_OPS)) #TODO scope
             grads = optimizer.compute_gradients(loss)
@@ -239,9 +222,10 @@ class EASTModel:
             grads = average_gradients(tower_grads)
             apply_gradient_op = optimizer.apply_gradients(grads, global_step=global_step)
 
-            variable_averages = tf.train.ExponentialMovingAverage(
-            self._moving_average_decay, global_step)
+            variable_averages = tf.train.ExponentialMovingAverage(self._moving_average_decay,
+                                                                  global_step)
             variables_averages_op = variable_averages.apply(tf.trainable_variables())
+
             # batch norm updates
             with tf.control_dependencies([variables_averages_op, apply_gradient_op, batch_norm_updates_op]):
                 train_op = tf.no_op(name='train_op')
@@ -263,14 +247,14 @@ class EASTModel:
         :return:
         """
         return os.path.join(self._model_root_directory,
-                            self._experiment_name,
                             type(self).__name__)
 
     def _build(self, features, labels, params, mode, config=None):
+
         input_images = features['images']
-        # input_images = tf.cast(input_images, tf.float32)
 
         is_training = mode == tf.estimator.ModeKeys.TRAIN
+
         # Build inference graph
         with tf.variable_scope(tf.get_variable_scope(), reuse=False):
             f_score, f_geometry = model(input_images, is_training=is_training)
@@ -283,13 +267,12 @@ class EASTModel:
             input_score_maps = features['score_maps']
             input_geo_maps = features['geo_maps']
             input_training_masks = features['training_masks']
-            # input_score_maps = tf.cast(input_score_maps, tf.float32)
-            # input_geo_maps = tf.cast(input_geo_maps, tf.float32)
-            # input_training_masks = tf.cast(input_training_masks, tf.float32)
         
-            model_loss = get_loss(input_score_maps, f_score,
-                                    input_geo_maps, f_geometry,
-                                    input_training_masks)
+            model_loss = get_loss(input_score_maps,
+                                  f_score,
+                                  input_geo_maps,
+                                  f_geometry,
+                                  input_training_masks)
             loss = tf.add_n(
                 [model_loss] + tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
 

@@ -34,7 +34,7 @@ tree .
 ```
 
 **2015** : We have train and test data
-**2018** : We have only train data
+**2019** : We have only train data
 
 ## Text Localization:
 - All images are provided as JPEG or PNG files and the text files are UTF-8 files with CR/LF new line endings.
@@ -71,49 +71,50 @@ mkdir val
 #2013,2015
 # unzip 2013/task2/Challenge2_Training_Task12_Images.zip -d 2013_train/
 # unzip 2013/task2/Challenge2_Training_Task2_GT.zip -d 2013_train/
-# unzip 2015/ch4_training_images.zip -d 2015_train/
-# unzip 2015/ch4_training_localization_transcription_gt.zip -d 2015_train/
-unzip 2019/0319updated.task1train\(628p\)-20190320T064205Z-001.zip -d 2019_train/
-cd 2019_train/0319updated.task1train\(628p\)/
-mv * ../
-cd ..
-rm -rf 0319updated.task1train\(628p\)/
-cd ../
+unzip 2015/ch4_training_images.zip -d 2015_train/
+unzip 2015/ch4_training_localization_transcription_gt.zip -d 2015_train/
+# unzip 2019/0319updated.task1train\(628p\)-20190320T064205Z-001.zip -d 2019_train/
+# cd 2019_train/0319updated.task1train\(628p\)/
+# mv * ../
+# cd ..
+# rm -rf 0319updated.task1train\(628p\)/
+# cd ../
 
 # cd 2013_train/
 # rename 's/GT/gt/' *
 # cd ..
 # mv 2013_train/* train/
-# mv 2015_train/* train/
+mv 2015_train/* train/
 
-cd 2019_train/
-mv `ls  | head -50` ../test/
-mv `ls  | head -100` ../val/
-cd ..
-mv 2019_train/* train/
+# cd 2019_train/
+# mv `ls  | head -50` ../test/
+# mv `ls  | head -100` ../val/
+# cd ..
+# mv 2019_train/* train/
 
 # rm -rf 2013_train/
-# rm -rf 2015_train/
-rm -rf 2019_train/
+rm -rf 2015_train/
+# rm -rf 2019_train/
 
 
-# test and validation
-#unzip 2015/ch4_test_images.zip -d 2015_test_images/
-#unzip 2015/Challenge4_Test_Task1_GT.zip -d 2015_test_txt/
+#test and validation
+unzip 2015/ch4_test_images.zip -d 2015_test_images/
+unzip 2015/Challenge4_Test_Task1_GT.zip -d 2015_test_txt/
 
 #move first 100 images for testing and rest for validation
-#cd 2015_test_images/
-#mv `ls  | head -100` ../test/
-#mv *.* ../val/
-#cd ..
+cd 2015_test_images/
+mv `ls  | head -100` ../test/
+mv *.* ../val/
+cd ..
 
-#cd 2015_test_txt/
-#mv `ls  | head -100` ../test/
-#mv *.* ../val/
-#cd ..
+cd 2015_test_txt/
+mv `ls  | head -100` ../test/
+mv *.* ../val/
+cd ..
 
-#rm -rf 2015_test_images/
-#rm -rf 2015_test_txt/
+rm -rf 2015_test_images/
+rm -rf 2015_test_txt/
+
 ls
 ```
 
@@ -184,3 +185,12 @@ python grpc_predict.py \
 - As compared to original EAST repo, we have used Tensorflow high level APIs tf.data and tf.Estimators
 - This comes in handy when we move to big dataset or if we wanted to experiment with different models/data
 - TF Estimator also takes care of exporting the model for serving! [Reference](https://medium.com/@yuu.ishikawa/serving-pre-modeled-and-custom-tensorflow-estimator-with-tensorflow-serving-12833b4be421)
+
+### Similar Models / Gits:
+- https://github.com/Michael-Xiu/ICDAR-SROIE
+- https://github.com/xieyufei1993/FOTS
+- https://github.com/hwalsuklee/awesome-deep-text-detection-recognition
+- https://github.com/tangzhenyu/Scene-Text-Understanding
+
+### References
+- https://berlinbuzzwords.de/18/session/scalable-ocr-pipelines-using-python-tensorflow-and-tesseract

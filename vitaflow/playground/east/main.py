@@ -68,9 +68,10 @@ def run(save_checkpoints_steps=10,
         for current_epoch in tqdm(range(num_epochs), desc="Epoch"):
             current_max_steps = (num_samples // batch_size) * (current_epoch + 1)
             print("\n\n Training for epoch {} with steps {}\n\n".format(current_epoch, current_max_steps))
-            executor.train(max_steps=None)
+            # executor.train(max_steps=None)
             print("\n\n Evaluating for epoch\n\n", current_epoch)
-            executor.evaluate(steps=None)
+            # executor.evaluate(steps=None)
+            executor.train_and_evaluate()
             executor.export_model(model_dir+"/exported/")
     else:
         estimator = executor._estimator

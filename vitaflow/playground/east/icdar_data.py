@@ -46,7 +46,7 @@ def load_annoataion(txt_file_path):
     """
 
     text_polys = []
-    text_tags = []
+    text_tags = []  # mask used in training, to ignore some text annotated by ###
     # if not os.path.exists(p):
     #     return np.array(text_polys, dtype=np.float32)
 
@@ -343,6 +343,18 @@ def rectangle_from_parallelogram(poly):
     :param poly:
     :return:
     """
+
+    """
+
+      p0                         p1
+       --------------------------
+      |                          |
+      |                          |
+      |                          |
+       --------------------------  
+      p3                         p2 
+    """
+
     p0, p1, p2, p3 = poly
     angle_p0 = np.arccos(np.dot(p1-p0, p3-p0)/(np.linalg.norm(p0-p1) * np.linalg.norm(p3-p0)))
 
@@ -446,11 +458,23 @@ def generate_rbox(im_size, polys, tags, min_text_size):
         # ------------------------------------------------------------------------------------------------
         # Section 3.3.1 of EAST paper
         # Clockwise distance between two points and anti clockwise distance between two points
+
+        """
+
+          0                          1
+           --------------------------
+          |                          |
+          |                          |
+          |                          |
+           --------------------------  
+          3                          2 
+        """
+
         reference_length = [None, None, None, None]
         for i in range(4):
-            # Minimum vertically i.e find the shorted edge
-            # (0,1) | (1,2) | (2,3) | (3,0)
-            # (0,3) | (1,0) | (2,1) | (3,2)
+            # find the shorted edge distances(vertices1,vertices2)
+            # (0,1) | (1,2) | (2,3) | (3,0) <- (i+1) % 4
+            # (0,3) | (1,0) | (2,1) | (3,2) <- (i-1) % 4
             reference_length[i] = min(np.linalg.norm(poly[i] - poly[(i + 1) % 4]),
                                       np.linalg.norm(poly[i] - poly[(i - 1) % 4]))
 
@@ -498,8 +522,6 @@ def generate_rbox(im_size, polys, tags, min_text_size):
             # [p1_x, p2_x], [p1_y, p2_y]
             forward_edge = fit_line([p1[0], p2[0]], [p1[1], p2[1]])
 
-            # --------------------------------------------------------------------------------------
-
             if point_dist_to_line(p0, p1, p2) > point_dist_to_line(p0, p1, p3):
                 # 平行线经过p2 - parallel lines through p2
                 if edge[1] == 0:
@@ -513,14 +535,14 @@ def generate_rbox(im_size, polys, tags, min_text_size):
                 else:
                     edge_opposite = [edge[0], -1, p3[1] - edge[0] * p3[0]]
 
+            # --------------------------------------------------------------------------------------
+
             # move forward edge
             new_p0 = p0
             new_p1 = p1
             new_p2 = p2
             new_p3 = p3
             new_p2 = line_cross_point(forward_edge, edge_opposite)
-
-            # --------------------------------------------------------------------------------------
 
             if point_dist_to_line(p1, new_p2, p0) > point_dist_to_line(p1, new_p2, p3):
                 # across p0
@@ -540,14 +562,14 @@ def generate_rbox(im_size, polys, tags, min_text_size):
 
             fitted_parallelograms.append([new_p0, new_p1, new_p2, new_p3, new_p0])
 
+            # --------------------------------------------------------------------------------------
+
             # or move backward edge
             new_p0 = p0
             new_p1 = p1
             new_p2 = p2
             new_p3 = p3
             new_p3 = line_cross_point(backward_edge, edge_opposite)
-
-            # --------------------------------------------------------------------------------------
 
             if point_dist_to_line(p0, p3, p1) > point_dist_to_line(p0, p3, p2):
                 # across p1
@@ -567,6 +589,8 @@ def generate_rbox(im_size, polys, tags, min_text_size):
             fitted_parallelograms.append([new_p0, new_p1, new_p2, new_p3, new_p0])
 
         # --------------------------------------------------------------------------------------------------
+
+        # print("Lenght of fitted_parallelograms : ", len(fitted_parallelograms))
 
         areas = [Polygon(t).area for t in fitted_parallelograms]
         parallelogram = np.array(fitted_parallelograms[np.argmin(areas)][:-1], dtype=np.float32)
@@ -719,40 +743,62 @@ def image_2_data(image_file_path,
         if vis:
             plt.imshow(im)
             print_shape(im, "im")
+
             fig, axs = plt.subplots(3, 2, figsize=(20, 30))
+
             axs[0, 0].imshow(im[:, :, ::-1])
             axs[0, 0].set_xticks([])
             axs[0, 0].set_yticks([])
             for poly in text_polys:
                 poly_h = min(abs(poly[3, 1] - poly[0, 1]), abs(poly[2, 1] - poly[1, 1]))
                 poly_w = min(abs(poly[1, 0] - poly[0, 0]), abs(poly[2, 0] - poly[3, 0]))
-                axs[0, 0].add_artist(Patches.Polygon(
-                    poly, facecolor='none', edgecolor='green', linewidth=2, linestyle='-', fill=True))
-                axs[0, 0].text(poly[0, 0], poly[0, 1], '{:.0f}-{:.0f}'.format(poly_h, poly_w), color='purple')
+                axs[0, 0].add_artist(Patches.Polygon(poly,
+                                                     facecolor='none',
+                                                     edgecolor='green',
+                                                     linewidth=2,
+                                                     linestyle='-',
+                                                     fill=True))
+                axs[0, 0].text(poly[0, 0],
+                               poly[0, 1],
+                               '{:.0f}-{:.0f}'.format(poly_h, poly_w), color='purple')
+            axs[0, 0].set_title("text RBOX")
+
             axs[0, 1].imshow(score_map[::, ::])
             axs[0, 1].set_xticks([])
             axs[0, 1].set_yticks([])
             axs[0, 1].set_title("score_map")
+
             axs[1, 0].imshow(geo_map[::, ::, 0])
             axs[1, 0].set_xticks([])
             axs[1, 0].set_yticks([])
-            axs[1, 0].set_title("geo_map")
+            axs[1, 0].set_title("geo_map0")
+
             axs[1, 1].imshow(geo_map[::, ::, 1])
             axs[1, 1].set_xticks([])
             axs[1, 1].set_yticks([])
-            axs[1, 1].set_title("geo_map2")
+            axs[1, 1].set_title("geo_map1")
+
             axs[2, 0].imshow(geo_map[::, ::, 2])
             axs[2, 0].set_xticks([])
             axs[2, 0].set_yticks([])
-            axs[2, 0].set_title("geo_map3")
+            axs[2, 0].set_title("geo_map2")
+
             axs[2, 1].imshow(training_mask[::, ::])
             axs[2, 1].set_xticks([])
             axs[2, 1].set_yticks([])
+            axs[2, 0].set_title("training_mask")
+
             plt.tight_layout()
             plt.show()
             plt.close()
 
+        # print_shape(im, "image")
+        # print_shape(score_map, "score_map")
+        # print_shape(geo_map, "geo_map")
+        # print_shape(training_mask, "training_mask")
+
         image = im[:, :, ::-1].astype(np.float32)
+        # scale rest of the ata by 4 i.e sample 1 for every 4 pixels
         score_map = score_map[::4, ::4, np.newaxis].astype(np.float32)
         geo_map = geo_map[::4, ::4, :].astype(np.float32)
         training_mask = training_mask[::4, ::4, np.newaxis].astype(np.float32)
@@ -799,12 +845,14 @@ class ICDARTFDataset():
                  max_text_size=800,
                  min_text_size=5,
                  min_crop_side_ratio=0.1,
-                 geometry="RBOX"):
+                 geometry="RBOX",
+                 number_images_per_tfrecords=8):
+
         self._data_dir = data_dir
 
         self._train_out_dir = out_dir + "/train/"
-        self._val_out_dir   = out_dir + "/val/"
-        self._test_out_dir  = out_dir + "/test/"
+        self._val_out_dir = out_dir + "/val/"
+        self._test_out_dir = out_dir + "/test/"
 
         make_dirs(self._train_out_dir)
         make_dirs(self._val_out_dir)
@@ -815,6 +863,7 @@ class ICDARTFDataset():
         self._max_image_large_side = max_image_large_side
         self._max_text_size = max_text_size
         self._min_crop_side_ratio = min_crop_side_ratio
+        self._number_images_per_tfrecords = number_images_per_tfrecords
 
     def _get_features(self, image_mat, score_map_mat, geo_map_mat, training_masks_mat):
         """
@@ -856,10 +905,9 @@ class ICDARTFDataset():
 
         images = get_images(data_path)
 
-        number_images_per_tfrecords = 8
         index = 0
-        for i in tqdm(range(0, len(images), number_images_per_tfrecords), desc="prepare_data: "):
-            self.write_tf_records(images=images[i:i+number_images_per_tfrecords],
+        for i in tqdm(range(0, len(images), self._number_images_per_tfrecords), desc="prepare_data: "):
+            self.write_tf_records(images=images[i:i+self._number_images_per_tfrecords],
                                   file_path_name=out_path + "/" + str(index) + ".tfrecords")
             index += 1
 
