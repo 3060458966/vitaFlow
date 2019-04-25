@@ -139,7 +139,6 @@ def basic_params1():
       norm_type="layer",  # "batch", layer", "noam", "none".
       # epsilon parameter to normalization function
       norm_epsilon=1e-6,
-      symbol_modality_num_shards=1,
       # pad vocabularies so that this value divides the vocabulary size.
       vocab_divisor=1,
       # During training, we drop sequences whose inputs and targets are shorter
@@ -149,6 +148,13 @@ def basic_params1():
       # than max_length.
       # If max_length==0, we use hparams.batch_size instead.
       max_length=0,
+      # Pack examples on the fly.
+      pack_dataset=False,
+      # Use custom ops not included in standard tensorflow.
+      use_custom_ops=True,
+      # Split targets on the first axis into chunks of this length.
+      split_targets_chunk_length=0,
+      split_targets_max_chunks=100,
       # Maximum length in the smallest length bucket.  Setting this
       # flag too high will result in wasteful padding of short
       # sequences.  Due to some (hopefully) temporary hacks in the
@@ -167,22 +173,26 @@ def basic_params1():
       # If True, run the model autoregressively instead of teacher-forcing
       # during eval
       eval_run_autoregressive=False,
-      # TODO(lukaszkaiser): these parameters should probably be set elsewhere.
-      # (SymbolModality) - If this flag is on, we try to share all of the input
-      # embeddings, the target embeddings and the softmax weights.
+      # (For features with symbol modality) If True, share all of the
+      # input embeddings, target embeddings, and softmax weights.
       shared_embedding_and_softmax_weights=False,
-      # (SymbolModality) - If this flag is on, we try to share the input
-      # embeddings and the target embeddings.
-      # You can also share the input embeddings with the target embeddings
-      # by using a problem_hparams that uses the same modality object for
-      # the input modality and target modality.
+      # (For features with symbol modality) If True, share the input embeddings
+      # and target embeddings.
       shared_embedding=False,
-      # In SymbolModality, skip the top layer, assume we're providing logits.
-      symbol_modality_skip_top=False,
-      # Modalities used to map from features to a space compatible with
-      # chosen model architecture. It comprises key-value pairs of a feature
-      # name (str) and its modality type.
-      modality={},
+      # (For features with symbol modality) Number to shard embeddings by.
+      symbol_modality_num_shards=1,
+      # Feature transformations are optional dictionaries comprising key-value
+      # pairs of a feature name (str) and its transformation (function). If not
+      # specified, T2TModel applies a default transformation according to the
+      # feature's modality. Bottom is applicable to all features; loss, top, and
+      # weights_fn are only applicable to target features.
+      # TODO(trandustin): `name` is an optional hparam for legacy reasons,
+      # defining variable scope names. Remove this hparam in the future.
+      bottom={},
+      loss={},
+      name={},
+      top={},
+      weights_fn={},
       # The maximum length of "input" sequence.
       # Sequences longer than this value will be truncated. 0 or negative values
       # mean there is no maximum or truncation.
@@ -473,4 +483,4 @@ def basic_range1(ranged_hparams):
 @registry.register_ranged_hparams
 def basic_moe_range(rhp):
   """Moe range; when this parameter is unused, it allows us to see variance."""
-  rhp.set_float("moe_loss_coef", 0.01, 0.02)
+rhp.set_float("moe_loss_coef", 0.01, 0.02)

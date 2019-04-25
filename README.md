@@ -28,6 +28,7 @@ The process itself encompasses many small details and tasks that the data scienc
 much like the little black box in this image:
 
 ![](docs/images/ml_system_blocks.png)
+[paper](https://papers.nips.cc/paper/5656-hidden-technical-debt-in-machine-learning-systems.pdf)
 
 # Problem Statement
 

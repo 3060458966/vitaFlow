@@ -198,10 +198,8 @@ def sequence_edit_distance(predictions,
                            labels,
                            weights_fn=common_layers.weights_nonzero):
   """Average edit distance, ignoring padding 0s.
-
   The score returned is the edit distance divided by the total length of
   reference truth and the weight returned is the total length of the truth.
-
   Args:
     predictions: Tensor of shape [`batch_size`, `length`, 1, `num_classes`] and
         type tf.float32 representing the logits, 0-padded.
@@ -209,10 +207,8 @@ def sequence_edit_distance(predictions,
         representing the labels of same length as logits and 0-padded.
     weights_fn: ignored. The weights returned are the total length of the ground
         truth labels, excluding 0-paddings.
-
   Returns:
     (edit distance / reference length, reference length)
-
   Raises:
     ValueError: if weights_fn is not common_layers.weights_nonzero.
   """
@@ -312,11 +308,9 @@ def multilabel_accuracy_matchk(predictions,
                                k,
                                weights_fn=common_layers.weights_nonzero):
   """Used to evaluate the VQA accuracy.
-
   Let n be the times that predictions appear in labels, then final score
   is min(n/k, 1).
   Refer to https://arxiv.org/pdf/1505.00468.pdf.
-
   Args:
     predictions: A tensor with shape [batch_size, 1, 1, 1, vocab_size].
     labels: A tensor with shape [batch_size, length, 1, 1].
@@ -325,7 +319,6 @@ def multilabel_accuracy_matchk(predictions,
   Returns:
     scores: min(n/k, 1).
     weights: returns all ones.
-
   """
   predictions = tf.to_int32(tf.argmax(predictions, axis=-1))
   scores = tf.to_float(tf.equal(predictions, labels))
@@ -348,13 +341,11 @@ def multilabel_accuracy_match3(predictions, labels,
 def set_precision(predictions, labels,
                   weights_fn=common_layers.weights_nonzero):
   """Precision of set predictions.
-
   Args:
     predictions : A Tensor of scores of shape [batch, nlabels].
     labels: A Tensor of int32s giving true set elements,
       of shape [batch, seq_length].
     weights_fn: A function to weight the elements.
-
   Returns:
     hits: A Tensor of shape [batch, nlabels].
     weights: A Tensor of shape [batch, nlabels].
@@ -370,13 +361,11 @@ def set_precision(predictions, labels,
 
 def set_recall(predictions, labels, weights_fn=common_layers.weights_nonzero):
   """Recall of set predictions.
-
   Args:
     predictions : A Tensor of scores of shape [batch, nlabels].
     labels: A Tensor of int32s giving true set elements,
       of shape [batch, seq_length].
     weights_fn: A function to weight the elements.
-
   Returns:
     hits: A Tensor of shape [batch, nlabels].
     weights: A Tensor of shape [batch, nlabels].
@@ -392,12 +381,10 @@ def set_recall(predictions, labels, weights_fn=common_layers.weights_nonzero):
 
 def image_summary(predictions, targets, hparams):
   """Reshapes predictions and passes it to tensorboard.
-
   Args:
     predictions : The predicted image (logits).
     targets : The ground truth.
     hparams: model hparams.
-
   Returns:
     summary_proto: containing the summary images.
     weights: A Tensor of zeros of the same shape as predictions.
@@ -413,7 +400,6 @@ def image_summary(predictions, targets, hparams):
 
 def softmax_cross_entropy_one_hot(logits, labels, weights_fn=None):
   """Calculate softmax cross entropy given one-hot labels and logits.
-
   Args:
     logits: Tensor of size [batch-size, o=1, p=1, num-classes]
     labels: Tensor of size [batch-size, o=1, p=1, num-classes]
@@ -431,7 +417,6 @@ def softmax_cross_entropy_one_hot(logits, labels, weights_fn=None):
 
 def sigmoid_accuracy_one_hot(logits, labels, weights_fn=None):
   """Calculate accuracy for a set, given one-hot labels and logits.
-
   Args:
     logits: Tensor of size [batch-size, o=1, p=1, num-classes]
     labels: Tensor of size [batch-size, o=1, p=1, num-classes]
@@ -450,10 +435,8 @@ def sigmoid_accuracy_one_hot(logits, labels, weights_fn=None):
 
 def sigmoid_precision_one_hot(logits, labels, weights_fn=None):
   """Calculate precision for a set, given one-hot labels and logits.
-
   Predictions are converted to one-hot,
   as predictions[example][arg-max(example)] = 1
-
   Args:
     logits: Tensor of size [batch-size, o=1, p=1, num-classes]
     labels: Tensor of size [batch-size, o=1, p=1, num-classes]
@@ -473,10 +456,8 @@ def sigmoid_precision_one_hot(logits, labels, weights_fn=None):
 
 def sigmoid_recall_one_hot(logits, labels, weights_fn=None):
   """Calculate recall for a set, given one-hot labels and logits.
-
   Predictions are converted to one-hot,
   as predictions[example][arg-max(example)] = 1
-
   Args:
     logits: Tensor of size [batch-size, o=1, p=1, num-classes]
     labels: Tensor of size [batch-size, o=1, p=1, num-classes]
@@ -496,7 +477,6 @@ def sigmoid_recall_one_hot(logits, labels, weights_fn=None):
 
 def sigmoid_cross_entropy_one_hot(logits, labels, weights_fn=None):
   """Calculate sigmoid cross entropy for one-hot lanels and logits.
-
   Args:
     logits: Tensor of size [batch-size, o=1, p=1, num-classes]
     labels: Tensor of size [batch-size, o=1, p=1, num-classes]
@@ -514,9 +494,7 @@ def sigmoid_cross_entropy_one_hot(logits, labels, weights_fn=None):
 
 def roc_auc(logits, labels, weights_fn=None):
   """Calculate ROC AUC.
-
   Requires binary classes.
-
   Args:
     logits: Tensor of size [batch_size, 1, 1, num_classes]
     labels: Tensor of size [batch_size, 1, 1, num_classes]
@@ -533,16 +511,13 @@ def roc_auc(logits, labels, weights_fn=None):
 
 def create_evaluation_metrics(problems, model_hparams):
   """Creates the evaluation metrics for the model.
-
   Args:
     problems: List of Problem instances.
     model_hparams: a set of hparams.
-
   Returns:
     dict<metric name, metric function>. The metric functions have signature
     (Tensor predictions, features) -> (metric Tensor, update op), where features
     is a dict with keys {targets}.
-
   Raises:
     ValueError: if the metrics specified by a problem are not recognized (i.e.
       are not defined in the Metrics enum.
@@ -597,7 +572,7 @@ def create_evaluation_metrics(problems, model_hparams):
   def weights_fn_for_mp(problem_task_id):
     return lambda x: common_layers.weights_multi_problem(x, problem_task_id)
 
-  eval_metrics = dict()
+  eval_metrics = {}
   for problem_instance in problems:
     problem_name = problem_instance.name
     if problem_instance.was_reversed:
@@ -611,7 +586,9 @@ def create_evaluation_metrics(problems, model_hparams):
       tm = {"targets": tm}
 
     for target_name, modality in six.iteritems(tm):
-      weights_fn = modality.targets_weights_fn
+      weights_fn = model_hparams.weights_fn.get(
+          "targets",
+          modalities.get_weights_fn(modality))
       if hasattr(model_hparams.problem, "task_list"):
         ptid = problem_instance.task_id  # pylint: disable=cell-var-from-loop
         weights_fn = weights_fn_for_mp(ptid)
@@ -636,20 +613,21 @@ def create_evaluation_metrics(problems, model_hparams):
 def create_eager_metrics_for_problem(problem, model_hparams):
   """See create_eager_metrics."""
   metric_fns = problem.eval_metric_fns(model_hparams)
-  tm = problem.get_hparams(model_hparams).modality["targets"]
-  return create_eager_metrics_internal(
-      metric_fns, weights_fn=tm.targets_weights_fn)
+  problem_hparams = problem.get_hparams(model_hparams)
+  target_modality = problem_hparams.modality["targets"]
+  weights_fn = model_hparams.weights_fn.get(
+      "targets",
+      modalities.get_weights_fn(target_modality))
+  return create_eager_metrics_internal(metric_fns, weights_fn=weights_fn)
 
 
 def create_eager_metrics(metric_names, weights_fn=common_layers.weights_all):
   """Create metrics accumulators and averager for Eager mode.
-
   Args:
     metric_names: list<str> from Metrics enum
     weights_fn: function that takes labels and returns a weights mask. Defaults
       to weights of all 1, i.e. common_layers.weights_all. Use
       common_layers.weights_nonzero if labels have 0-padding.
-
   Returns:
     (accum_fn(predictions, targets) => None,
      result_fn() => dict<str metric_name, float avg_val>
@@ -662,18 +640,16 @@ def create_eager_metrics(metric_names, weights_fn=common_layers.weights_all):
 def create_eager_metrics_internal(metric_fns,
                                   weights_fn=common_layers.weights_all):
   """Create metrics accumulators and averager for Eager mode.
-
   Args:
     metric_fns: dict<metric name, metric function>
     weights_fn: function that takes labels and returns a weights mask. Defaults
       to weights of all 1, i.e. common_layers.weights_all. Use
       common_layers.weights_nonzero if labels have 0-padding.
-
   Returns:
     (accum_fn(predictions, targets) => None,
      result_fn() => dict<str metric_name, float avg_val>
   """
-  tfe_metrics = dict()
+  tfe_metrics = {}
 
   for name in metric_fns:
     tfe_metrics[name] = tfe.metrics.Mean(name=name)
@@ -698,13 +674,11 @@ def word_error_rate(raw_predictions,
                     lookup=None,
                     weights_fn=common_layers.weights_nonzero):
   """Calculate word error rate.
-
   Args:
     raw_predictions: The raw predictions.
     labels: The actual labels.
     lookup: A tf.constant mapping indices to output tokens.
     weights_fn: Weighting function.
-
   Returns:
     The word error rate.
   """
@@ -755,12 +729,10 @@ def word_error_rate(raw_predictions,
 
 def pearson_correlation_coefficient(predictions, labels, weights_fn=None):
   """Calculate pearson correlation coefficient.
-
   Args:
     predictions: The raw predictions.
     labels: The actual labels.
     weights_fn: Weighting function.
-
   Returns:
     The pearson correlation coefficient.
   """

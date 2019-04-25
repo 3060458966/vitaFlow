@@ -24,7 +24,6 @@ from vitaflow.internal.layers import modalities
 from vitaflow.utils import metrics
 import tensorflow as tf
 
-
 class MixingSchedule(object):
   """Available schedules for mixing datasets."""
   EXPONENTIAL = "exponential"
@@ -36,13 +35,11 @@ def normalize_example_nlp(task, example, is_infer, vocab_type, vocab_offset,
                           max_input_length, max_target_length,
                           fixed_train_length):
   """Normalize the examples from different tasks so they can be merged.
-
   This function is specific to NLP tasks and normalizes them so that in the
   end the example only has "targets" and "task_id". For tasks that originally
   have inputs, this is done by appending task_id to the inputs and prepending
   targets, so normalized_targets = inputs task_id targets. For classification
   tasks, targets are constructed by spelling out the class.
-
   Args:
     task: the Problem class of the task we are normalizing.
     example: a dictionary of tensors, the example to normalize.
@@ -52,7 +49,6 @@ def normalize_example_nlp(task, example, is_infer, vocab_type, vocab_offset,
     max_input_length: maximum length to cut inputs to.
     max_target_length: maximum length to cut targets to.
     fixed_train_length: set length to this size if > 0.
-
   Returns:
     a dictionary of tensors, like example, after normalizing, which in this
     case means that it only has "targets" and "task_id" as feature.
@@ -107,14 +103,11 @@ def normalize_example_nlp(task, example, is_infer, vocab_type, vocab_offset,
 
 def flatten_zip_dataset(*args):
   """A list of examples to a dataset containing mixed examples.
-
   Given a list of `n` dataset examples, flatten them by converting
   each element into a dataset and concatenating them to convert into a
   single dataset.
-
   Args:
     *args: A list containing one example each from `n` different datasets.
-
   Returns:
     flattened: A new dataset containing the examples from the list as part
       of a single dataset.
@@ -169,8 +162,7 @@ class MultiProblem(problem.Problem):
     self.update_task_ids(vocab_size)
     tf.logging.info("New vocabulary size: %d" % new_vocab_size)
     self._hparams.vocab_size["targets"] = new_vocab_size
-    self._hparams.modality["targets"] = modalities.SymbolModality(
-        model_hparams, self._hparams.vocab_size["targets"])
+    self._hparams.modality["targets"] = modalities.ModalityType.SYMBOL
     return self._hparams
 
   def dataset(self,
@@ -317,16 +309,13 @@ class MultiProblem(problem.Problem):
 
         def sample_task(curr_task, num_tasks_left, randnum):
           """A recursive function to sample a task.
-
           This function treats the probability as the threshold for the primary
           task and divides the remaining probability mass across the other
           tasks.
-
           Args:
             curr_task: The index of the task being considered for sampling.
             num_tasks_left: Number of tasks remaining to possibly sample from.
             randnum: The random number used to select the dataset.
-
           Returns:
             A Tensor representing an example from the task that was sampled
             from.
@@ -382,9 +371,7 @@ class MultiProblem(problem.Problem):
 
   def update_task_ids(self, encoder_vocab_size):
     """Generate task_ids for each problem.
-
     These ids correspond to the index of the task in the task_list.
-
     Args:
       encoder_vocab_size: the size of the vocab which is used to compute
         the index offset.
@@ -396,11 +383,9 @@ class MultiProblem(problem.Problem):
 
   def get_max_num_classes(self):
     """Compute the maximum number of classes any subtask has.
-
     This is useful for modifying the size of the softmax to include the output
     labels for the classification tasks. Currently, labels from different tasks
     are overloaded.
-
     Returns:
       num: Highest number of output classes in any text classification sub-task
         within this MultiProblem.
@@ -417,24 +402,32 @@ class MultiProblem(problem.Problem):
 def aggregate_task_losses(hparams,
                           problem_hparams,
                           logits,
-                          target_modality,
+                          feature_name,
                           feature):
   """Multiproblem loss function."""
 
   # If no reweighting, we want the default loss to mimic the LM loss.
   if not hparams.multiproblem_reweight_label_loss:
     return aggregate_task_lm_losses(hparams=hparams,
+                                    problem_hparams=problem_hparams,
                                     logits=logits,
-                                    target_modality=target_modality,
+                                    feature_name=feature_name,
                                     feature=feature)
 
   summaries = []
   main_task_id = hparams.problem.task_list[0].task_id
+  vocab_size = problem_hparams.vocab_size[feature_name]
+  if vocab_size is not None and hasattr(hparams, "vocab_divisor"):
+    vocab_size += (-vocab_size) % hparams.vocab_divisor
+  modality = problem_hparams.modality[feature_name]
+  loss = hparams.loss.get(feature_name, modalities.get_loss(modality))
+  weights_fn = hparams.weights_fn.get(
+      feature_name, modalities.get_weights_fn(modality))
   # Primary task loss
-  loss_num, loss_den = target_modality.loss(
+  loss_num, loss_den = loss(
       logits, feature,
-      weights_fn=
-      lambda x: common_layers.weights_multi_problem_all(x, main_task_id))
+      lambda x: common_layers.weights_multi_problem_all(x, main_task_id),
+      hparams, vocab_size, weights_fn)
 
   loss_val = loss_num / tf.maximum(1.0, loss_den)
   summaries.append([hparams.problem.task_list[0].name+"_loss", loss_val])
@@ -447,10 +440,10 @@ def aggregate_task_losses(hparams,
 
   for task in hparams.problem.task_list[1:]:
     # Loss only from the input sequence -- the auxiliary LM loss.
-    seq_loss_num, seq_loss_den = target_modality.loss(
+    seq_loss_num, seq_loss_den = loss(
         logits, feature,
-        weights_fn=
-        lambda x: common_layers.weights_multi_problem_input(x, task.task_id))  # pylint: disable=cell-var-from-loop
+        lambda x: common_layers.weights_multi_problem_input(x, task.task_id),  # pylint: disable=cell-var-from-loop
+        hparams, vocab_size)
     seq_loss_num *= problem_hparams.loss_multiplier
 
     # Unscaled sequence loss.
@@ -459,10 +452,10 @@ def aggregate_task_losses(hparams,
 
     if hasattr(task, "num_classes"):
       # Loss only from the classification label.
-      label_loss_num, label_loss_den = target_modality.loss(
+      label_loss_num, label_loss_den = loss(
           logits, feature,
-          weights_fn=
-          lambda x: common_layers.weights_multi_problem(x, task.task_id))  # pylint: disable=cell-var-from-loop
+          lambda x: common_layers.weights_multi_problem(x, task.task_id),  # pylint: disable=cell-var-from-loop
+          hparams, vocab_size)
       label_loss_num *= problem_hparams.loss_multiplier
 
       # Unscaled classification label loss.
@@ -481,10 +474,10 @@ def aggregate_task_losses(hparams,
 
     else:
       # Loss only from the target sequence.
-      target_loss_num, target_loss_den = target_modality.loss(
+      target_loss_num, target_loss_den = loss(
           logits, feature,
-          weights_fn=
-          lambda x: common_layers.weights_multi_problem(x, task.task_id))  # pylint: disable=cell-var-from-loop
+          lambda x: common_layers.weights_multi_problem(x, task.task_id),  # pylint: disable=cell-var-from-loop
+          hparams, vocab_size)
       target_loss_num *= problem_hparams.loss_multiplier
 
       # Unscaled target sequence loss.
@@ -513,18 +506,26 @@ def aggregate_task_losses(hparams,
 
 
 def aggregate_task_lm_losses(hparams,
+                             problem_hparams,
                              logits,
-                             target_modality,
+                             feature_name,
                              feature):
   """LM loss for multiproblems."""
   summaries = []
+  vocab_size = problem_hparams.vocab_size[feature_name]
+  if vocab_size is not None and hasattr(hparams, "vocab_divisor"):
+    vocab_size += (-vocab_size) % hparams.vocab_divisor
+  modality = problem_hparams.modality[feature_name]
+  loss = hparams.loss.get(feature_name, modalities.get_loss(modality))
+  weights_fn = hparams.weights_fn.get(
+      feature_name, modalities.get_weights_fn(modality))
   loss_num = 0.
   loss_den = 0.
   for task in hparams.problem.task_list:
-    loss_num_, loss_den_ = target_modality.loss(
+    loss_num_, loss_den_ = loss(
         logits, feature,
-        weights_fn=
-        lambda x: common_layers.weights_multi_problem_all(x, task.task_id))  # pylint: disable=cell-var-from-loop
+        lambda x: common_layers.weights_multi_problem_all(x, task.task_id),  # pylint: disable=cell-var-from-loop
+        hparams, vocab_size, weights_fn)
 
     loss_num += loss_num_
     loss_den += loss_den_
@@ -532,4 +533,4 @@ def aggregate_task_lm_losses(hparams,
     loss_val = loss_num_ / tf.maximum(1.0, loss_den_)
     summaries.append([task.name+"_loss", loss_val])
 
-  return loss_num, loss_den, summaries
+return loss_num, loss_den, summaries

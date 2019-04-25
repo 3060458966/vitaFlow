@@ -281,7 +281,7 @@ def generate_data():
 def profile_context():
   if FLAGS.profile:
     with tf.contrib.tfprof.ProfileContext(
-        "t2tprof", trace_steps=range(100), dump_steps=range(100)) as pctx:
+        "vfprof", trace_steps=range(100), dump_steps=range(100)) as pctx:
       opts = tf.profiler.ProfileOptionBuilder.time_and_memory()
       pctx.add_auto_profiling("op", opts, range(100))
       yield
@@ -347,7 +347,7 @@ def execute_schedule(exp):
 
 
 def run_std_server():
-  exp = trainer_lib.T2TExperiment(*([None] * 5))
+  exp = trainer_lib.VfExperiment(*([None] * 5))
   exp.run_std_server()
 
 

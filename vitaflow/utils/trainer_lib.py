@@ -367,7 +367,7 @@ class HookContext(collections.namedtuple(
   pass
 
 
-class T2TExperiment(object):
+class VfExperiment(object):
   """Custom Experiment class for running distributed experiments."""
 
   def __init__(self, estimator, hparams, train_spec, eval_spec,
@@ -754,7 +754,7 @@ def create_experiment(
       throttle_secs=eval_throttle_seconds,
       exporters=exporter)
 
-  return T2TExperiment(estimator, hparams, train_spec, eval_spec,
+  return VfExperiment(estimator, hparams, train_spec, eval_spec,
                        use_validation_monitor, decode_hparams)
 
 

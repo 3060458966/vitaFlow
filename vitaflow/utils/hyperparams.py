@@ -750,7 +750,8 @@ class HParams(object):
                     return str(x)
 
         return json.dumps(
-            remove_callables(self.values()),
+            #remove_callables(self.values()),
+            {k: v.__name__ if callable(v) else v for k, v in six.iteritems(self.values())},
             indent=indent,
             separators=separators,
             sort_keys=sort_keys)

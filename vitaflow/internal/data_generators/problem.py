@@ -1008,7 +1008,6 @@ def _create_modalities(problem_hparams, model_hparams):
       None
     """
     modality_overrides = getattr(model_hparams, "modality", {})
-    print(model_hparams)
     modality = {}
     for feature_name, modality_type in six.iteritems(problem_hparams.modality):
         vocab_size = problem_hparams.vocab_size[feature_name]
