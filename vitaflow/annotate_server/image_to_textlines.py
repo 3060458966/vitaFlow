@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 from bin.plugin import PluginAppModel
 from bin.utils import trim_file_ext
-from vitaflow.annotate_server import config
+import config
 
 
 def show_img(data):

@@ -9,8 +9,8 @@ import pytesseract
 from PIL import Image
 from scipy.ndimage.filters import rank_filter
 
+import config
 from bin.plugin import PluginAppModel
-from vitaflow.annotate_server import config
 
 
 class Page(object):
