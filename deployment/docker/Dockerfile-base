@@ -4,8 +4,12 @@ LABEL maintainer="Sampath Kumar M"
 RUN apt-get update && \
  apt-get install vim -y
 
-COPY ../.. /app
+cd ../..
+
+
 WORKDIR /app
+COPY . /app
+
 
 RUN pip install Cython --install-option="--no-cython-compile"
 

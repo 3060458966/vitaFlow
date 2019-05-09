@@ -3,7 +3,15 @@ from abc import ABC
 from glob import glob
 
 from common import verify_isimagefile, verify_isfile
-from vitaflow.annotate_server import config
+
+try:
+    from vitaflow.annotate_server import config
+    import sys
+
+    # Add the ptdraft folder path to the sys.path list
+    sys.path.append('..')
+except ModuleNotFoundError:
+    import config
 
 
 def find_files_with_ext(search_folder, exts=None):

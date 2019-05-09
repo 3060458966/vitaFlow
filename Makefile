@@ -2,6 +2,7 @@
 
 # Setting Version
 APP_VERSION=0.1
+IMAGE_VERSION=0.1123
 
 
 help:		### Help Command
@@ -13,7 +14,9 @@ clear:		### Clears Shell
 
 version:		### To prints the Application Version
 	@echo "Application Version "${APP_VERSION}
-
+	set -e; \
+	export IMAGE_VERSION=${IMAGE_VERSION}
+	@echo "Image Version "${IMAGE_VERSION}
 
 preprocess:		### OCR Pipeline - Pre-processing
 	@echo "Starting Document Localisation - doc2text"
@@ -52,3 +55,37 @@ data_cleanup:		### OCR Pipeline - Clean all sub folder
 
 show_input:		### OCR Pipeline - Run complete pipeline
 	ls -l vitaflow/annotate_server/static/data/preprocess/
+
+
+###################################################################
+########################################################## DOCKER #
+###################################################################
+
+#version: ## Prints Build version
+#	set -e; \
+#	export IMAGE_VERSION=${IMAGE_VERSION}
+#	@echo "Image Version "${IMAGE_VERSION}
+
+base: ## building base docker image
+	docker build --rm -f Dockerfile-base -t vitaflow-base .
+
+
+build: ## building docker image
+	docker build --rm -t vitaflow:${IMAGE_VERSION} .
+
+run: # run the VitaFlow Docker
+	@echo "Running vitaflow/vitaflow-app - RUN"
+	docker run -d --name vitaflow vitaflow:${IMAGE_VERSION} /bin/bash
+
+rm: ## rm
+	docker rm -f vitaflow
+
+exec:
+	docker exec -it vitaflow /bin/bash
+
+ps:
+	docker ps -a
+
+im:
+	# help - https://docs.docker.com/engine/reference/commandline/build/#options
+	docker images
