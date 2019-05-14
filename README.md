@@ -121,7 +121,7 @@ As baseline problem we have considered [Receipts](vitaflow/playground/receipt_oc
 
 # Quick Start
 
-For a pre-build docker image
+For a pre-build [docker image](https://hub.docker.com/r/vitaflow/vitaflow)
 
     docker pull vitaflow/vitaflow
 
@@ -134,7 +134,7 @@ After execution of above command, user will be landed in a docker terminal. For 
     cd vitaflow/annotate_server
     python binarisation.py # starting binarisation
 
-Please check the annotation folder README for further details on Annotation/Receipt data extraction pipeline.
+Please check the annotation folder [README](https://github.com/Imaginea/vitaFlow/tree/master/vitaflow/annotate_server) for further details on Annotation/Receipt data extraction pipeline.
 
 # License
 
