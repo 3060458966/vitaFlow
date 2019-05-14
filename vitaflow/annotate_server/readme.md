@@ -61,7 +61,43 @@ Option 2: For Calamari OCR
 
 Output files will to generated to same location where images are present
 
-__5. Text Annotation__
+__5. OCR Evaluation(Optional)__
+
+In case the user has ground truth, one can evaluate the OCR performance using following steps
+
+Step1: Download the following metric-script
+
+    wget https://raw.githubusercontent.com/Calamari-OCR/calamari/master/calamari_ocr/scripts/eval.py
+    
+Above script is snippet used by Calamari-OCR for evaluation of OCR Results.
+
+Step2: Ground truth preparation
+
+Ground truth folder structure
+
+        <Ground Truth Text Folder>
+          |_____<ImageName>
+                    |_____1.gt.txt
+                    |_____2.gt.txt
+                    |_____3.gt.txt
+
+OCR(Tesseract/Calamari) extracted text image folder structure
+
+(As per default config, all files shall be in vitaflow/annotate_server/static/data/text_images)
+
+        text_images
+          |_____<ImageName>
+                    |_____1.png           # First Text Line in Image 
+                    |_____1.pred.txt      # Clamari OCR output
+                    |_____3.tesseract.txt # Tesseract OCR output
+
+                    |_____2.png           # Second Text Line in Image 
+                    |_____2.pred.txt      # Clamari OCR output
+                    |_____2.tesseract.txt # Tesseract OCR output
+
+Step3: Evaluation
+
+__6. Text Annotation__
 
 WIP
 
@@ -81,8 +117,8 @@ As the growth continued, we added following image features to it.
 
 Other pages
 
-* A Summary page: To review how well the cropping & binarisation are working
-* A Stats page: To know the statistics of on annotation completed
+* Summary page: To review how well the cropping & binarisation are working
+* Stats page: To know the statistics of on annotation completed
 
 
 
