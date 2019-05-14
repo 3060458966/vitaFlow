@@ -125,9 +125,16 @@ For a pre-build docker image
 
     docker pull vitaflow/vitaflow
 
-To run
+To run(Current last version available is 0.1123)
 
-    docker run -it vitaflow /bin/bash
+    docker run -it vitaflow:0.1123 /bin/bash
+
+After execution of above command, user will be landed in a docker terminal. For execution of Vitaflow Annotation tools,
+
+    cd vitaflow/annotate_server
+    python binarisation.py # starting binarisation
+
+Please check the annotation folder README for further details on Annotation/Receipt data extraction pipeline.
 
 # License
 
