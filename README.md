@@ -119,6 +119,16 @@ As baseline problem we have considered [Receipts](vitaflow/playground/receipt_oc
     improvised to meet our needs. Check [here](vitaflow/annotate_server) for more details.
 
 
+# Quick Start
+
+For a pre-build docker image
+
+    docker pull vitaflow/vitaflow
+
+To run
+
+    docker run -it vitaflow /bin/bash
+
 # License
 
 Apache License - Version 2.0.
