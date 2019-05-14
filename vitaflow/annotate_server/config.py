@@ -5,6 +5,7 @@ from bin.utils import check_n_create
 ROOT_DIR = os.path.dirname(__file__)
 
 # Image path for processing
+# Note: For Web UI display, these images are requried to avail as sub-folder of Vitaflow Annotation Tools(Flask Server)
 IMAGE_ROOT_DIR = "static/data/images"
 
 # To store cropped images - original images
