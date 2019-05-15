@@ -124,7 +124,7 @@ As baseline problem we have considered [Receipts](vitaflow/playground/receipt_oc
 
 For a pre-build [docker image](https://hub.docker.com/r/vitaflow/vitaflow)
 
-    docker pull vitaflow/vitaflow
+    docker pull vitaflow/vitaflow:0.1123
 
 To run(Current last version available is 0.1123)
 
