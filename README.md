@@ -85,34 +85,6 @@ As baseline problem we have considered [Receipts](vitaflow/playground/receipt_oc
     Can we showcase the prototype developed to upcoming project proposals as quick as possible?
     ![vitaflow_stack](docs/images/vitaflow_stack.png)
 
-    In our exploration, we came across [Tensor2Tensor](https://github.com/tensorflow/tensor2tensor), which does what we intended to do. **So we ported minimalistic and essential T2T components, and evaluating it for our needs**
-     
-
-    ```sh
-    cd /path/to/vitaflow_repo/
-    #list down all available problems(datasets), models and hyper parameters
-    vitaflow/bin/vf-trainer --registry_help=true
-
-    PROBLEM=conll2002_es_ner
-    MODEL=lstm_seq2seq
-    MODEL_HPARAMS=lstm_seq2seq
-    DATA_DIR=~/vf_data
-    TEMP_DIR=~/vf_data/tmp
-    MODEL_OUT_DIR=~/vf_train/$PROBLEM\_$MODEL
-
-    python vitaflow/bin/vf-trainer \
-    --generate_data \
-    --problem=$PROBLEM \
-    --data_dir=$DATA_DIR \
-    --tmp_dir=$TEMP_DIR \
-    --model=$MODEL \
-    --hparams_set=$MODEL_HPARAMS \
-    --output_dir=$MODEL_OUT_DIR \
-    --train_steps=1000 \
-    --eval_steps=100
-    ```
-
-    For more detailed walthrough check out [here](vf-tf-engine-walkthrough.md)!  
 
 2. __Annotation Server__
 
@@ -136,6 +108,9 @@ After execution of above command, user will be landed in a docker terminal. For 
     python binarisation.py # starting binarisation
 
 Please check the annotation folder [README](https://github.com/Imaginea/vitaFlow/tree/master/vitaflow/annotate_server) for further details on Annotation/Receipt data extraction pipeline.
+
+# OCR Demo
+Refer [here](vitaflow/playground/east/README.md) for EAST based TExt extraction from receipts.
 
 # License
 
