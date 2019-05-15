@@ -4,7 +4,7 @@ import subprocess
 import config
 from bin.plugin import PluginAppModel
 
-_command_convert = ['/usr/local/bin/convert',
+_command_convert = ['/usr/bin/convert',
                     '-auto-level',
                     '-sharpen',
                     '0x4.0',
