@@ -128,7 +128,7 @@ For a pre-build [docker image](https://hub.docker.com/r/vitaflow/vitaflow)
 
 To run(Current last version available is 0.1123)
 
-    docker run -it vitaflow:0.1123 /bin/bash
+    docker run -it vitaflow/vitaflow:0.1123 /bin/bash
 
 After execution of above command, user will be landed in a docker terminal. Please run git pull command to update the code for
 latest changes, if any.
