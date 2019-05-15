@@ -130,9 +130,10 @@ To run(Current last version available is 0.1123)
 
     docker run -it vitaflow/vitaflow:0.1123 /bin/bash
 
-After execution of above command, user will be landed in a docker terminal. Please run git pull command to update the code for
+After execution of above command, user will be landed in a docker terminal. Run the following commands to update the code for
 latest changes, if any.
 
+    git checkout.
     git pull
 
 Please check the annotation folder [README](https://github.com/Imaginea/vitaFlow/tree/master/vitaflow/annotate_server) for further details on Annotation/Receipt data extraction pipeline.
