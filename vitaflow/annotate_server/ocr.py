@@ -22,13 +22,15 @@ os.environ['OMP_THREAD_LIMIT'] = '1'
 
 
 def string_parser(text):
-    debug = False
+    debug = True
     if debug:
         print('--' * 15)
         print(text)
         print('--' * 15)
     try:
-        text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore')
+        #TODO SAMPATH Check why this normalization was plugged in
+        # text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore')
+        text =  text.decode('utf-8')
     except:
         text = ""
     return str(text)
