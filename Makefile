@@ -49,7 +49,7 @@ ocr_pipeline: data_cleanup preprocess binarisation text2lineimages tesseract cal
 
 data_cleanup:		### OCR Pipeline - Clean all sub folder
 	@echo "Starting "
-#	rm -rf vitaflow/annotate_server/static/data/images/*
+	rm -rf vitaflow/annotate_server/static/data/images/*
 	rm -rf vitaflow/annotate_server/static/data/binarisation/*
 	rm -rf vitaflow/annotate_server/static/data/text_images/*
 
