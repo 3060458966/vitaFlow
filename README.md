@@ -92,7 +92,7 @@ As baseline problem we have considered [Receipts](vitaflow/playground/receipt_oc
     improvised to meet our needs. Check [here](vitaflow/annotate_server) for more details.
 
 
-# Getting Started with EAST+CALAMARI(Proof of concept) Demo
+# Getting Started with EAST+CALAMARI (Proof of concept) Demo
 
 This section deals with running an end to end vitaflow demo for OCR task.
 In order to reduce the setup time we have dockarised the entire code.
@@ -101,7 +101,7 @@ For a pre-build [docker image](https://hub.docker.com/r/vitaflow/vitaflow)
 
     docker pull vitaflow/vitaflow:0.1123
 
-To run(Current last version available is 0.1123)
+To run (Current last version available is 0.1123)
 
     docker run -it vitaflow/vitaflow:0.1123 /bin/bash
     root@xxxxxx:/app#
@@ -145,7 +145,7 @@ The output folder will have the contents below.
  ```
 where each folder corressponds to image in input folder and contains the cropped images of the text detected by east model. There are also two files \*.pred.txt and \*.tesseract.txt which are the OCR outputs of the Calamari and Tesseract OCR engines.
 
-3. The location of pretrained models(Calamari) `vitaflow/annotate_server/static/data/calamari_models`
+3. The location of pretrained models (Calamari) `vitaflow/annotate_server/static/data/calamari_models`
 
 We want to ensure clean folders before we begin any experiments. 
     
