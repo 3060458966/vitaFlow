@@ -45,11 +45,11 @@ calmari:		### OCR Pipeline - OCR with Calamari OCR
 
 ocr_pipeline: data_cleanup preprocess binarisation text2lineimages tesseract calmari		### OCR Pipeline - Run complete pipeline
 	@echo "Starting OCR Pipeline(All Step)"
-	python vitaflow/annotate_server/ocr_calamari.py
+#	python vitaflow/annotate_server/ocr_calamari.py
 
 data_cleanup:		### OCR Pipeline - Clean all sub folder
 	@echo "Starting "
-	rm -rf vitaflow/annotate_server/static/data/images/*
+#	rm -rf vitaflow/annotate_server/static/data/images/*
 	rm -rf vitaflow/annotate_server/static/data/binarisation/*
 	rm -rf vitaflow/annotate_server/static/data/text_images/*
 
