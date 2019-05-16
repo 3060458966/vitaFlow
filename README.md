@@ -94,8 +94,8 @@ As baseline problem we have considered [Receipts](vitaflow/playground/receipt_oc
 
 # Getting Started with EAST+CALAMARI(Proof of concept) Demo
 
-This section deals with running an end to end demo, extracting text from image, using vitaFlow.
-In order to reduce the setup and resolving dependency issues, we have dockarised the entire code.
+This section deals with running an end to end vitaflow demo for OCR task.
+In order to reduce the setup time we have dockarised the entire code.
 
 For a pre-build [docker image](https://hub.docker.com/r/vitaflow/vitaflow)
 
@@ -106,15 +106,50 @@ To run(Current last version available is 0.1123)
     docker run -it vitaflow/vitaflow:0.1123 /bin/bash
     root@xxxxxx:/app#
   
-After execution of above command, user will be landed in a docker terminal. Run the following commands to update the code for
-latest changes, if any.
+Run the following commands to update the code for latest changes, if any.
 
     git checkout .
     git pull
 
 Before running any more commands, let's check the locations that will be used during the execution.
-1. Input folder 
-2. Output folder
+1. Input folder : `vitaflow/annotate_server/static/data/preprocess` will house the input images. We have already placed 5 (images)[https://github.com/Imaginea/vitaFlow/blob/master/vitaflow/annotate_server/static/data/preprocess] as example inputs to the pipeline. In case any new images are added in this folder, please ensure that they contain no space, dots and other non ascii charecter in the image name.
+
+2. Output folder: `vitaflow/annotate_server/static/data/text_images` all predictions/output will be placed here. The content of the folder would be as follows. Assuming input folder has following contents.
+```
+    ├── X00016469670.jpg
+    ├── X00016469671.jpg
+    ├── X51005200931.jpg
+    ├── X51005230605.jpg
+    └── X51005230616.jpg
+```
+The output folder will have the contents below.
+```
+.
+├── X00016469670
+│   ├── 10.png
+│   ├── 10.pred.txt
+│   ├── 10.tesseract.txt
+│   ├── 11.png
+│   ├── 11.pred.txt
+│   ├── 11.tesseract.txt
+│   ├── 12.png
+.
+└── X00016469671
+    ├── 7.png
+    ├── 7.pred.txt
+    ├── 7.tesseract.txt
+    ├── 8.png
+    ├── 8.tesseract.txt
+    ├── 9.png
+    └── 9.tesseract.txt
+ ```
+where each folder corressponds to image in input folder and contains the cropped images of the text detected by east model. There are also two files \*.pred.txt and \*.tesseract.txt which are the OCR outputs of the Calamari and Tesseract OCR engines.
+
+3. The location of pretrained models(Calamari) `vitaflow/annotate_server/static/data/calamari_models`
+
+We want to ensure clean folders before we begin any experiments. 
+    
+    make data_cleanup
 
 To run the entire pipeline (with existing images)
 
@@ -123,14 +158,15 @@ To run the entire pipeline (with existing images)
 To run the entire pipeline (with new image), please check the annotation folder [README](https://github.com/Imaginea/vitaFlow/tree/master/vitaflow/annotate_server) for further details on Annotation/Receipt data extraction pipeline.
 
 The predicted results are present in the docker container and not host. 
-In order to copy a file from a container to the host, you can use the command
+In order to copy a file from a container to the host, we have to first find the CONTAINER ID. Open a terminal from Host machine and fire up the command.
 
     docker ps
     
-This will return the CONTAINER ID of the running dockers. Use the containerId of the image vitaflow/vitaflow:0.1123 in the following command.
+This will return the CONTAINER ID of the running dockers. In the same terminal, use the containerId of the image vitaflow/vitaflow:0.1123 in the following command.
     
     docker cp {CONTAINER ID}:/app/vitaflow/annotate_server/static/data/ .
 
+This will copy the entire data folder from the container to the host machine which can be checked by the user for outputs/predictions. 
 
 # License
 
@@ -141,4 +177,4 @@ Apache License - Version 2.0.
 # References
 
 - [Image annotation tool](https://github.com/frederictost/images_annotation_programme)
-- [Tensor2Tensor](https://github.com/tensorflow/tensor2tensor)
+
