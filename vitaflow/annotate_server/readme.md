@@ -1,4 +1,4 @@
-# VF Image Annotation Tool
+# VF Image Annotation and Preprocessor Tool
 
 # History
 
