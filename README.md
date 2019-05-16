@@ -112,7 +112,7 @@ Run the following commands to update the code for latest changes, if any.
     git pull
 
 Before running any more commands, let's check the locations that will be used during the execution.
-1. Input folder : `vitaflow/annotate_server/static/data/preprocess` will house the input images. We have already placed 5 (images)[https://github.com/Imaginea/vitaFlow/blob/master/vitaflow/annotate_server/static/data/preprocess] as example inputs to the pipeline. In case any new images are added in this folder, please ensure that they contain no space, dots and other non ascii charecter in the image name.
+1. Input folder : `vitaflow/annotate_server/static/data/preprocess` will house the input images. There are already 5 [images](https://github.com/Imaginea/vitaFlow/blob/master/vitaflow/annotate_server/static/data/preprocess) placed as example inputs to the pipeline. In case any new images are added in this folder, please ensure that they contain no space, dots and other non ascii charecter in the image name.
 
 2. Output folder: `vitaflow/annotate_server/static/data/text_images` all predictions/output will be placed here. The content of the folder would be as follows. Assuming input folder has following contents.
 ```
