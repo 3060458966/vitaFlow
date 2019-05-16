@@ -85,34 +85,6 @@ As baseline problem we have considered [Receipts](vitaflow/playground/receipt_oc
     Can we showcase the prototype developed to upcoming project proposals as quick as possible?
     ![vitaflow_stack](docs/images/vitaflow_stack.png)
 
-    In our exploration, we came across [Tensor2Tensor](https://github.com/tensorflow/tensor2tensor), which does what we intended to do. **So we ported minimalistic and essential T2T components, and evaluating it for our needs**
-     
-
-    ```sh
-    cd /path/to/vitaflow_repo/
-    #list down all available problems(datasets), models and hyper parameters
-    vitaflow/bin/vf-trainer --registry_help=true
-
-    PROBLEM=conll2002_es_ner
-    MODEL=lstm_seq2seq
-    MODEL_HPARAMS=lstm_seq2seq
-    DATA_DIR=~/vf_data
-    TEMP_DIR=~/vf_data/tmp
-    MODEL_OUT_DIR=~/vf_train/$PROBLEM\_$MODEL
-
-    python vitaflow/bin/vf-trainer \
-    --generate_data \
-    --problem=$PROBLEM \
-    --data_dir=$DATA_DIR \
-    --tmp_dir=$TEMP_DIR \
-    --model=$MODEL \
-    --hparams_set=$MODEL_HPARAMS \
-    --output_dir=$MODEL_OUT_DIR \
-    --train_steps=1000 \
-    --eval_steps=100
-    ```
-
-    For more detailed walthrough check out [here](vf-tf-engine-walkthrough.md)!  
 
 2. __Annotation Server__
 
@@ -120,7 +92,10 @@ As baseline problem we have considered [Receipts](vitaflow/playground/receipt_oc
     improvised to meet our needs. Check [here](vitaflow/annotate_server) for more details.
 
 
-# Quick Start
+# Getting Started with EAST+CALAMARI(Proof of concept) Demo
+
+This section deals with running an end to end demo, extracting text from image, using vitaFlow.
+In order to reduce the setup and resolving dependency issues, we have dockarised the entire code.
 
 For a pre-build [docker image](https://hub.docker.com/r/vitaflow/vitaflow)
 
@@ -129,14 +104,32 @@ For a pre-build [docker image](https://hub.docker.com/r/vitaflow/vitaflow)
 To run(Current last version available is 0.1123)
 
     docker run -it vitaflow/vitaflow:0.1123 /bin/bash
-
+    root@xxxxxx:/app#
+  
 After execution of above command, user will be landed in a docker terminal. Run the following commands to update the code for
 latest changes, if any.
 
-    git checkout.
+    git checkout .
     git pull
 
-Please check the annotation folder [README](https://github.com/Imaginea/vitaFlow/tree/master/vitaflow/annotate_server) for further details on Annotation/Receipt data extraction pipeline.
+Before running any more commands, let's check the locations that will be used during the execution.
+1. Input folder 
+2. Output folder
+
+To run the entire pipeline (with existing images)
+
+    /app# make ocr_pipeline
+
+To run the entire pipeline (with new image), please check the annotation folder [README](https://github.com/Imaginea/vitaFlow/tree/master/vitaflow/annotate_server) for further details on Annotation/Receipt data extraction pipeline.
+
+The predicted results are present in the docker container and not host. 
+In order to copy a file from a container to the host, you can use the command
+
+    docker ps
+    
+This will return the CONTAINER ID of the running dockers. Use the containerId of the image vitaflow/vitaflow:0.1123 in the following command.
+    
+    docker cp {CONTAINER ID}:/app/vitaflow/annotate_server/static/data/ .
 
 
 # License
