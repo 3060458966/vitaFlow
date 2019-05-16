@@ -32,6 +32,8 @@ from tfx.components.example_validator.component import ExampleValidator # Step 3
 
 from tfx.components.transform import component
 
+from tfx_east.print_helper import *
+
 
 from tfx.proto import trainer_pb2 # Step 5
 from tfx.components.trainer.component import Trainer # Step 5
@@ -45,6 +47,7 @@ from tfx.proto import evaluator_pb2 # Step 6
 
 from tfx.orchestration.airflow.airflow_runner import AirflowDAGRunner
 from tfx.orchestration.pipeline import PipelineDecorator
+from tfx.orchestration.pipeline import Pipeline
 
 from tfx.utils.dsl_utils import tfrecord_input
 from tfx.components.example_gen.import_example_gen.component import ImportExampleGen
@@ -56,7 +59,7 @@ _east_root = os.path.join(os.environ['HOME'], 'airflow')
 _data_root = os.path.join(_east_root, 'data/east')
 # Python module file to inject customized logic into the TFX components. The
 # Transform and Trainer both require user-defined functions to run successfully.
-_east_module_file = os.path.join(_east_root, 'dags/east_utils.py')
+_east_module_file = os.path.join(_east_root, 'dags/tfx_east/east_utils.py')
 # Path which can be listened to by the model server.  Pusher will output the
 # trained model here.
 _serving_model_dir = os.path.join(_east_root, 'saved_models/east')
@@ -89,72 +92,70 @@ logger_overrides = {
     additional_pipeline_args={'logger_args': logger_overrides},
     pipeline_root=_pipeline_root)
 def _create_pipeline():
-  """Implements the chicago east pipeline with TFX."""
-  examples = tfrecord_input(_data_root)
-  example_gen = ImportExampleGen(input_base=examples)
+    """Implements the chicago east pipeline with TFX."""
+    print_info("Creating pipeline")
+    examples = tfrecord_input(_data_root)
+    example_gen = ImportExampleGen(input_base=examples)
 
-  # Brings data into the pipeline or otherwise joins/converts training data.
-  #example_gen = CsvExampleGen(input_base=examples)
+    # Computes statistics over data for visualization and example validation.
+    # pylint: disable=line-too-long
+    statistics_gen = StatisticsGen(input_data=example_gen.outputs.examples) # Step 3
+    # pylint: enable=line-too-long
 
-  # Computes statistics over data for visualization and example validation.
-  # pylint: disable=line-too-long
-  statistics_gen = StatisticsGen(input_data=example_gen.outputs.examples) # Step 3
-  # pylint: enable=line-too-long
+    # Generates schema based on statistics files.
+    infer_schema = SchemaGen(stats=statistics_gen.outputs.output) # Step 3
 
-  # Generates schema based on statistics files.
-  infer_schema = SchemaGen(stats=statistics_gen.outputs.output) # Step 3
+    # Performs anomaly detection based on statistics and data schema.
+    validate_stats = ExampleValidator( # Step 3
+        stats=statistics_gen.outputs.output, # Step 3
+        schema=infer_schema.outputs.output) # Step 3
 
-  # Performs anomaly detection based on statistics and data schema.
-  validate_stats = ExampleValidator( # Step 3
-       stats=statistics_gen.outputs.output, # Step 3
-             schema=infer_schema.outputs.output) # Step 3
+    # Performs transformations and feature engineering in training and serving.
+    transform = component.Transform( # Step 4
+        input_data=example_gen.outputs.examples, # Step 4
+        schema=infer_schema.outputs.output, # Step 4
+        module_file=_east_module_file) # Step 4
 
-  # Performs transformations and feature engineering in training and serving.
-  transform = component.Transform( # Step 4
-       input_data=example_gen.outputs.examples, # Step 4
-       schema=infer_schema.outputs.output, # Step 4
-       module_file=_east_module_file) # Step 4
+    # Uses user-provided Python function that implements a model using TF-Learn.
+    trainer = Trainer( # Step 5
+        module_file=_east_module_file, # Step 5
+        transformed_examples=transform.outputs.transformed_examples, # Step 5
+        schema=infer_schema.outputs.output, # Step 5
+        transform_output=transform.outputs.transform_output, # Step 5
+        train_args=trainer_pb2.TrainArgs(num_steps=50), # Step 5
+        eval_args=trainer_pb2.EvalArgs(num_steps=10)) # Step 5
 
-  # Uses user-provided Python function that implements a model using TF-Learn.
-  trainer = Trainer( # Step 5
-       module_file=_east_module_file, # Step 5
-       transformed_examples=transform.outputs.transformed_examples, # Step 5
-       schema=infer_schema.outputs.output, # Step 5
-       transform_output=transform.outputs.transform_output, # Step 5
-       train_args=trainer_pb2.TrainArgs(num_steps=1000), # Step 5
-       eval_args=trainer_pb2.EvalArgs(num_steps=500)) # Step 5
+    # Uses TFMA to compute a evaluation statistics over features of a model.
+    #model_analyzer = Evaluator( # Step 6
+    #     examples=example_gen.outputs.examples, # Step 6
+    #     model_exports=trainer.outputs.output, # Step 6
+    #     feature_slicing_spec=evaluator_pb2.FeatureSlicingSpec(specs=[ # Step 6
+    #         evaluator_pb2.SingleSlicingSpec( # Step 6
+    #             column_for_slicing=['trip_start_hour']) # Step 6
+    #     ])) # Step 6
 
-  # Uses TFMA to compute a evaluation statistics over features of a model.
-  #model_analyzer = Evaluator( # Step 6
-  #     examples=example_gen.outputs.examples, # Step 6
-  #     model_exports=trainer.outputs.output, # Step 6
-  #     feature_slicing_spec=evaluator_pb2.FeatureSlicingSpec(specs=[ # Step 6
-  #         evaluator_pb2.SingleSlicingSpec( # Step 6
-  #             column_for_slicing=['trip_start_hour']) # Step 6
-  #     ])) # Step 6
+    # Performs quality validation of a candidate model (compared to a baseline).
+    # model_validator = ModelValidator( # Step 7
+    #     examples=example_gen.outputs.examples, # Step 7
+    #              model=trainer.outputs.output) # Step 7
 
-  # Performs quality validation of a candidate model (compared to a baseline).
-  # model_validator = ModelValidator( # Step 7
-  #     examples=example_gen.outputs.examples, # Step 7
-  #              model=trainer.outputs.output) # Step 7
+    # Checks whether the model passed the validation steps and pushes the model
+    # to a file destination if check passed.
+    # pusher = Pusher( # Step 7
+    #     model_export=trainer.outputs.output, # Step 7
+    #     model_blessing=model_validator.outputs.blessing, # Step 7
+    #     push_destination=pusher_pb2.PushDestination( # Step 7
+    #         filesystem=pusher_pb2.PushDestination.Filesystem( # Step 7
+    #             base_directory=_serving_model_dir))) # Step 7
 
-  # Checks whether the model passed the validation steps and pushes the model
-  # to a file destination if check passed.
-  # pusher = Pusher( # Step 7
-  #     model_export=trainer.outputs.output, # Step 7
-  #     model_blessing=model_validator.outputs.blessing, # Step 7
-  #     push_destination=pusher_pb2.PushDestination( # Step 7
-  #         filesystem=pusher_pb2.PushDestination.Filesystem( # Step 7
-  #             base_directory=_serving_model_dir))) # Step 7
-
-  return [
-      example_gen,
-      statistics_gen, infer_schema, #validate_stats, # Step 3
-      transform, # Step 4
-      trainer, # Step 5
-      #model_analyzer, # Step 6
-      # model_validator, pusher # Step 7
-  ]
+    return [
+        example_gen,
+        statistics_gen, infer_schema, #validate_stats, # Step 3
+        transform, # Step 4
+        trainer, # Step 5
+        #model_analyzer, # Step 6
+        # model_validator, pusher # Step 7
+    ]
 
 
 pipeline = AirflowDAGRunner(_airflow_config).run(_create_pipeline())

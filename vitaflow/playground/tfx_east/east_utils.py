@@ -32,52 +32,17 @@ from tensorflow_transform.tf_metadata import dataset_metadata
 from tensorflow_transform.tf_metadata import dataset_schema
 from tensorflow_transform.tf_metadata import metadata_io  # Step 4
 from tensorflow_transform.tf_metadata import schema_utils  # Step 4
+from tfx_east.print_helper import *
+from tfx_east import resnet_v1
 
-import resnet_v1
-
-# Categorical features are assumed to each have a maximum value in the dataset.
-_MAX_CATEGORICAL_FEATURE_VALUES = [24, 31, 12]
-
-_CATEGORICAL_FEATURE_KEYS = [
-    'trip_start_hour', 'trip_start_day', 'trip_start_month',
-    'pickup_census_tract', 'dropoff_census_tract', 'pickup_community_area',
-    'dropoff_community_area'
-]
-
-_DENSE_FLOAT_FEATURE_KEYS = ['trip_miles', 'fare', 'trip_seconds']
-
-# Number of buckets used by tf.transform for encoding each feature.
-_FEATURE_BUCKET_COUNT = 10
-
-_BUCKET_FEATURE_KEYS = [
-    'pickup_latitude', 'pickup_longitude', 'dropoff_latitude',
-    'dropoff_longitude'
-]
-
-# Number of vocabulary terms used for encoding VOCAB_FEATURES by tf.transform
-_VOCAB_SIZE = 1000
-
-# Count of out-of-vocab buckets in which unrecognized VOCAB_FEATURES are hashed.
-_OOV_SIZE = 10
-
-_VOCAB_FEATURE_KEYS = [
-    'payment_type',
-    'company',
-]
-
-
-
-# Keys
-# _LABEL_KEY = 'tips'
-_FARE_KEY = 'fare'
 
 # Step 4 START --------------------------
 def _transformed_name(key):
-   return key + '_xf'
+    return key + '_xf'
 
 
 def _transformed_names(keys):
-   return [_transformed_name(key) for key in keys]
+    return [_transformed_name(key) for key in keys]
 
 
 # # Tf.Transform considers these features as "raw"
@@ -92,314 +57,255 @@ def _get_raw_feature_spec(schema):
 
 
 def _gzip_reader_fn():
-   """Small utility returning a record reader that can read gzip'ed files."""
-   return tf.TFRecordReader(
-       options=tf.python_io.TFRecordOptions(
-           compression_type=tf.python_io.TFRecordCompressionType.GZIP))
-
-
-def _fill_in_missing(x):
-   """Replace missing values in a SparseTensor.
-
-   Fills in missing values of `x` with '' or 0, and converts to a dense tensor.
-
-   Args:
-     x: A `SparseTensor` of rank 2.  Its dense shape should have size at most 1
-       in the second dimension.
-
-   Returns:
-     A rank 1 tensor where missing values of `x` have been filled in.
-   """
-   default_value = '' if x.dtype == tf.string else 0
-   return tf.squeeze(
-       tf.sparse_to_dense(x.indices, [x.dense_shape[0], 1], x.values,
-                          default_value),
-       axis=1)
+    """Small utility returning a record reader that can read gzip'ed files."""
+    return tf.TFRecordReader(
+        options=tf.python_io.TFRecordOptions(
+            compression_type=tf.python_io.TFRecordCompressionType.GZIP))
 
 
 RAW_DATA_FEATURE_SPEC = {
-            _transformed_name('images'): tf.FixedLenFeature([512 * 512 * 3], tf.float32),
-            _transformed_name('score_maps'): tf.FixedLenFeature([128 * 128 * 1], tf.float32),
-            _transformed_name('geo_maps'): tf.FixedLenFeature([128 * 128 * 5], tf.float32),
-            _transformed_name('training_masks'): tf.FixedLenFeature([128 * 128 * 1], tf.float32),
-        }
+    _transformed_name('images'): tf.FixedLenFeature([512 * 512 * 3], tf.float32),
+    _transformed_name('score_maps'): tf.FixedLenFeature([128 * 128 * 1], tf.float32),
+    _transformed_name('geo_maps'): tf.FixedLenFeature([128 * 128 * 5], tf.float32),
+    _transformed_name('training_masks'): tf.FixedLenFeature([128 * 128 * 1], tf.float32),
+}
 
 RAW_DATA_METADATA = dataset_metadata.DatasetMetadata(
     dataset_schema.from_feature_spec(RAW_DATA_FEATURE_SPEC))
 
 
 def preprocessing_fn(inputs):
-   """tf.transform's callback function for preprocessing inputs.
+    """tf.transform's callback function for preprocessing inputs.
 
-   Args:
-     inputs: map from feature keys to raw not-yet-transformed features.
+    Args:
+      inputs: map from feature keys to raw not-yet-transformed features.
 
-   Returns:
-     Map from string feature key to transformed feature operations.
-   """
-   _outputs = {}
-   outputs = {}
+    Returns:
+      Map from string feature key to transformed feature operations.
+    """
+    print_info("preprocessing_fn")
+    print_info(inputs)
 
-   #
-   _DENSE_FLOAT_FEATURE_KEYS = ["images","training_masks","geo_maps","score_maps"]
-   # for key in _DENSE_FLOAT_FEATURE_KEYS:
-   #   # Preserve this feature as a dense float, setting nan's to the mean.
-   #   tf.logging.info("Sparse->Dense")
-   #   tf.logging.info(tf.sparse.to_dense(inputs[key]))
-   #   _outputs[_transformed_name(key)] = inputs[key]
+    _outputs = {}
 
-   # _outputs = decode(_outputs)
+    _DENSE_FLOAT_FEATURE_KEYS = ["images", "training_masks", "geo_maps", "score_maps"]
 
-   _outputs[_transformed_name("images")] = tf.reshape(tf.cast(tf.sparse.to_dense(inputs['images']), tf.float32), shape=[-1,512, 512, 3])
-   _outputs[_transformed_name('score_maps')] = tf.reshape(tf.cast(tf.sparse.to_dense(inputs['score_maps']), tf.float32), shape=[-1,128, 128, 1])
-   _outputs[_transformed_name('geo_maps')] = tf.reshape(tf.cast(tf.sparse.to_dense(inputs['geo_maps']), tf.float32), shape=[-1,128, 128, 5])
-   _outputs[_transformed_name('training_masks')] = tf.reshape(tf.cast(tf.sparse.to_dense(inputs['training_masks']), tf.float32), shape=[-1,128, 128, 1])
+    _outputs[_transformed_name("images")] = tf.reshape(tf.cast(tf.sparse.to_dense(inputs['images']),
+                                                               tf.float32), shape=[-1,512, 512, 3])
+    _outputs[_transformed_name('score_maps')] = tf.reshape(tf.cast(tf.sparse.to_dense(inputs['score_maps']),
+                                                                   tf.float32), shape=[-1,128, 128, 1])
+    _outputs[_transformed_name('geo_maps')] = tf.reshape(tf.cast(tf.sparse.to_dense(inputs['geo_maps']),
+                                                                 tf.float32), shape=[-1,128, 128, 5])
+    _outputs[_transformed_name('training_masks')] = tf.reshape(tf.cast(tf.sparse.to_dense(inputs['training_masks']),
+                                                                       tf.float32), shape=[-1,128, 128, 1])
 
-
-
-   print(inputs)
-   return _outputs
+    return _outputs
 # Step 4 END --------------------------
 
 def _build_estimator(config):
-  """Build an estimator for predicting the tipping behavior of east riders.
+    """Build an estimator for predicting the tipping behavior of east riders."""
 
-  Args:
-    config: tf.contrib.learn.RunConfig defining the runtime environment for the
-      estimator (including model_dir).
-    hidden_units: [int], the layer sizes of the DNN (input layer first)
-    warm_start_from: Optional directory to warm start from.
+    _model = EASTModel()
+    return tf.estimator.Estimator(
+        model_fn=_model, config=config, params=None)
 
-  Returns:
-    A dict of the following:
-      - estimator: The estimator that will be used for training and eval.
-      - train_spec: Spec for training.
-      - eval_spec: Spec for eval.
-      - eval_input_receiver_fn: Input function for eval.
-  """
-  # real_valued_columns = [
-  #     tf.feature_column.numeric_column(key, shape=(512, 512, 3))
-  #     for key in _transformed_names(_DENSE_FLOAT_FEATURE_KEYS)
-  # ]
-  # categorical_columns = [
-  #     tf.feature_column.categorical_column_with_identity(
-  #         key, num_buckets=_VOCAB_SIZE + _OOV_SIZE, default_value=0)
-  #     for key in _transformed_names(_VOCAB_FEATURE_KEYS)
-  # ]
-  # categorical_columns += [
-  #     tf.feature_column.categorical_column_with_identity(
-  #         key, num_buckets=_FEATURE_BUCKET_COUNT, default_value=0)
-  #     for key in _transformed_names(_BUCKET_FEATURE_KEYS)
-  # ]
-  # categorical_columns += [
-  #     tf.feature_column.categorical_column_with_identity(  # pylint: disable=g-complex-comprehension
-  #         key,
-  #         num_buckets=num_buckets,
-  #         default_value=0) for key, num_buckets in zip(
-  #             _transformed_names(_CATEGORICAL_FEATURE_KEYS),
-  #             _MAX_CATEGORICAL_FEATURE_VALUES)
-  # ]
-  _model = EASTModel()
-  return tf.estimator.Estimator(
-      model_fn=_model, config=config, params=None)
-
-  # return tf.estimator.DNNLinearCombinedClassifier(
-  #     config=config,
-  #     linear_feature_columns=categorical_columns,
-  #     dnn_feature_columns=real_valued_columns,
-  #     dnn_hidden_units=hidden_units or [100, 70, 50, 25],
-  #     warm_start_from=warm_start_from)
+    # return tf.estimator.DNNLinearCombinedClassifier(
+    #     config=config,
+    #     linear_feature_columns=categorical_columns,
+    #     dnn_feature_columns=real_valued_columns,
+    #     dnn_hidden_units=hidden_units or [100, 70, 50, 25],
+    #     warm_start_from=warm_start_from)
 
 
 def _example_serving_receiver_fn(transform_output, schema):
-  """Build the serving in inputs.
+    """Build the serving in inputs.
 
-  Args:
-    transform_output: directory in which the tf-transform model was written
-      during the preprocessing step.
-    schema: the schema of the input data.
+    Args:
+      transform_output: directory in which the tf-transform model was written
+        during the preprocessing step.
+      schema: the schema of the input data.
 
-  Returns:
-    Tensorflow graph which parses examples, applying tf-transform to them.
-  """
-  raw_feature_spec = _get_raw_feature_spec(schema)
-  raw_feature_spec.pop("training_masks")
-  raw_feature_spec.pop("geo_maps")
-  raw_feature_spec.pop("score_maps")
+    Returns:
+      Tensorflow graph which parses examples, applying tf-transform to them.
+    """
+    raw_feature_spec = _get_raw_feature_spec(schema)
+    raw_feature_spec.pop("training_masks")
+    raw_feature_spec.pop("geo_maps")
+    raw_feature_spec.pop("score_maps")
 
-  raw_input_fn = tf.estimator.export.build_parsing_serving_input_receiver_fn(
-      raw_feature_spec, default_batch_size=None)
-  serving_input_receiver = raw_input_fn()
+    raw_input_fn = tf.estimator.export.build_parsing_serving_input_receiver_fn(
+        raw_feature_spec, default_batch_size=None)
+    serving_input_receiver = raw_input_fn()
 
-  _, transformed_features = (
-      saved_transform_io.partially_apply_saved_transform(
-          os.path.join(transform_output, transform_fn_io.TRANSFORM_FN_DIR),
-          serving_input_receiver.features))
+    _, transformed_features = (
+        saved_transform_io.partially_apply_saved_transform(
+            os.path.join(transform_output, transform_fn_io.TRANSFORM_FN_DIR),
+            serving_input_receiver.features))
 
-  return tf.estimator.export.ServingInputReceiver(
-      transformed_features, serving_input_receiver.receiver_tensors)
+    return tf.estimator.export.ServingInputReceiver(
+        transformed_features, serving_input_receiver.receiver_tensors)
 
 
 def _eval_input_receiver_fn(transform_output, schema):
-  """Build everything needed for the tf-model-analysis to run the model.
+    """Build everything needed for the tf-model-analysis to run the model.
 
-  Args:
-    transform_output: directory in which the tf-transform model was written
-      during the preprocessing step.
-    schema: the schema of the input data.
+    Args:
+      transform_output: directory in which the tf-transform model was written
+        during the preprocessing step.
+      schema: the schema of the input data.
 
-  Returns:
-    EvalInputReceiver function, which contains:
-      - Tensorflow graph which parses raw untransformed features, applies the
-        tf-transform preprocessing operators.
-      - Set of raw, untransformed features.
-      - Label against which predictions will be compared.
-  """
-  # Notice that the inputs are raw features, not transformed features here.
-  raw_feature_spec = _get_raw_feature_spec(schema)
+    Returns:
+      EvalInputReceiver function, which contains:
+        - Tensorflow graph which parses raw untransformed features, applies the
+          tf-transform preprocessing operators.
+        - Set of raw, untransformed features.
+        - Label against which predictions will be compared.
+    """
+    # Notice that the inputs are raw features, not transformed features here.
+    raw_feature_spec = _get_raw_feature_spec(schema)
 
-  serialized_tf_example = tf.placeholder(
-      dtype=tf.string, shape=[None], name='input_example_tensor')
+    serialized_tf_example = tf.placeholder(
+        dtype=tf.string, shape=[None], name='input_example_tensor')
 
-  # Add a parse_example operator to the tensorflow graph, which will parse
-  # raw, untransformed, tf examples.
-  features = tf.parse_example(serialized_tf_example, raw_feature_spec)
+    # Add a parse_example operator to the tensorflow graph, which will parse
+    # raw, untransformed, tf examples.
+    features = tf.parse_example(serialized_tf_example, raw_feature_spec)
 
-  # Now that we have our raw examples, process them through the tf-transform
-  # function computed during the preprocessing step.
-  _, transformed_features = (
-      saved_transform_io.partially_apply_saved_transform(
-          os.path.join(transform_output, transform_fn_io.TRANSFORM_FN_DIR),
-          features))
+    # Now that we have our raw examples, process them through the tf-transform
+    # function computed during the preprocessing step.
+    _, transformed_features = (
+        saved_transform_io.partially_apply_saved_transform(
+            os.path.join(transform_output, transform_fn_io.TRANSFORM_FN_DIR),
+            features))
 
-  # The key name MUST be 'examples'.
-  receiver_tensors = {'examples': serialized_tf_example}
+    # The key name MUST be 'examples'.
+    receiver_tensors = {'examples': serialized_tf_example}
 
-  # NOTE: Model is driven by transformed features (since training works on the
-  # materialized output of TFT, but slicing will happen on raw features.
-  features.update(transformed_features)
+    # NOTE: Model is driven by transformed features (since training works on the
+    # materialized output of TFT, but slicing will happen on raw features.
+    features.update(transformed_features)
 
-  return tfma.export.EvalInputReceiver(
-      features=features,
-      receiver_tensors=receiver_tensors,
-      labels=transformed_features[_transformed_name("training_masks"),
-                                  _transformed_name("geo_maps"),_transformed_name("score_maps")])
+    return tfma.export.EvalInputReceiver(
+        features=features,
+        receiver_tensors=receiver_tensors,
+        labels=transformed_features[_transformed_name("training_masks"),
+                                    _transformed_name("geo_maps"),_transformed_name("score_maps")])
 
 
 def _input_fn(filenames, transform_output, batch_size=200):
-  """Generates features and labels for training or evaluation.
+    """Generates features and labels for training or evaluation.
 
-  Args:
-    filenames: [str] list of CSV files to read data from.
-    transform_output: directory in which the tf-transform model was written
-      during the preprocessing step.
-    batch_size: int First dimension size of the Tensors returned by input_fn
+    Args:
+      filenames: [str] list of CSV files to read data from.
+      transform_output: directory in which the tf-transform model was written
+        during the preprocessing step.
+      batch_size: int First dimension size of the Tensors returned by input_fn
 
-  Returns:
-    A (features, indices) tuple where features is a dictionary of
-      Tensors, and indices is a single Tensor of label indices.
-  """
-  metadata_dir = os.path.join(transform_output,
-                              transform_fn_io.TRANSFORMED_METADATA_DIR)
-  transformed_metadata = metadata_io.read_metadata(metadata_dir)
-  transformed_feature_spec = transformed_metadata.schema.as_feature_spec()
-  #
-  transformed_features = tf.contrib.learn.io.read_batch_features(
-      filenames, batch_size, transformed_feature_spec, reader=_gzip_reader_fn)
-  #
-  # # We pop the label because we do not want to use it as a feature while we're
-  # # training.,"training_masks","geo_maps","score_maps"
-  # return transformed_features, transformed_features[
-  #     _transformed_name("images")]
+    Returns:
+      A (features, indices) tuple where features is a dictionary of
+        Tensors, and indices is a single Tensor of label indices.
+    """
+    metadata_dir = os.path.join(transform_output,
+                                transform_fn_io.TRANSFORMED_METADATA_DIR)
+    transformed_metadata = metadata_io.read_metadata(metadata_dir)
+    transformed_feature_spec = transformed_metadata.schema.as_feature_spec()
+    #
+    transformed_features = tf.contrib.learn.io.read_batch_features(
+        filenames, batch_size, transformed_feature_spec, reader=_gzip_reader_fn)
+    #
+    # # We pop the label because we do not want to use it as a feature while we're
+    # # training.,"training_masks","geo_maps","score_maps"
+    # return transformed_features, transformed_features[
+    #     _transformed_name("images")]
 
-  # """Input function for training and eval."""
-  # dataset = tf.contrib.data.make_batched_features_dataset(file_pattern = filenames,
-  #                                                         batch_size = batch_size,
-  #                                                         features = transformed_feature_spec,
-  #                                                         reader = tf.data.TFRecordDataset,
-  #                                                         shuffle = True)
-  #
-  # dataset = dataset.map(decode)
-  # transformed_features = dataset.make_one_shot_iterator().get_next()
+    # """Input function for training and eval."""
+    # dataset = tf.contrib.data.make_batched_features_dataset(file_pattern = filenames,
+    #                                                         batch_size = batch_size,
+    #                                                         features = transformed_feature_spec,
+    #                                                         reader = tf.data.TFRecordDataset,
+    #                                                         shuffle = True)
+    #
+    # dataset = dataset.map(decode)
+    # transformed_features = dataset.make_one_shot_iterator().get_next()
 
-  # Extract features and label from the transformed tensors.
-  tf.logging.info("<->")
-  tf.logging.info(transformed_features.keys())
-  return transformed_features,{k: v for k, v in transformed_features.items() if k in [_transformed_name("training_masks"),_transformed_name("geo_maps"),_transformed_name("score_maps")] }
+    # Extract features and label from the transformed tensors.
+    tf.logging.info("<->")
+    tf.logging.info(transformed_features.keys())
+    return transformed_features,{k: v for k, v in transformed_features.items() if k in [_transformed_name("training_masks"),_transformed_name("geo_maps"),_transformed_name("score_maps")] }
 
 
 # TFX will call this function
 def trainer_fn(hparams, schema):
-  """Build the estimator using the high level API.
+    """Build the estimator using the high level API.
 
-  Args:
-    hparams: Holds hyperparameters used to train the model as name/value pairs.
-    schema: Holds the schema of the training examples.
+    Args:
+      hparams: Holds hyperparameters used to train the model as name/value pairs.
+      schema: Holds the schema of the training examples.
 
-  Returns:
-    A dict of the following:
-      - estimator: The estimator that will be used for training and eval.
-      - train_spec: Spec for training.
-      - eval_spec: Spec for eval.
-      - eval_input_receiver_fn: Input function for eval.
-  """
-  # Number of nodes in the first layer of the DNN
-  # first_dnn_layer_size = 100
-  # num_dnn_layers = 4
-  # dnn_decay_factor = 0.7
+    Returns:
+      A dict of the following:
+        - estimator: The estimator that will be used for training and eval.
+        - train_spec: Spec for training.
+        - eval_spec: Spec for eval.
+        - eval_input_receiver_fn: Input function for eval.
+    """
+    # Number of nodes in the first layer of the DNN
+    # first_dnn_layer_size = 100
+    # num_dnn_layers = 4
+    # dnn_decay_factor = 0.7
 
-  train_batch_size = 4
-  eval_batch_size = 4
+    train_batch_size = 4
+    eval_batch_size = 4
 
-  train_input_fn = lambda: _input_fn(  # pylint: disable=g-long-lambda
-      hparams.train_files,
-      hparams.transform_output,
-      batch_size=train_batch_size)
+    train_input_fn = lambda: _input_fn(  # pylint: disable=g-long-lambda
+        hparams.train_files,
+        hparams.transform_output,
+        batch_size=train_batch_size)
 
-  eval_input_fn = lambda: _input_fn(  # pylint: disable=g-long-lambda
-      hparams.eval_files,
-      hparams.transform_output,
-      batch_size=eval_batch_size)
+    eval_input_fn = lambda: _input_fn(  # pylint: disable=g-long-lambda
+        hparams.eval_files,
+        hparams.transform_output,
+        batch_size=eval_batch_size)
 
-  train_spec = tf.estimator.TrainSpec(  # pylint: disable=g-long-lambda
-      train_input_fn,
-      max_steps=hparams.train_steps)
+    train_spec = tf.estimator.TrainSpec(  # pylint: disable=g-long-lambda
+        train_input_fn,
+        max_steps=hparams.train_steps)
 
-  serving_receiver_fn = lambda: _example_serving_receiver_fn(  # pylint: disable=g-long-lambda
-      hparams.transform_output, schema)
+    serving_receiver_fn = lambda: _example_serving_receiver_fn(  # pylint: disable=g-long-lambda
+        hparams.transform_output, schema)
 
-  exporter = tf.estimator.FinalExporter('east', serving_receiver_fn)
-  eval_spec = tf.estimator.EvalSpec(
-      eval_input_fn,
-      steps=hparams.eval_steps,
-      exporters=[exporter],
-      name='east-eval')
+    exporter = tf.estimator.FinalExporter('east', serving_receiver_fn)
+    eval_spec = tf.estimator.EvalSpec(
+        eval_input_fn,
+        steps=hparams.eval_steps,
+        exporters=[exporter],
+        name='east-eval')
 
-  run_config = tf.estimator.RunConfig(
-      save_checkpoints_steps=999, keep_checkpoint_max=1)
+    run_config = tf.estimator.RunConfig(
+        save_checkpoints_steps=999, keep_checkpoint_max=1)
 
-  run_config = run_config.replace(model_dir=hparams.serving_model_dir)
+    run_config = run_config.replace(model_dir=hparams.serving_model_dir)
 
-  estimator = _build_estimator(
-      # Construct layers sizes with exponetial decay
-      # hidden_units=[
-      #     max(2, int(first_dnn_layer_size * dnn_decay_factor**i))
-      #     for i in range(num_dnn_layers)
-      # ],
-      # warm_start_from=hparams.warm_start_from
-      config=run_config
-      )
+    estimator = _build_estimator(
+        # Construct layers sizes with exponetial decay
+        # hidden_units=[
+        #     max(2, int(first_dnn_layer_size * dnn_decay_factor**i))
+        #     for i in range(num_dnn_layers)
+        # ],
+        # warm_start_from=hparams.warm_start_from
+        config=run_config
+    )
 
-  # Create an input receiver for TFMA processing
-  receiver_fn = lambda: _eval_input_receiver_fn(  # pylint: disable=g-long-lambda
-      hparams.transform_output, schema)
+    # Create an input receiver for TFMA processing
+    receiver_fn = lambda: _eval_input_receiver_fn(  # pylint: disable=g-long-lambda
+        hparams.transform_output, schema)
 
-  return {
-      'estimator': estimator,
-      'train_spec': train_spec,
-      'eval_spec': eval_spec,
-      'eval_input_receiver_fn': receiver_fn
-  }
+    return {
+        'estimator': estimator,
+        'train_spec': train_spec,
+        'eval_spec': eval_spec,
+        'eval_input_receiver_fn': receiver_fn
+    }
 #############################################################
 def unpool(inputs):
     return tf.image.resize_bilinear(inputs, size=[tf.shape(inputs)[1] * 2, tf.shape(inputs)[2] * 2])
@@ -576,6 +482,7 @@ def average_gradients(tower_grads):
     return average_grads
 
 def decode(serialized_example):
+    print_info("Decode")
     # 1. define a parser
     features = tf.parse_single_example(
         serialized_example,
@@ -605,6 +512,10 @@ class EASTModel:
                  learning_rate=0.0001,
                  model_root_directory="./",
                  moving_average_decay=0.997):
+        print_info("EASTModel")
+        print_info("model_root_directory : {}".format(model_root_directory))
+        print_info("learning_rate : {}".format(learning_rate))
+
         self._model_root_directory = model_root_directory
         self._learning_rate = learning_rate
         self._moving_average_decay = moving_average_decay
