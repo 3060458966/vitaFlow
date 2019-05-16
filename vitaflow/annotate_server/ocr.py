@@ -22,7 +22,7 @@ os.environ['OMP_THREAD_LIMIT'] = '1'
 
 
 def string_parser(text):
-    debug = True
+    debug = False
     if debug:
         print('--' * 15)
         print(text)
