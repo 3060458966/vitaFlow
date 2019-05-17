@@ -1,17 +1,12 @@
 """
 """
 import time
-import os
+
 import cv2
-import gin
+import locality_aware_nms as nms_locality
 import numpy as np
-import tensorflow as tf
-from gin.config import REQUIRED
-from numba.types import float32
 from tqdm import tqdm
 
-import locality_aware_nms as nms_locality
-import lanms
 
 def resize_image(im, max_side_len=2400):
     '''

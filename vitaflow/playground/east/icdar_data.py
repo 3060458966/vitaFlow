@@ -2,20 +2,16 @@
 # coding: utf-8
 
 import csv
+import os
+
 import cv2
 import gin
-import glob
-import time
-import os
-import numpy as np
-import scipy.optimize
-import matplotlib.pyplot as plt
 import matplotlib.patches as Patches
+import matplotlib.pyplot as plt
+import numpy as np
+import tensorflow as tf
 from shapely.geometry import Polygon
 from tqdm import tqdm
-import tensorflow as tf
-import time
-import numpy as np
 
 
 def get_images(data_path):
@@ -109,7 +105,7 @@ def polygon_area(poly):
         #  (x1 - x4) * (y1 + y4)
         (poly[0][0] - poly[3][0]) * (poly[0][1] + poly[3][1])
     ]
-    return np.sum(edge)/2.
+    return np.sum(edge) / 2.
 
 
 def check_and_validate_polys(polys, tags, height_weight_tuple):
@@ -126,8 +122,8 @@ def check_and_validate_polys(polys, tags, height_weight_tuple):
     if polys.shape[0] == 0:
         return polys
 
-    polys[:, :, 0] = np.clip(polys[:, :, 0], 0, w-1)
-    polys[:, :, 1] = np.clip(polys[:, :, 1], 0, h-1)
+    polys[:, :, 0] = np.clip(polys[:, :, 0], 0, w - 1)
+    polys[:, :, 1] = np.clip(polys[:, :, 1], 0, h - 1)
 
     validated_polys = []
     validated_tags = []
@@ -137,7 +133,7 @@ def check_and_validate_polys(polys, tags, height_weight_tuple):
         if abs(p_area) < 1:
             print('invalid poly')
             continue
-        if p_area > 0: # TODO what maths is involved?
+        if p_area > 0:  # TODO what maths is involved?
             print('poly in wrong direction')
             # rows are inter changed
             poly = poly[(0, 3, 2, 1), :]
@@ -158,18 +154,18 @@ def crop_area(im, polys, tags, min_crop_side_ratio, crop_background=False, max_t
     :return:
     """
     h, w, _ = im.shape
-    pad_h = h//10
-    pad_w = w//10
-    h_array = np.zeros((h + pad_h*2), dtype=np.int32)
-    w_array = np.zeros((w + pad_w*2), dtype=np.int32)
+    pad_h = h // 10
+    pad_w = w // 10
+    h_array = np.zeros((h + pad_h * 2), dtype=np.int32)
+    w_array = np.zeros((w + pad_w * 2), dtype=np.int32)
     for poly in polys:
         poly = np.round(poly, decimals=0).astype(np.int32)
         minx = np.min(poly[:, 0])
         maxx = np.max(poly[:, 0])
-        w_array[minx+pad_w:maxx+pad_w] = 1
+        w_array[minx + pad_w:maxx + pad_w] = 1
         miny = np.min(poly[:, 1])
         maxy = np.max(poly[:, 1])
-        h_array[miny+pad_h:maxy+pad_h] = 1
+        h_array[miny + pad_h:maxy + pad_h] = 1
     # ensure the cropped area not across a text
     h_axis = np.where(h_array == 0)[0]
     w_axis = np.where(w_array == 0)[0]
@@ -179,28 +175,29 @@ def crop_area(im, polys, tags, min_crop_side_ratio, crop_background=False, max_t
         xx = np.random.choice(w_axis, size=2)
         xmin = np.min(xx) - pad_w
         xmax = np.max(xx) - pad_w
-        xmin = np.clip(xmin, 0, w-1)
-        xmax = np.clip(xmax, 0, w-1)
+        xmin = np.clip(xmin, 0, w - 1)
+        xmax = np.clip(xmax, 0, w - 1)
         yy = np.random.choice(h_axis, size=2)
         ymin = np.min(yy) - pad_h
         ymax = np.max(yy) - pad_h
-        ymin = np.clip(ymin, 0, h-1)
-        ymax = np.clip(ymax, 0, h-1)
-        if xmax - xmin < min_crop_side_ratio*w or ymax - ymin < min_crop_side_ratio*h:
+        ymin = np.clip(ymin, 0, h - 1)
+        ymax = np.clip(ymax, 0, h - 1)
+        if xmax - xmin < min_crop_side_ratio * w or ymax - ymin < min_crop_side_ratio * h:
             # area too small
             continue
         if polys.shape[0] != 0:
-            poly_axis_in_area = (polys[:, :, 0] >= xmin) & (polys[:, :, 0] <= xmax) & (polys[:, :, 1] >= ymin) & (polys[:, :, 1] <= ymax)
+            poly_axis_in_area = (polys[:, :, 0] >= xmin) & (polys[:, :, 0] <= xmax) & (polys[:, :, 1] >= ymin) & (
+                        polys[:, :, 1] <= ymax)
             selected_polys = np.where(np.sum(poly_axis_in_area, axis=1) == 4)[0]
         else:
             selected_polys = []
         if len(selected_polys) == 0:
             # no text in this area
             if crop_background:
-                return im[ymin:ymax+1, xmin:xmax+1, :], polys[selected_polys], tags[selected_polys]
+                return im[ymin:ymax + 1, xmin:xmax + 1, :], polys[selected_polys], tags[selected_polys]
             else:
                 continue
-        im = im[ymin:ymax+1, xmin:xmax+1, :]
+        im = im[ymin:ymax + 1, xmin:xmax + 1, :]
         polys = polys[selected_polys]
         tags = tags[selected_polys]
         polys[:, :, 0] -= xmin
@@ -299,7 +296,7 @@ def fit_line(p1, p2):
     if p1[0] == p1[1]:
         return [1., 0., -p1[0]]
     else:
-        [k, b] = np.polyfit(p1, p2, deg=1) # TODO find some simple example
+        [k, b] = np.polyfit(p1, p2, deg=1)  # TODO find some simple example
         return [k, -1., b]
 
 
@@ -320,8 +317,8 @@ def line_cross_point(line1, line2):
     else:
         k1, _, b1 = line1
         k2, _, b2 = line2
-        x = -(b1-b2)/(k1-k2)
-        y = k1*x + b1
+        x = -(b1 - b2) / (k1 - k2)
+        y = k1 * x + b1
     return np.array([x, y], dtype=np.float32)
 
 
@@ -333,7 +330,7 @@ def line_verticle(line, point):
         if line[0] == 0:
             verticle = [1, 0, -point[0]]
         else:
-            verticle = [-1./line[0], -1, point[1] - (-1/line[0] * point[0])]
+            verticle = [-1. / line[0], -1, point[1] - (-1 / line[0] * point[0])]
     return verticle
 
 
@@ -356,10 +353,10 @@ def rectangle_from_parallelogram(poly):
     """
 
     p0, p1, p2, p3 = poly
-    angle_p0 = np.arccos(np.dot(p1-p0, p3-p0)/(np.linalg.norm(p0-p1) * np.linalg.norm(p3-p0)))
+    angle_p0 = np.arccos(np.dot(p1 - p0, p3 - p0) / (np.linalg.norm(p0 - p1) * np.linalg.norm(p3 - p0)))
 
     if angle_p0 < 0.5 * np.pi:
-        if np.linalg.norm(p0 - p1) > np.linalg.norm(p0-p3):
+        if np.linalg.norm(p0 - p1) > np.linalg.norm(p0 - p3):
             # p0 and p2
             # p0
             p2p3 = fit_line([p2[0], p3[0]], [p2[1], p3[1]])
@@ -383,7 +380,7 @@ def rectangle_from_parallelogram(poly):
             new_p3 = line_cross_point(p0p3, p0p3_verticle)
             return np.array([p0, new_p1, p2, new_p3], dtype=np.float32)
     else:
-        if np.linalg.norm(p0-p1) > np.linalg.norm(p0-p3):
+        if np.linalg.norm(p0 - p1) > np.linalg.norm(p0 - p3):
             # p1 and p3
             # p1
             p2p3 = fit_line([p2[0], p3[0]], [p2[1], p3[1]])
@@ -423,17 +420,18 @@ def sort_rectangle(poly):
         # 找到最低点右边的点 - find the point that sits right to the lowest point
         p_lowest_right = (p_lowest - 1) % 4
         p_lowest_left = (p_lowest + 1) % 4
-        angle = np.arctan(-(poly[p_lowest][1] - poly[p_lowest_right][1])/(poly[p_lowest][0] - poly[p_lowest_right][0]))
+        angle = np.arctan(
+            -(poly[p_lowest][1] - poly[p_lowest_right][1]) / (poly[p_lowest][0] - poly[p_lowest_right][0]))
         # assert angle > 0
         if angle <= 0:
             print(angle, poly[p_lowest], poly[p_lowest_right])
-        if angle/np.pi * 180 > 45:
+        if angle / np.pi * 180 > 45:
             # 这个点为p2 - this point is p2
             p2_index = p_lowest
             p1_index = (p2_index - 1) % 4
             p0_index = (p2_index - 2) % 4
             p3_index = (p2_index + 1) % 4
-            return poly[[p0_index, p1_index, p2_index, p3_index]], -(np.pi/2 - angle)
+            return poly[[p0_index, p1_index, p2_index, p3_index]], -(np.pi / 2 - angle)
         else:
             # 这个点为p3 - this point is p3
             p3_index = p_lowest
@@ -482,7 +480,7 @@ def generate_rbox(im_size, polys, tags, min_text_size):
 
         # score map
         shrinked_poly = shrink_poly(poly.copy(), reference_length).astype(np.int32)[np.newaxis, :, :]
-        cv2.fillPoly(score_map, shrinked_poly, 1) # TODO ?
+        cv2.fillPoly(score_map, shrinked_poly, 1)  # TODO ?
 
         # ------------------------------------------------------------------------------------------------
 
@@ -633,10 +631,9 @@ def image_2_data(image_file_path,
                  min_text_size,
                  min_crop_side_ratio,
                  input_size=512,
-                 background_ratio=3./8,
-                 random_scale=np.array([0.5, 1, 2.0]),#, 3.0]),
+                 background_ratio=3. / 8,
+                 random_scale=np.array([0.5, 1, 2.0]),  # , 3.0]),
                  vis=False):
-
     images = []
     image_fns = []
     score_maps = []
@@ -651,7 +648,6 @@ def image_2_data(image_file_path,
         # repalce extenstion
         # img_1.png -> img_1.txt
         txt_file_name = image_file_path.replace(os.path.basename(image_file_path).split('.')[1], 'txt')
-
 
         # TODO clean this out!
         try:
@@ -728,8 +724,8 @@ def image_2_data(image_file_path,
         resize_w = input_size
         im = cv2.resize(im, dsize=(resize_w, resize_h))
 
-        resize_ratio_3_x = resize_w/float(new_w)
-        resize_ratio_3_y = resize_h/float(new_h)
+        resize_ratio_3_x = resize_w / float(new_w)
+        resize_ratio_3_y = resize_h / float(new_h)
 
         text_polys[:, :, 0] *= resize_ratio_3_x
         text_polys[:, :, 1] *= resize_ratio_3_y
@@ -834,6 +830,7 @@ def make_dirs(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
+
 # ======================================================================================================================
 
 @gin.configurable
@@ -893,7 +890,8 @@ class ICDARTFDataset():
                 except:
                     num_of_files_skipped += 1
                     continue
-                features = tf.train.Features(feature=self._get_features(image_mat, score_map_mat, geo_map_mat, training_masks_mat))
+                features = tf.train.Features(
+                    feature=self._get_features(image_mat, score_map_mat, geo_map_mat, training_masks_mat))
                 example = tf.train.Example(features=features)
                 writer.write(example.SerializeToString())
 
@@ -907,11 +905,11 @@ class ICDARTFDataset():
 
         index = 0
         for i in tqdm(range(0, len(images), self._number_images_per_tfrecords), desc="prepare_data: "):
-            self.write_tf_records(images=images[i:i+self._number_images_per_tfrecords],
+            self.write_tf_records(images=images[i:i + self._number_images_per_tfrecords],
                                   file_path_name=out_path + "/" + str(index) + ".tfrecords")
             index += 1
 
     def run(self):
-        self.prepare_data(data_path=self._data_dir+"/train/", out_path=self._train_out_dir)
-        self.prepare_data(data_path=self._data_dir+"/val/", out_path =self._val_out_dir)
-        self.prepare_data(data_path=self._data_dir+"/test/", out_path =self._test_out_dir)
+        self.prepare_data(data_path=self._data_dir + "/train/", out_path=self._train_out_dir)
+        self.prepare_data(data_path=self._data_dir + "/val/", out_path=self._val_out_dir)
+        self.prepare_data(data_path=self._data_dir + "/test/", out_path=self._test_out_dir)
