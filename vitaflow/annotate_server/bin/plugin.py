@@ -95,7 +95,8 @@ class PluginAppModel(ABC):
                 self.operator_func(*self._inputs)
             else:
                 raise RuntimeError('self.operator_func is not defined !!')
-        except:
+        except Exception as ex:
+            print(ex)
             raise RuntimeError('self.operator_func failed !!')
 
     def quick_run(self, *args):
