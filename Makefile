@@ -49,6 +49,7 @@ ocr_pipeline: data_cleanup preprocess binarisation text2lineimages tesseract cal
 
 data_cleanup:		### OCR Pipeline - Clean all sub folder
 	@echo "Starting "
+	rm -rf vitaflow/annotate_server/static/data/east/*
 	rm -rf vitaflow/annotate_server/static/data/images/*
 	rm -rf vitaflow/annotate_server/static/data/binarisation/*
 	rm -rf vitaflow/annotate_server/static/data/text_images/*
@@ -56,6 +57,18 @@ data_cleanup:		### OCR Pipeline - Clean all sub folder
 show_input:		### OCR Pipeline - Run complete pipeline
 	ls -l vitaflow/annotate_server/static/data/preprocess/
 
+east:		### OCR Pipeline - Run complete pipeline
+	@echo "East Model "
+	python vitaflow/playground/east/pb_predict.py \
+    --images_dir="vitaflow/annotate_server/static/data/preprocess"\
+    --output_dir="vitaflow/annotate_server/static/data/east"\
+    --model="vitaflow/annotate_server/static/data/east_models/east/EASTModel/exported/1558013588"
+	cp vitaflow/annotate_server/static/data/east/* vitaflow/annotate_server/static/data/images
+
+crop2box:
+	python vitaflow/annotate_server/crop_to_box.py
+
+east_ocr_pipeline:	data_cleanup east binarisation crop2box tesseract calmari ### EAST OCR Pipeline - Run complete pipeline
 
 ###################################################################
 ########################################################## DOCKER #

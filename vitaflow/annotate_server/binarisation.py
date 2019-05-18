@@ -27,11 +27,9 @@ _command_textcleaner = ['./textcleaner',
 
 # TODO: need to optimise
 #  http://www.fmwconcepts.com/imagemagick/color2gray/index.php
-_command_color2gray = ['./color2gray',
-                       '-f',
-                       'colorspace',
-                       '-c',
-                       'ohta']
+_command_color2gray = ['/usr/bin/convert',
+                       '-colorspace',
+                       'Gray']
 
 # TODO: need to optimise
 # http://www.fmwconcepts.com/imagemagick/graytoning/index.php
@@ -60,8 +58,8 @@ def binarisation(image_loc, dest_image_loc):
     # print('binarisation src {} dest {} '.format(image_loc, dest_image_loc))
     # TODO: experiment & optimize below
     _convert(image_loc, dest_image_loc)
-    _convert(dest_image_loc, dest_image_loc)
-    # _color2gray(dest_image_loc, dest_image_loc)
+    # _convert(dest_image_loc, dest_image_loc)
+    _color2gray(dest_image_loc, dest_image_loc)
 
 
 # noinspection PyUnusedLocal
@@ -82,7 +80,8 @@ def main(image_loc, dest_image_loc=None):
     try:
         binarisation(image_loc, dest_image_loc)
         print('Binarisation generated file {}'.format(dest_image_loc))
-    except:
+    except Exception as e:
+        print(e)
         print('Binarisation - Failed - Generated file {}'.format(dest_image_loc))
 
 
