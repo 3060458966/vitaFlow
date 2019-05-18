@@ -59,6 +59,8 @@ show_input:		### OCR Pipeline - Run complete pipeline
 
 east:		### OCR Pipeline - Run complete pipeline
 	@echo "East Model "
+	mkdir -p vitaflow/annotate_server/static/data/east/
+	mkdir -p vitaflow/annotate_server/static/data/images/
 	python vitaflow/playground/east/pb_predict.py \
     --images_dir="vitaflow/annotate_server/static/data/preprocess"\
     --output_dir="vitaflow/annotate_server/static/data/east"\
