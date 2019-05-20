@@ -143,7 +143,7 @@ The output folder will have the contents below.
     ├── 9.png
     └── 9.tesseract.txt
  ```
-where each folder corressponds to image in input folder and contains the cropped images of the text detected by east model. There are also two files \*.pred.txt and \*.tesseract.txt which are the OCR outputs of the Calamari and Tesseract OCR engines.
+where each folder corressponds to image in input folder and contains the cropped images of the text detected by east model. There are also two files \*.pred.txt and \*.tesseract.txt which are the OCR outputs of the Calamari and Tesseract OCR engines. There will be two more files named output.tesseract.txt and output.pred.txt which are the unified representations of all the ocr outputs.
 
 3. The location of pretrained models (Calamari) `vitaflow/annotate_server/static/data/calamari_models`
 
