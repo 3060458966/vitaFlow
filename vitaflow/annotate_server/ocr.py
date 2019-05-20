@@ -30,7 +30,8 @@ def string_parser(text):
     try:
         #TODO SAMPATH Check why this normalization was plugged in
         # text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore')
-        text =  text.decode('utf-8')
+        # text =  text.decode('utf-8')
+        text
     except:
         text = ""
     return str(text)
@@ -40,8 +41,8 @@ def main(source_file, destination_file=None):
     img = cv2.imread(source_file)
     out_path = trim_file_ext(source_file) + '.tesseract.txt'
     text = pytesseract.image_to_string(img, lang='eng', config=config.TESSERACT_CONFIG)
-    fd = open(out_path, "w")
-    fd.write(string_parser(text))
+    with open(out_path, "w") as fd:
+        fd.write(string_parser(text))
     return out_path
 
 
