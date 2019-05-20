@@ -4,8 +4,8 @@
  2. Install dependencies
  3. Clone the repository 
 
+### Pyhton 2.7
 ```
-    # Pyhton 2.7
     cd
     virtualenv -p python2.7 tfx-env
     source ~/tfx-env/bin/activate
@@ -16,8 +16,10 @@
     git clone https://github.com/tensorflow/tfx.git
     cd ~/tfx/tfx/tfx/examples/workshop/setup
     ./setup_demo.sh
-    
-    # Python 3.5
+```
+
+### Python 3.5
+```    
     pip install tensorflow_gpu
     pip uninstall enum34
     pip install "apache-airflow[mysql, postgresql, celery, rabbitmq]"
@@ -39,6 +41,7 @@
     airflow resetdb --yes
     airflow initdb
   
+    git clone https://github.com/tensorflow/tfx.git  
     cd /path/to/tfx/
     pip install setup.py --user
     jupyter nbextension install --py --symlink --sys-prefix tensorflow_model_analysis
@@ -49,65 +52,67 @@
 ```
 
 
-```
-# Airflow + Posgres
-# https://vujade.co/install-apache-airflow-ubuntu-18-04/
-# https://gist.github.com/zacgca/9e0401aa205e7c54cbae0e85afca479d
-# https://gist.github.com/rosiehoyem/9e111067fe4373eb701daf9e7abcc423
-
-#posgres url 
-postgresql://user:password@localhost:5432/database_name
-
-sudo -u postgres psql
-CREATE ROLE airflow WITH
-  LOGIN
-  SUPERUSER
-  INHERIT
-  CREATEDB
-  CREATEROLE
-  REPLICATION;
-  
-CREATE ROLE airflow;
-CREATE DATABASE airflow;
-GRANT ALL PRIVILEGES on database airflow to airflow;
-ALTER ROLE airflow SUPERUSER;
-ALTER ROLE airflow CREATEDB;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public to airflow;
-\password airflow
-ALTER ROLE "airflow" WITH LOGIN;
-
-\c airflow
-\conninfo 
-
-
-sudo vim /etc/postgresql/10/main/pg_hba.conf
-# IPv4 local connections:
-host    all             all             0.0.0.0/0               md5
-
-sudo vim /etc/postgresql/10/main/postgresql.conf
-listen_addresses = '*'
-
-sudo service postgresql restart
-
-#posgres url 
-postgresql://airflow:airflow@localhost:5432/airflow
-
-executor = CeleryExecutor
-sql_alchemy_conn = postgresql+psycopg2://airflow:airflow@localhost:5432/airflow
-
-broker_url = amqp://guest:guest@localhost:5672//
-celery_result_backend = amqp://guest:guest@localhost:5672//
-
-broker_url = db+postgresql://airflow:airflow@localhost:5432/airflow
-celery_result_backend = db+postgresql://airflow:airflow@localhost:5432/airflow
-
-broker_url = postgresql+psycopg2://airflow:airflow@localhost:5432/airflow
-celery_result_backend = postgresql+psycopg2://airflow:airflow@localhost:5432/airflow
+## Airflow + Posgres
 
 ```
-setup_demo will install the remaining dependencies and setup other requisites.
+    # https://vujade.co/install-apache-airflow-ubuntu-18-04/
+    # https://gist.github.com/zacgca/9e0401aa205e7c54cbae0e85afca479d
+    # https://gist.github.com/rosiehoyem/9e111067fe4373eb701daf9e7abcc423
+    
+    #posgres url 
+    postgresql://user:password@localhost:5432/database_name
+    
+    #create Posgresql user and DB for Airflow metadata store
+    sudo -u postgres psql
+    CREATE ROLE airflow WITH
+      LOGIN
+      SUPERUSER
+      INHERIT
+      CREATEDB
+      CREATEROLE
+      REPLICATION;
+      
+    CREATE ROLE airflow;
+    CREATE DATABASE airflow;
+    GRANT ALL PRIVILEGES on database airflow to airflow;
+    ALTER ROLE airflow SUPERUSER;
+    ALTER ROLE airflow CREATEDB;
+    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public to airflow;
+    \password airflow
+    ALTER ROLE "airflow" WITH LOGIN;
+    
+    \c airflow
+    \conninfo 
+    
+    
+    sudo vim /etc/postgresql/10/main/pg_hba.conf
+    # IPv4 local connections:
+    host    all             all             0.0.0.0/0               md5
+    
+    sudo vim /etc/postgresql/10/main/postgresql.conf
+    listen_addresses = '*'
+    
+    sudo service postgresql restart
+    
+    #posgres url 
+    postgresql://airflow:airflow@localhost:5432/airflow
+    
+    vim $AIRFLOW_HOME/airflow.cfg
+    
+    executor = CeleryExecutor
+    sql_alchemy_conn = postgresql+psycopg2://airflow:airflow@localhost:5432/airflow
+    
+    # experimental #TODO
+    broker_url = amqp://guest:guest@localhost:5672//
+    celery_result_backend = amqp://guest:guest@localhost:5672//
+    
+    broker_url = db+postgresql://airflow:airflow@localhost:5432/airflow
+    celery_result_backend = db+postgresql://airflow:airflow@localhost:5432/airflow
+    
+    broker_url = postgresql+psycopg2://airflow:airflow@localhost:5432/airflow
+    celery_result_backend = postgresql+psycopg2://airflow:airflow@localhost:5432/airflow
 
-This will create a folder called *Airflow* in your home directory.
+```
 
 ## Adding Data
 1. Change the directory to ~/airflow ($AIRFLOW_HOME)
