@@ -125,3 +125,15 @@ class TextExtPluginModel(PluginAppModel):
             raise RuntimeError('self.source_folder or self.operator_func is not defined !!')
         all_images = self.image_search(self.source_folder + '/*')
         self.parallel_operator_func(all_images)
+
+class StitchTextExtPluginModel(PluginAppModel):
+    '''Abstract Class'''
+
+    def __init__(self):
+        super().__init__()
+        self.parallel_operator_func = None
+
+    def bulk_run(self):
+        if (not self.source_folder) or (not self.operator_func):
+            raise RuntimeError('self.source_folder or self.operator_func is not defined !!')
+        self.parallel_operator_func(os.path.join(config.ROOT_DIR, self.source_folder))

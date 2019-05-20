@@ -47,6 +47,9 @@ IMAGE_EXTS = ['.JPG', '.jpg', '.png']
 # Time inverval to re-check images
 OS_FILE_REFRESH_TIME_INVTERVAL = 2 * 60  # Shift to inotify
 
+# Acceptable txt file extension
+OCR_TEXT_EXTS = ['.pred.txt','.tesseract.txt']
+
 # create missing dir
 for each_dir in [IMAGE_ROOT_DIR,
                  CROPPER_ROOT_DIR,

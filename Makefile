@@ -70,7 +70,11 @@ east:		### OCR Pipeline - Run complete pipeline
 crop2box:
 	python vitaflow/annotate_server/crop_to_box.py
 
-east_ocr_pipeline:	data_cleanup east binarisation crop2box tesseract calmari ### EAST OCR Pipeline - Run complete pipeline
+text2file:
+	python vitaflow/annotate_server/text_file_stitch.py
+
+
+east_ocr_pipeline:	data_cleanup east binarisation crop2box tesseract calmari text2file ### EAST OCR Pipeline - Run complete pipeline
 
 ###################################################################
 ########################################################## DOCKER #

@@ -10,11 +10,8 @@ image files are processed and save to Images folder.
 
 import os
 
-import cv2
-import matplotlib.pyplot as plt
-import numpy as np
-
 import config
+import matplotlib.pyplot as plt
 from bin.plugin import PluginAppModel
 
 
@@ -58,7 +55,7 @@ def main(source_image_loc, dest_image_loc):
                     jpgfile = plt.imread(source_image_loc)
 
                     # naming convention for the file
-                    image_name = gt_image_base + "_" + str(count)
+                    image_name = str(count)
                     # call fun with cords and imagesame named convention for the cropped image
                     crop_and_save((int(x1), int(x2), int(y1), int(y2)), jpgfile, cropped_dir,image_name)  # (int(x1)-11, int(x2)+11, int(y1)-4, int(y2)+4
                     count = count + 1
