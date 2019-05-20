@@ -153,7 +153,7 @@ We want to ensure clean folders before we begin any experiments.
 
 To run the entire pipeline (with existing images)
 
-    /app# make ocr_pipeline
+    /app# make east_ocr_pipeline
 
 To run the entire pipeline (with new image), please check the annotation folder [README](https://github.com/Imaginea/vitaFlow/tree/master/vitaflow/annotate_server) for further details on Annotation/Receipt data extraction pipeline.
 
