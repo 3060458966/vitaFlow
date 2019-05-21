@@ -56,6 +56,15 @@ class PluginAppModel(ABC):
         path = os.path.join(config.ROOT_DIR, path)
         return find_files_with_ext(path, config.IMAGE_EXTS)
 
+    @staticmethod
+    def pdf_search(path):
+        """Inputs should be collected as a list of tuples.
+
+        Each tuple items shall contains args to pass to input method
+        """
+        path = os.path.join(config.ROOT_DIR, path)
+        return find_files_with_ext(path, config.PDF_EXTS)
+
     def inputs(self, source_image, destination_image=None):
         """Validate the inputs"""
         # verify source

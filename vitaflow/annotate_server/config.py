@@ -44,6 +44,9 @@ TESSERACT_CONFIG = '-c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvw
 # Acceptable file extension
 IMAGE_EXTS = ['.JPG', '.jpg', '.png']
 
+# Acceptable file extension
+PDF_EXTS =['.pdf']
+
 # Time inverval to re-check images
 OS_FILE_REFRESH_TIME_INVTERVAL = 2 * 60  # Shift to inotify
 
@@ -61,3 +64,6 @@ for each_dir in [IMAGE_ROOT_DIR,
                  ]:
     each_dir = os.path.join(ROOT_DIR, each_dir)
     check_n_create(each_dir)
+
+# Output of
+PDF2TEXT_DIR="static/data/text"
