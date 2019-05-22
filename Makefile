@@ -100,7 +100,8 @@ rm: ## rm
 	docker rm -f vitaflow
 
 exec:
-	docker exec -it vitaflow /bin/bash
+	# docker exec -it vitaflow /bin/bash
+	docker run -i -t --name vitaflow vitaflow:${IMAGE_VERSION} bash
 
 ps:
 	docker ps -a

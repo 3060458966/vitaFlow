@@ -1,8 +1,6 @@
 '''
 Demo sample example of how to include calamari_ocr into python code
 '''
-import os
-from glob import glob
 
 from calamari_ocr.ocr.datasets import DataSetType
 from calamari_ocr.scripts.predict import run as calamari_ocr_run
@@ -25,7 +23,7 @@ calamari_models = [
                    'vitaflow/annotate_server/static/data/calamari_models/model_00117200.ckpt',
                    'vitaflow/annotate_server/static/data/calamari_models/model_00132600.ckpt']
 
-calamari_input_images = glob(os.path.join(config.ROOT_DIR, config.TEXT_IMAGES) + '/*/*')  # Add your files here
+calamari_input_images = []  # glob(os.path.join(config.ROOT_DIR, config.TEXT_IMAGES) + '/*/*')  # Add your files here
 
 
 class args:
