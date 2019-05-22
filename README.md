@@ -106,15 +106,39 @@ To run (Current last version available is 0.1123)
     docker run -it vitaflow/vitaflow:0.1123 /bin/bash
     root@xxxxxx:/app#
   
-Run the following commands to update the code for latest changes, if any.
+Run the following commands to update the code for latest changes, if any. 
+(Below steps can done on local machine also, skipping the docker if you prefer so)
 
-    git checkout .
-    git pull
+
+```
+#TODO update 
+# for local machine setup
+pip install tensorflow-gpu
+pip install tensorflow-serving-api
+pip install gin-config
+pip install numpy
+pip install opencv-python
+pip install shapely
+pip install tqdm
+pip install matplotlib
+pip install scipy
+pip install grpcio
+pip install calamari_ocr
+```
+
+```
+git checkout .
+git pull
+```
+
 
 Before running any more commands, let's check the locations that will be used during the execution.
-1. Input folder : `vitaflow/annotate_server/static/data/preprocess` will house the input images. There are already 5 [images](https://github.com/Imaginea/vitaFlow/blob/master/vitaflow/annotate_server/static/data/preprocess) placed as example inputs to the pipeline. In case any new images are added in this folder, please ensure that they contain no space, dots and other non ascii charecter in the image name.
+1. Input folder : `vitaflow/annotate_server/static/data/preprocess` will house the input images. 
+- There are already 5 [images](https://github.com/Imaginea/vitaFlow/blob/master/vitaflow/annotate_server/static/data/preprocess) 
+placed as example inputs to the pipeline. 
+- In case any new images are added in this folder, please ensure that they contain no space, dots and other non ascii 
+character in the image name.
 
-2. Output folder: `vitaflow/annotate_server/static/data/text_images` all predictions/output will be placed here. The content of the folder would be as follows. Assuming input folder has following contents.
 ```
     ├── X00016469670.jpg
     ├── X00016469671.jpg
@@ -122,7 +146,14 @@ Before running any more commands, let's check the locations that will be used du
     ├── X51005230605.jpg
     └── X51005230616.jpg
 ```
-The output folder will have the contents below.
+
+2. Output folder: `vitaflow/annotate_server/static/data/text_images` all predictions/output will be placed here. 
+The content of the folder would be as follows. 
+
+- The output folder will have the contents below, where each folder corresponds to image in input folder and 
+contains the cropped images of the text detected by east model. 
+- There are also two files **\*.pred.txt** and **\*.tesseract.txt** which are the OCR outputs of the Calamari and Tesseract OCR engines. 
+
 ```
 .
 ├── X00016469670
@@ -142,20 +173,37 @@ The output folder will have the contents below.
     ├── 8.tesseract.txt
     ├── 9.png
     └── 9.tesseract.txt
- ```
-where each folder corressponds to image in input folder and contains the cropped images of the text detected by east model. There are also two files \*.pred.txt and \*.tesseract.txt which are the OCR outputs of the Calamari and Tesseract OCR engines. There will be two more files named output.tesseract.txt and output.pred.txt which are the unified representations of all the ocr outputs.
+```
 
-3. The location of pretrained models (Calamari) `vitaflow/annotate_server/static/data/calamari_models`
+Each folder will have two final output files :    
+
+```
+output.pred.txt # output of EAST + Calamari
+output.tesseract.txt # output of Tesseract
+```
+
+
+3. The location of pre-trained models :
+
+Calamari : `vitaflow/annotate_server/static/data/calamari_models`
+EAST : `vitaflow/annotate_server/static/data/east/`
+
 
 We want to ensure clean folders before we begin any experiments. 
-    
-    make data_cleanup
+
+``` 
+make data_cleanup
+```
 
 To run the entire pipeline (with existing images)
 
-    /app# make east_ocr_pipeline
+```
+/app# make east_ocr_pipeline
+```
 
-To run the entire pipeline (with new image), please check the annotation folder [README](https://github.com/Imaginea/vitaFlow/tree/master/vitaflow/annotate_server) for further details on Annotation/Receipt data extraction pipeline.
+
+To run the entire pipeline (with new image), please check the annotation folder 
+[README](https://github.com/Imaginea/vitaFlow/tree/master/vitaflow/annotate_server) for further details on Annotation/Receipt data extraction pipeline.
 
 The predicted results are present in the docker container and not host. 
 In order to copy a file from a container to the host, we have to first find the CONTAINER ID. Open a terminal from Host machine and fire up the command.
