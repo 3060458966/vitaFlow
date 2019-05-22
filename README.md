@@ -123,6 +123,7 @@ pip install scipy
 pip install grpcio
 pip install calamari_ocr
 ```
+Follow this [link](https://launchpad.net/~alex-p/+archive/ubuntu/tesseract-ocr?field.series_filter=xenial) to install Tesseract, in case you are running on local machine.
 
 ```
 git checkout .
