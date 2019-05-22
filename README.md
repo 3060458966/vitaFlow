@@ -37,8 +37,6 @@ The challenge is to build a pipeline with different moving parts that are loosel
 iterate through the data handling, model building, test and deploy in an incremental fashion, and repeat the whole process.
 Layout a platform that take cares of engineering aspects of Data Science projects.   
 
-![](docs/images/data_heirarchy.png)
-
 
 # Proposed Solution
 
@@ -131,7 +129,6 @@ git checkout .
 git pull
 ```
 
-
 Before running any more commands, let's check the locations that will be used during the execution.
 1. Input folder : `vitaflow/annotate_server/static/data/preprocess` will house the input images. 
 - There are already 5 [images](https://github.com/Imaginea/vitaFlow/blob/master/vitaflow/annotate_server/static/data/preprocess) 
@@ -152,7 +149,6 @@ The content of the folder would be as follows.
 
 - The output folder will have the contents below, where each folder corresponds to image in input folder and 
 contains the cropped images of the text detected by east model. 
-- There are also two files **\*.pred.txt** and **\*.tesseract.txt** which are the OCR outputs of the Calamari and Tesseract OCR engines. 
 
 ```
 .
@@ -175,13 +171,12 @@ contains the cropped images of the text detected by east model.
     └── 9.tesseract.txt
 ```
 
-Each folder will have two final output files :    
+- There are also two files **\*.pred.txt** and **\*.tesseract.txt** which are the OCR outputs of the Calamari and Tesseract OCR engines.    
 
 ```
 output.pred.txt # output of EAST + Calamari
 output.tesseract.txt # output of Tesseract
 ```
-
 
 3. The location of pre-trained models :
 
@@ -189,7 +184,7 @@ Calamari : `vitaflow/annotate_server/static/data/calamari_models`
 EAST : `vitaflow/annotate_server/static/data/east/`
 
 
-We want to ensure clean folders before we begin any experiments. 
+Lets clean the folders before we begin any experiments. 
 
 ``` 
 make data_cleanup
@@ -198,9 +193,15 @@ make data_cleanup
 To run the entire pipeline (with existing images)
 
 ```
+#on docker
 /app# make east_ocr_pipeline
 ```
 
+```
+#on local machine
+cd / path/to/vitaflow/
+make east_ocr_pipeline
+```
 
 To run the entire pipeline (with new image), please check the annotation folder 
 [README](https://github.com/Imaginea/vitaFlow/tree/master/vitaflow/annotate_server) for further details on Annotation/Receipt data extraction pipeline.
@@ -208,11 +209,15 @@ To run the entire pipeline (with new image), please check the annotation folder
 The predicted results are present in the docker container and not host. 
 In order to copy a file from a container to the host, we have to first find the CONTAINER ID. Open a terminal from Host machine and fire up the command.
 
-    docker ps
-    
+```
+docker ps
+```
+
 This will return the CONTAINER ID of the running dockers. In the same terminal, use the containerId of the image vitaflow/vitaflow:0.1123 in the following command.
-    
-    docker cp {CONTAINER ID}:/app/vitaflow/annotate_server/static/data/ .
+
+```
+docker cp {CONTAINER ID}:/app/vitaflow/annotate_server/static/data/ .
+```
 
 This will copy the entire data folder from the container to the host machine which can be checked by the user for outputs/predictions. 
 
