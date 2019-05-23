@@ -22,13 +22,13 @@ __author__ = 'Gaurish Thakkar'
 import os
 import shutil
 
-from vitaflow.internal import ICLIENTXType1
+from vitaflow.internal.dataset_types.dataset_types import ICSVSeq2SeqType1
 from vitaflow.utils.hyperparams import HParams
 from vitaflow.internal.ipreprocessor import IPreprocessor
 from vitaflow.utils.print_helper import *
 
 
-class CLIENTXDataset(IPreprocessor, ICLIENTXType1):
+class CLIENTXDataset(IPreprocessor, ICSVSeq2SeqType1):
     """
     Converts the given train, val, test folder to IOB format
 
@@ -97,7 +97,7 @@ class CLIENTXDataset(IPreprocessor, ICLIENTXType1):
             "experiment_name": "CLIENTXDataset",
             "minimum_num_words": 5,
             "over_write": False,
-            "temp-data": os.path.join(os.path.expanduser("~"), "vita-temp/"),
+            "temp-data": os.environ['DEMO_DATA_PATH'], #os.path.join("/opt/data", "vitaFlow-clientx/"),
         })
         return hparams
 
@@ -106,17 +106,17 @@ class CLIENTXDataset(IPreprocessor, ICLIENTXType1):
         To setup destination folders structure if not present.
         :return:
         """
-        if os.path.exists(self.PREPROCESSED_DATA_OUT_DIR):
+        if os.path.exists(self.PROCESSED_DATA_OUT_DIR):
             if self._hparams.over_write:
-                print_info("Deleting data folder: {}".format(self.PREPROCESSED_DATA_OUT_DIR))
-                shutil.rmtree(self.PREPROCESSED_DATA_OUT_DIR)
-                print_info("Recreating data folder: {}".format(self.PREPROCESSED_DATA_OUT_DIR))
-                os.makedirs(self.PREPROCESSED_DATA_OUT_DIR)
+                print_info("Deleting data folder: {}".format(self.PROCESSED_DATA_OUT_DIR))
+                shutil.rmtree(self.PROCESSED_DATA_OUT_DIR)
+                print_info("Recreating data folder: {}".format(self.PROCESSED_DATA_OUT_DIR))
+                os.makedirs(self.PROCESSED_DATA_OUT_DIR)
             else:
                 print_info("Skipping preprocessing step, since the data might already be available")
         else:
-            print_info("Creating data folder: {}".format(self.PREPROCESSED_DATA_OUT_DIR))
-            os.makedirs(self.PREPROCESSED_DATA_OUT_DIR)
+            print_info("Creating data folder: {}".format(self.PROCESSED_DATA_OUT_DIR))
+            os.makedirs(self.PROCESSED_DATA_OUT_DIR)
 
     def _place_dataset(self, origin_file_path, out_dir):
         """

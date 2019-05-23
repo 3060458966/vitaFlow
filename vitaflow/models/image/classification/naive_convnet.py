@@ -72,7 +72,7 @@ class NaiveConvNet(ClassifierBase, ImageFeature):
             Number of output labels/classes
         "learning_rate" : float
             Learning rate
-        "keep_propability" : float
+        "keep_probability" : float
             Drop out layer `keep` probability value
 
         :return: A dictionary of hyper parameters with default values

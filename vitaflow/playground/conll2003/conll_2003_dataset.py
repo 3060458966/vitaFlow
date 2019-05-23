@@ -25,17 +25,11 @@ import shutil
 import pandas as pd
 from tqdm import tqdm
 
-from vitaflow.internal import HParams
+from vitaflow.utils.hyperparams import HParams
 from vitaflow.internal import IPreprocessor
-from vitaflow.internal import ICSVSeq2SeqType1
+from vitaflow.internal.dataset_types.dataset_types import ICSVSeq2SeqType1
 from vitaflow.iterators.text.vocabulary import SpecialTokens
 from vitaflow.utils.print_helper import *
-
-# from vitaflow.core import HParams
-# from vitaflow.core import IPreprocessor
-# from vitaflow.core.dataset_types import ICSVSeq2SeqType1
-# from vitaflow.iterators.text.vocabulary import SpecialTokens
-# from vitaflow.helpers.print_helper import *
 from vitaflow.utils.data_io import maybe_download
 
 

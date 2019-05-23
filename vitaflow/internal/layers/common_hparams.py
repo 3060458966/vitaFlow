@@ -483,4 +483,4 @@ def basic_range1(ranged_hparams):
 @registry.register_ranged_hparams
 def basic_moe_range(rhp):
   """Moe range; when this parameter is unused, it allows us to see variance."""
-rhp.set_float("moe_loss_coef", 0.01, 0.02)
+  rhp.set_float("moe_loss_coef", 0.01, 0.02)

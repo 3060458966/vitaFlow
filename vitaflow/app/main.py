@@ -1,7 +1,12 @@
 import os
 import sys
 import flask
-
+import io
+import subprocess
+import pandas as pd
+from pytesseract import image_to_string
+import matplotlib.pyplot as plt
+from PIL import Image
 print(__name__)
 sys.path.append(os.path.abspath('.'))
 
@@ -14,6 +19,10 @@ import serve
 # define the app
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
+if not os.path.exists("./uploads/"):
+    os.mkdir("./uploads/");
+UPLOAD_FOLDER = './uploads/'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER 
 CORS(app)
 
 
@@ -28,34 +37,41 @@ def predict_api():
 
     pdf_file = request.files['pdf_file']
     modelPath = request.form['dname']
+    
+    TESSERACT_CONFIG = '-c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyz -c preserve_interword_spaces=1'
+    image = Image.open(pdf_file)
+    text_content = image_to_string(image)
 
     if pdf_file.filename == '':
         return '''No file selected.<a href="/predict">Click here to go back.</a>'''
-    elif modelPath == '':
-        return '''No model selected.<a href="/predict">Click here to go back.</a>'''
+
     try:
-        model = request.form['model']
+        model = request.form['dname']
     except:
         return '''No model selected.<a href="/predict">Click here to go back.</a>'''
-
-    model_dir = modelPath + model
+    
+    global filename
     filename = secure_filename(pdf_file.filename)
 
-    abs_fpath = filename
-    session['currentFile'] = filename
-    session['modelDirectory'] = model_dir
-
-    pdf_file.save(abs_fpath)
-
-    app.logger.info("api_input: " + str(model_dir))
-    model_api = serve.get_model_api(model_dir, abs_fpath)
-    os.remove(abs_fpath)
-
-    if not model_api:
-        return '''Not Supported.<a href="/predict">Click here to go back.</a>'''
+    saved_filename = os.path.join(app.config['UPLOAD_FOLDER'],filename.rsplit(".",1)[0]+".txt")
+    with open(os.path.join(app.config['UPLOAD_FOLDER'],filename.rsplit(".",1)[0]+".txt"), "w") as text_file:
+        text_file.write(text_content)
+  
+    if modelPath == "DL":
+        status = subprocess.call(['./examples/clientx/predict-pipeline.sh',saved_filename])
+        if status == 0:        
+            df = pd.read_csv("./postprocessed/"+filename.rsplit(".",1)[0]+".csv", delimiter='~')
     else:
-        return model_api[0].to_json(orient='records', lines=True) + '''
-            <html><body>
+        status = subprocess.call(['./examples/clientx/predict-pipeline-ml.sh',saved_filename])
+        if status == 0:        
+            df = pd.read_csv("./postprocessed/"+filename.rsplit(".",1)[0]+".csv", delimiter='~')
+    
+    str_io = io.StringIO()
+    df.to_html(buf=str_io, classes='table table-striped')
+    html_str = str_io.getvalue()
+
+    return '''
+            <html><body>'''+html_str+'''
             <br><br><a href="/return-files">Click here to download as csv.</a><br><br>
             <a href="/predict">Click here to upload new document.</a>
             </body></html>
@@ -111,8 +127,7 @@ def return_files_tut():
     """API function that sends predictions file to frontend.
     """
     try:
-        return flask.send_file(session['modelDirectory'] + "/predictions/" + session.get('currentFile', None),
-                               attachment_filename=session.get('currentFile', None), as_attachment=True)
+        return flask.send_file("../../postprocessed/"+filename.rsplit(".",1)[0]+".csv",attachment_filename=filename.rsplit(".",1)[0]+".csv", as_attachment=True)
     except Exception as e:
         return str(e)
 
@@ -145,4 +160,4 @@ def server_error(e):
 
 if __name__ == '__main__':
     # This is used when running locally.
-    app.run(host='localhost', port=8080, debug=True)
+    app.run(host='localhost', port=8090, debug=True)

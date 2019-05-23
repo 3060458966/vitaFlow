@@ -16,13 +16,15 @@
 """Base class for combining multiple problems for multitask learning."""
 
 
+import tensorflow as tf
+
 from vitaflow.internal.data_generators import problem
 from vitaflow.internal.data_generators import text_problems
 from vitaflow.internal.layers import common_layers
 from vitaflow.internal.layers import discretization
 from vitaflow.internal.layers import modalities
 from vitaflow.utils import metrics
-import tensorflow as tf
+
 
 class MixingSchedule(object):
   """Available schedules for mixing datasets."""
@@ -533,4 +535,4 @@ def aggregate_task_lm_losses(hparams,
     loss_val = loss_num_ / tf.maximum(1.0, loss_den_)
     summaries.append([task.name+"_loss", loss_val])
 
-return loss_num, loss_den, summaries
+  return loss_num, loss_den, summaries
