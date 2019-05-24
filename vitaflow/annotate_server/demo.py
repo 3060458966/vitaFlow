@@ -92,10 +92,8 @@ def show_uploaded_images():
 
 @app.route('/uploads/<filename>')
 def show_uploaded_image_details(filename):
-    html_data = []
-    html_data.append('<li><img src="/{}/{}"></li>'.format(UPLOAD_FOLDER, filename))
-    html_data.append("<html><body><ul>{}<ul></body></html>".format(html_data))
-    return '\n'.join(html_data)
+    image_data = "/{}/{}".format(UPLOAD_FOLDER, filename)
+    return render_template('demo_result.html', image_data=image_data)
 
 
 @app.route('/uploads/')
