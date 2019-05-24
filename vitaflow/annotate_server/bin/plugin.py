@@ -8,7 +8,7 @@ try:
     from vitaflow.annotate_server import config
     import sys
 
-    # Add the ptdraft folder path to the sys.path list
+    # Add the draft folder path to the sys.path list
     sys.path.append('..')
 except ModuleNotFoundError:
     import config
@@ -26,69 +26,74 @@ def find_files_with_ext(search_folder, exts=None):
 
 
 class PluginAppModel(ABC):
-    '''Simple image processing plugin application
+    """Simple image processing plugin application
 
-    Must implement `run` method for using.'''
+    Must implement `run` method for using."""
 
     def __init__(self):
         self._inputs = None
         self._inputs_validated = False
+        self._input_files_types = config.IMAGE_EXTS
         self._destination_out_exists = False
-        # custom location according to need
+        # Custom location according to need #
+        # main folders
+        self.root_folder = config.ROOT_DIR
+        # relative path
         self.source_folder = None
+        # relative path
         self.destination_folder = None
-        # transformation function for converting source_image to destination_image
+        # Transformation fns to convert source_file to dest_file #
         self.operator_func = None
 
+    # TODO: remove this fns & re-write it  dependencies
     def plugin_inputs(self):
         # custom location according to need
         self.source_folder = None
         self.destination_folder = None
-        # transformation function for converting source_image to destination_image
+        # transformation function for converting source_file to destination_file
         self.operator_func = None
 
-    @staticmethod
-    def image_search(path):
+    def image_search(self, path):
         """Inputs should be collected as a list of tuples.
 
         Each tuple items shall contains args to pass to input method
         """
-        path = os.path.join(config.ROOT_DIR, path)
-        return find_files_with_ext(path, config.IMAGE_EXTS)
+        path = os.path.join(self.root_folder, path)
+        return find_files_with_ext(path, self._input_files_types)
 
-    @staticmethod
-    def pdf_search(path):
-        """Inputs should be collected as a list of tuples.
+    # @staticmethod
+    # def pdf_search(path):
+    #     """Inputs should be collected as a list of tuples.
+    #
+    #     Each tuple items shall contains args to pass to input method
+    #     """
+    #     path = os.path.join(self.root_folder, path)
+    #     return find_files_with_ext(path, config.PDF_EXTS)
 
-        Each tuple items shall contains args to pass to input method
-        """
-        path = os.path.join(config.ROOT_DIR, path)
-        return find_files_with_ext(path, config.PDF_EXTS)
-
-    def inputs(self, source_image, destination_image=None):
+    def inputs(self, source_file, destination_file=None):
         """Validate the inputs"""
-        # verify source
+        # Verify source
         if not all([
-            verify_isfile(source_image),
-            verify_isimagefile(source_image)
+            verify_isfile(source_file),
+            verify_isimagefile(source_file)
         ]):
             print([
-                verify_isfile(source_image),
-                verify_isimagefile(source_image)
+                verify_isfile(source_file),
+                verify_isimagefile(source_file)
             ])
             raise ValueError('inputs are ')
 
         # set destination
-        if destination_image is None:
+        if destination_file is None:
             if not self.destination_folder:
                 raise AttributeError('self.destination_folder is not set !!')
-            filename = os.path.basename(source_image)
-            destination_image = os.path.join(config.ROOT_DIR, self.destination_folder, filename)
+            filename = os.path.basename(source_file)
+            destination_file = os.path.join(self.root_folder, self.destination_folder, filename)
 
         # for customisation - write code here
-        self._inputs = (source_image, destination_image)
+        self._inputs = (source_file, destination_file)
         self._inputs_validated = True
-        self._destination_out_exists = verify_isfile(destination_image)
+        self._destination_out_exists = verify_isfile(destination_file)
 
     def _validate_inputs(self):
         if not self._inputs_validated:
@@ -117,13 +122,13 @@ class PluginAppModel(ABC):
         """For automated runs"""
         if (not self.source_folder) or (not self.operator_func):
             raise RuntimeError('self.source_folder or self.operator_func is not defined !!')
-        all_source_images = self.image_search(self.source_folder)
-        for source_image in all_source_images:
-            self.quick_run(source_image, None)
+        all_source_files = self.image_search(self.source_folder)
+        for source_file in all_source_files:
+            self.quick_run(source_file, None)
 
 
 class TextExtPluginModel(PluginAppModel):
-    '''OCR Abstract Class'''
+    """OCR Abstract Class"""
 
     def __init__(self):
         super().__init__()
@@ -135,8 +140,9 @@ class TextExtPluginModel(PluginAppModel):
         all_images = self.image_search(self.source_folder + '/*')
         self.parallel_operator_func(all_images)
 
+
 class StitchTextExtPluginModel(PluginAppModel):
-    '''Abstract Class'''
+    """Abstract Class"""
 
     def __init__(self):
         super().__init__()
@@ -145,4 +151,4 @@ class StitchTextExtPluginModel(PluginAppModel):
     def bulk_run(self):
         if (not self.source_folder) or (not self.operator_func):
             raise RuntimeError('self.source_folder or self.operator_func is not defined !!')
-        self.parallel_operator_func(os.path.join(config.ROOT_DIR, self.source_folder))
+        self.parallel_operator_func(os.path.join(self.root_folder, self.source_folder))

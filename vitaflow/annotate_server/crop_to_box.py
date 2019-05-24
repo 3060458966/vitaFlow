@@ -10,14 +10,14 @@ image files are processed and save to Images folder.
 
 import os
 
-import config
 import matplotlib.pyplot as plt
+
+import config
 from bin.plugin import PluginAppModel
 
 
 def crop_and_save(cords, image, dest, fname):
     (x1, x2, y1, y2) = cords
-
     cropped_image = image[y1:y2, x1:x2]
     dest_file = os.path.join(dest, fname)
     plt.imsave(dest_file, cropped_image, cmap='Greys_r')  # '
@@ -37,7 +37,7 @@ def main(source_image_loc, dest_image_loc):
     cropped_dir=os.path.join(dest_loc_dir,gt_text_base)
     if not os.path.isdir(cropped_dir):
         os.mkdir(os.path.join(cropped_dir))
-    #GT this config injection is not a very good approach
+    # TODO: Need to remove config usage from here
     gt_text_file_loc = os.path.join(config.ROOT_DIR,config.EAST_DIR,gt_text_name)
     if not os.path.isfile(gt_text_file_loc):
         print("Skipping the run as {} has not east predictions".format(gt_text_file_loc))
@@ -64,7 +64,6 @@ def main(source_image_loc, dest_image_loc):
 
 
 class cropToBoxPlugin(PluginAppModel):
-
     def plugin_inputs(self):
         # Custom location according to need
         self.source_folder = config.BINARIZE_ROOT_DIR

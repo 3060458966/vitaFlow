@@ -8,14 +8,14 @@ sys.path.append(os.path.abspath('.'))
 
 # from config.global_constants import UNKNOWN_WORD
 # from data_iterators.data_iterators_factory import DataIteratorsFactory
-#from vitaflow.engines.factory.data_iterator import DataIteratorFactory
-from vitaflow.helpers.print_helper import *
+# from vitaflow.engines.factory.data_iterator import DataIteratorFactory
+# from vitaflow.helpers.print_helper import *
 # from commands.tagger import load_estimator
 
 
 def get_model_api(model_dir, abs_fpath):
     """Returns dataframe"""
-    
+
     #TESSERACT_CONFIG = '-c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyz -c preserve_interword_spaces=1'
     print(abs_fpath)
 

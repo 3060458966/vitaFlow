@@ -89,6 +89,7 @@ def main(image_filename, image_dir=None):
     line_image_offset = 0
     i = 1
     if not image_dir:
+        # TODO: Need to remove config usage from here
         image_dir = os.path.join(config.TEXT_IMAGES, trim_file_ext(os.path.basename(source_image)))
     if os.path.isdir(image_dir):
         print('Skipping the run as {} already exists'.format(image_dir))

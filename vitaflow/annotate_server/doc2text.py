@@ -301,6 +301,7 @@ def main(fname, out_name=None):
     y1, x1, y2, x2 = final_rect
     if not out_name:
         filename = os.path.basename(fname)
+        # TODO: Need to remove config usage from here
         out_name = os.path.join(config.ROOT_DIR, config.DOC2TEXT_DIR, filename)
     plt.imsave(out_name, plt.imread(fname)[x1: x2, y1: y2])
     return True

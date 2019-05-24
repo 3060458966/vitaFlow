@@ -22,7 +22,7 @@ app.secret_key = os.urandom(24)
 if not os.path.exists("./uploads/"):
     os.mkdir("./uploads/");
 UPLOAD_FOLDER = './uploads/'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER 
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 CORS(app)
 
 
@@ -37,7 +37,7 @@ def predict_api():
 
     pdf_file = request.files['pdf_file']
     modelPath = request.form['dname']
-    
+
     TESSERACT_CONFIG = '-c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyz -c preserve_interword_spaces=1'
     image = Image.open(pdf_file)
     text_content = image_to_string(image)
@@ -49,29 +49,29 @@ def predict_api():
         model = request.form['dname']
     except:
         return '''No model selected.<a href="/predict">Click here to go back.</a>'''
-    
+
     global filename
     filename = secure_filename(pdf_file.filename)
 
     saved_filename = os.path.join(app.config['UPLOAD_FOLDER'],filename.rsplit(".",1)[0]+".txt")
     with open(os.path.join(app.config['UPLOAD_FOLDER'],filename.rsplit(".",1)[0]+".txt"), "w") as text_file:
         text_file.write(text_content)
-  
+
     if modelPath == "DL":
         status = subprocess.call(['./examples/clientx/predict-pipeline.sh',saved_filename])
-        if status == 0:        
+        if status == 0:
             df = pd.read_csv("./postprocessed/"+filename.rsplit(".",1)[0]+".csv", delimiter='~')
     else:
         status = subprocess.call(['./examples/clientx/predict-pipeline-ml.sh',saved_filename])
-        if status == 0:        
+        if status == 0:
             df = pd.read_csv("./postprocessed/"+filename.rsplit(".",1)[0]+".csv", delimiter='~')
-    
+
     str_io = io.StringIO()
     df.to_html(buf=str_io, classes='table table-striped')
     html_str = str_io.getvalue()
 
     return '''
-            <html><body>'''+html_str+'''
+            <html><body>''' + html_str + '''
             <br><br><a href="/return-files">Click here to download as csv.</a><br><br>
             <a href="/predict">Click here to upload new document.</a>
             </body></html>
@@ -87,17 +87,18 @@ def predict_text_api():
         return render_template('full_client.html')
 
     sentence = request.json['input']
-    modelPath = request.json['dname']
+    model_path = request.json['dname']
 
     # Empty validation
-    if modelPath == '':
-        return '''No model selected.<a href="/predict">Click here to go back.</a>'''
+    msg = '''No model selected.<a href="/predict">Click here to go back.</a>'''
+    if model_path == '':
+        return msg
     try:
         model = request.json['model']
     except:
-        return '''No model selected.<a href="/predict">Click here to go back.</a>'''
+        return msg
 
-    model_dir = modelPath + model
+    model_dir = model_path + model
 
     app.logger.info("api_input: " + str(model_dir))
     # Get predictions for text
