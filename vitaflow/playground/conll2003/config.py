@@ -55,6 +55,6 @@ experiments = {
         "word_emd_size": 8,
         "char_emd_size": 8,
         "num_lstm_layers": 1,
-        "keep_propability": 0.5,
+        "keep_probability": 0.5,
     }
 }

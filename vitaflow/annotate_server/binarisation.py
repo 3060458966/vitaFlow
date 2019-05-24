@@ -72,6 +72,7 @@ def main(image_loc, dest_image_loc=None):
     # TODO: experiment & optimize below
     if dest_image_loc is None:
         filename = os.path.basename(image_loc)
+        # TODO: Need to remove config usage from here
         dest_image_loc = os.path.join(config.ROOT_DIR, config.BINARIZE_ROOT_DIR, filename)
 
     if os.path.isfile(dest_image_loc):
@@ -86,7 +87,6 @@ def main(image_loc, dest_image_loc=None):
 
 
 class imageBinarisePlugin(PluginAppModel):
-
     def plugin_inputs(self):
         # Custom location according to need
         self.source_folder = config.IMAGE_ROOT_DIR

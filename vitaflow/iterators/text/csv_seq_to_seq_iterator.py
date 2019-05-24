@@ -24,7 +24,7 @@ import tensorflow as tf
 from overrides import overrides
 from tqdm import tqdm
 
-from vitaflow.internal import HParams
+from vitaflow.utils.hyperparams import HParams
 from vitaflow.internal import IIteratorBase
 from vitaflow.internal import IPreprocessor
 from vitaflow.internal.features import ITextFeature
@@ -32,17 +32,8 @@ from vitaflow.internal.nlp.spacy_helper import naive_vocab_creater, get_char_voc
 from vitaflow.iterators.text.vocabulary import SpecialTokens
 from vitaflow.utils.os_helper import check_n_makedirs
 from vitaflow.utils.print_helper import print_info
-
-# from vitaflow.core import HParams
-# from vitaflow.core import IIteratorBase
-# from vitaflow.core import IPreprocessor
-# from vitaflow.core.features import ITextFeature
-# from vitaflow.core.nlp.spacy_helper import naive_vocab_creater, get_char_vocab, vocab_to_tsv
-# from vitaflow.iterators.text.vocabulary import SpecialTokens
-# from vitaflow.helpers.os_helper import check_n_makedirs
-# from vitaflow.helpers.print_helper import print_info
 from vitaflow.engines import Executor
-
+import csv
 
 class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
     def __init__(self, hparams=None, dataset=None):
@@ -232,7 +223,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
                 df_file = os.path.join(self.TRAIN_FILES_IN_PATH, df_file)
 
                 if df_file.endswith(".csv"):
-                    df = pd.read_csv(df_file).fillna(SpecialTokens.UNK_WORD)
+                    df = pd.read_csv(df_file,sep="\t",quoting=csv.QUOTE_NONE).fillna(SpecialTokens.UNK_WORD)
                 else:
                     raise RuntimeError
 
@@ -383,14 +374,14 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             df_file = os.path.join(df_files_path, df_file)
 
             if df_file.endswith(".csv"):  # TODO start and stop tags
-                df = pd.read_csv(df_file).fillna(SpecialTokens.UNK_WORD)
+                df = pd.read_csv(df_file,sep="\t",quoting=csv.QUOTE_NONE).fillna(SpecialTokens.UNK_WORD)
             elif df_file.endswith(".json"):
                 df = pd.read_json(df_file).filla(SpecialTokens.UNK_WORD)
 
             list_text = df[self._hparams.text_col].astype(str).values.tolist()
             list_char_ids = [[char_2_id_map.get(c, 0) for c in str(word)] for word in list_text]
             list_tag = df[self._hparams.entity_col].astype(str).values.tolist()
-
+            print(list_text,list_char_ids,list_tag)
             sentence_feature1.append("{}".format(self._hparams.seperator).join(list_text))
             char_ids_feature2.append(list_char_ids)
             tag_label.append("{}".format(self._hparams.seperator).join(list_tag))
@@ -600,7 +591,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         # Get the files from test folder and zip it with predictions
         for each_prediction, file in zip(predictions, self._test_files_path):
 
-            df = pd.read_csv(file)
+            df = pd.read_csv(file,sep="\t",quoting=csv.QUOTE_NONE)
 
             predicted_id = []
             confidence = []
@@ -642,6 +633,11 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
 
             df["predicted_id"] = [j for i, j in
                                   zip(df[self._hparams.text_col].astype(str).values.tolist(), predicted_id)]
+            df["confidence"]= confidence[:len(df)]
+            df["pred_1"]= pred_1[:len(df)]
+            df["pred_1_confidence"]= pred_1_confidence[:len(df)]
+            df["pred_2"]= pred_2[:len(df)]
+            df["pred_2_confidence"]= pred_2_confidence[:len(df)]
 
             out_dir = os.path.join(self.OUT_DIR ,"predictions")
             check_n_makedirs(out_dir)
@@ -695,7 +691,111 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         data_iterator = executor.data_iterator
 
         predict_fn = estimator.predict(input_fn=lambda: data_iterator.test_input_fn())
-        data_iterator.predict_on_test_files(predict_fn)
+
+        # data_iterator.predict_on_test_files(predict_fn)
+
+        predictions = []
+
+        for predict in predict_fn:
+            predictions.append(predict)
+
+        results = []
+
+        # Get the files from test folder and zip it with predictions
+        for each_prediction, file in zip(predictions, self._test_files_path):
+
+            df = pd.read_csv(file,sep="\t",quoting=csv.QUOTE_NONE)
+
+            predicted_id = []
+            confidence = []
+
+            for tag_score in each_prediction["confidence"]:
+                confidence.append(tag_score)
+            for tag_id in each_prediction["viterbi_seq"]:
+                predicted_id.append(self.TAGS_2_ID[tag_id])
+            top_3_predicted_indices = each_prediction["top_3_indices"]
+            top_3_predicted_confidence = each_prediction["top_3_confidence"]
+
+            # print(top_3_predicted_indices)
+
+            pred_1 = top_3_predicted_indices[:, 0:1].flatten()
+            pred_1 = list(map(lambda x: self.TAGS_2_ID[x], pred_1))
+
+            pred_2 = top_3_predicted_indices[:, 1:2].flatten()
+            pred_2 = list(map(lambda x: self.TAGS_2_ID[x], pred_2))
+
+            pred_3 = top_3_predicted_indices[:, 2:].flatten()
+            pred_3 = list(map(lambda x: self.TAGS_2_ID[x], pred_3))
+
+            pred_1_confidence = top_3_predicted_confidence[:, 0:1]
+            pred_2_confidence = top_3_predicted_confidence[:, 1:2]
+            pred_3_confidence = top_3_predicted_confidence[:, 2:]
+
+            results.append({
+                "tokens": df[self._hparams.text_col].astype(str).values.tolist(),
+                "predicted_id": predicted_id,
+                "confidence": confidence,
+                "pred_1": pred_1,
+                "pred_1_confidence": pred_1_confidence,
+                "pred_2": pred_2,
+                "pred_2_confidence": pred_2_confidence,
+                "pred_3": pred_3,
+                "pred_3_confidence": pred_3_confidence,
+
+            })
+
+            df["predicted_id"] = [j for i, j in
+                                  zip(df[self._hparams.text_col].astype(str).values.tolist(), predicted_id)]
+
+            df["confidence"]= confidence[:len(df)]
+            df["pred_1"]= pred_1[:len(df)]
+            df["pred_1_confidence"]= pred_1_confidence[:len(df)]
+            df["pred_2"]= pred_2[:len(df)]
+            df["pred_2_confidence"]= pred_2_confidence[:len(df)]
+
+            out_dir = os.path.join(self.OUT_DIR, "predictions")
+            check_n_makedirs(out_dir)
+            df.to_csv(os.path.join(out_dir, os.path.basename(file)), index=False)
+
+            prev_tag = None
+            doc_text = ""
+            text = ""
+            enter = False
+            print(file)
+            for index, row in df.iterrows():
+                #         print(row["0"],row["predicted_id"])
+                # check if the first row
+                if row["predicted_id"] != "O":
+                    if index == 0 or not enter:
+                        text = row["0"]
+                        prev_tag = row["predicted_id"]
+                        enter = True
+
+                    else:
+                        # second index onwards
+                        if is_new_tag(prev_tag, row["predicted_id"]):
+                            doc_text = doc_text + text + "~" + strip_iob(prev_tag)+"\n"
+                            text = row["0"]
+
+                        else:
+                            text = text + " " + row["0"]
+                        prev_tag = row["predicted_id"]
+            doc_text = doc_text + text + "~" + strip_iob(prev_tag) + "\n"
+            print(doc_text)
+
+            post_out_dir = os.path.join(self.OUT_DIR, "postprocessed")
+            check_n_makedirs(post_out_dir)
+          
+            with open(os.path.join(post_out_dir,os.path.basename(file)), "w") as post_file:
+                post_file.write("Item~Tag\n")
+                post_file.write(doc_text)
+
+        # for loop ends
+
+
+
+    #function ends        
+
 
     def predict_sentence(self,  executor: Executor, sentence):
         """
@@ -710,3 +810,30 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         predict_fn = estimator.predict(input_fn=lambda: data_iterator.test_sentence_input_fn(sentence))
         results = data_iterator.predict_on_text(predict_fn)
         print(list(zip(sentence.split(), results)))
+
+def strip_iob(iob_tag):
+    tag = iob_tag.replace("B-", "")
+    tag = tag.replace("I-", "")
+    return tag
+
+def is_new_tag(prev, current):
+    if "O" in prev:
+        prev_t, prev_w = "O", "O"
+    else:
+        prev_t, prev_w = prev.split("-")
+    if "O" in current:
+        current_t, current_w = "O", "O"
+    else:
+        current_t, current_w = current.split("-")
+
+    if prev_w != current_w:
+        return True
+    else:
+        if prev_t =="B" and current_t =="I":
+            return False
+        elif prev_t =="I" and current_t =="B":
+            return True
+        elif prev_t =="I" and current_t =="I":
+            return False
+        else:
+            return False

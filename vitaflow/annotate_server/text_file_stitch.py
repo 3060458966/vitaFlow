@@ -20,11 +20,8 @@ os.environ['OMP_THREAD_LIMIT'] = '1'
 
 def main(source_file):
     source_file_folder = os.path.dirname(source_file)
-
     ext = os.path.splitext(os.path.basename(source_file).split(os.extsep)[1])[0]
-
     destination_file = os.path.join(source_file_folder, "output.{}.txt".format(ext))
-
     if os.path.isfile(destination_file):
         #  read the file and append values
         with open(destination_file, "a") as fd:
@@ -35,7 +32,6 @@ def main(source_file):
         with open(destination_file, "w") as fd:
             fd.write(open(source_file, "r").read())
             fd.write("\n")
-
     return destination_file
 
 
@@ -49,7 +45,6 @@ def main_parallel(text_list):
         for ext in config.OCR_TEXT_EXTS:
             files = sorted(glob.glob(folder_path + "/*{}".format(ext)),
                            key=lambda x: int(os.path.splitext(os.path.basename(x).split(os.extsep)[0])[0]))
-
             with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
                 for text_file_path, out_file in zip(files, executor.map(main, files)):
                     completed_jobs.append(

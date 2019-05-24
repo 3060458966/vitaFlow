@@ -1,28 +1,35 @@
 import os
 import sys
 import pandas as pd
-
+from pytesseract import image_to_string
+import matplotlib.pyplot as plt
 print(__name__)
 sys.path.append(os.path.abspath('.'))
 
 # from config.global_constants import UNKNOWN_WORD
 # from data_iterators.data_iterators_factory import DataIteratorsFactory
-from vitaflow.utils.print_helper import *
+# from vitaflow.engines.factory.data_iterator import DataIteratorFactory
+# from vitaflow.helpers.print_helper import *
 # from commands.tagger import load_estimator
-
-
 
 
 def get_model_api(model_dir, abs_fpath):
     """Returns dataframe"""
 
+    #TESSERACT_CONFIG = '-c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyz -c preserve_interword_spaces=1'
+    print(abs_fpath)
+
+    #image = plt.imread(abs_fpath)
+    #text_lines = image_to_string(image, config=TESSERACT_CONFIG)
+    text_lines = open(abs_fpath).read()
+    print(text_lines)
     # 1. initialize model
-    decoded_path = model_dir.split("/")
+    '''decoded_path = model_dir.split("/")
     model_name = decoded_path[-2]
     data_iterator_name = decoded_path[-3]
     experiment_name = decoded_path[-4]
 
-    estimator = load_estimator(experiment_name=experiment_name,
+    estimator = laod_estimator(experiment_name=experiment_name,
                                data_iterator=data_iterator_name,
                                model_name=model_name,
                                model_dir=model_dir)
@@ -41,7 +48,9 @@ def get_model_api(model_dir, abs_fpath):
     elif abs_fpath.endswith(".json"):
         df = pd.read_json(abs_fpath).filla(UNKNOWN_WORD)
 
-    a = data_iterator.predict_on_dataframes(estimator=estimator, dfs=[df])
+    a = data_iterator.predict_on_dataframes(estimator=estimator, dfs=[df])'''
+    a = pd.read_csv("/home/anilr/Anil/gpucluster/data/vitaFlow-clientx/clientx_dataset/clientx_data_iterator/postprocessed/test.csv")
+    print(a)
     return a
 
 
