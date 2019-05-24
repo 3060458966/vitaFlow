@@ -4,7 +4,7 @@ import subprocess
 import config
 from bin.plugin import PluginAppModel
 
-_command_convert = ['/usr/bin/convert',
+_command_convert = ['convert',
                     '-auto-level',
                     '-sharpen',
                     '0x4.0',
@@ -27,7 +27,7 @@ _command_textcleaner = ['./textcleaner',
 
 # TODO: need to optimise
 #  http://www.fmwconcepts.com/imagemagick/color2gray/index.php
-_command_color2gray = ['/usr/bin/convert',
+_command_color2gray = ['convert',
                        '-colorspace',
                        'Gray']
 

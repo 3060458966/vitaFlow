@@ -1,5 +1,5 @@
 #!/bin/bash
-export DEMO_DATA_PATH=/opt/data/vitaflow_demo/
+export DEMO_DATA_PATH=~/vitaflow_demo/
 #1 input -> folder (hardcoded)
 inputdirectory=$DEMO_DATA_PATH
 #2. py2 -> stanoff2conll
@@ -11,7 +11,7 @@ rm -rf ./examples/clientx/standoff2conll/annotations
 mkdir ./examples/clientx/standoff2conll/annotations
 echo $1
 # move the uploaded file into annotations folder {TODO}
-cp $1 ./examples/clientx/standoff2conll/annotations/ 
+cp $1 ./examples/clientx/standoff2conll/annotations/
 
 # clear csv folder
 rm -rf csv
@@ -21,7 +21,7 @@ mkdir -p postprocessed
 
 sourcefile=`basename $1`
 touch ./examples/clientx/standoff2conll/annotations/"${sourcefile%.*}.ann"
-python2 ./examples/clientx/standoff2conll/standoff2conll.py ./examples/clientx/standoff2conll/annotations
+python2.7 ./examples/clientx/standoff2conll/standoff2conll.py ./examples/clientx/standoff2conll/annotations
 
 # csv file in one place
 
