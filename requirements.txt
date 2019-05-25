@@ -45,3 +45,4 @@ pyspark
 # sphinx doc
 recommonmark
 sphinx_rtd_theme
+gin-config

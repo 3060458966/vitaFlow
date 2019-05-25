@@ -12,10 +12,11 @@
                     <title>Sequence tag</title>
                     <h2>Sequence tag</h2>
 			<div>
-                        <input class="card-text btn btn-outline-primary" id = 'predictText' type=button value="Get text tags" required>
- 			<span style="display:inline-block; width: 10%;"></span>
-                        <input class="card-text btn btn-outline-primary" id = 'predict' type=button value="Upload document"></div>
-		</div>		
+                <input class="card-text btn btn-outline-primary" id = 'predictText' type=button value="Get text tags" required>
+                <span style="display:inline-block; width: 10%;"></span>
+                <input class="card-text btn btn-outline-primary" id = 'predict' type=button value="Upload document">
+            </div>
+		</div>
             </div>
         </div>
     </div>
@@ -23,15 +24,15 @@
 
 
 <script type="text/javascript">
-       
+
     // assign my click handlers
 
     $("#predictText").click(function (){
     	window.location.href = "http://localhost:8090/predictText";
     });
-	
+
     $("#predict").click(function (){
     	window.location.href = "http://localhost:8090/predict";
     });
-    
+
 </script>

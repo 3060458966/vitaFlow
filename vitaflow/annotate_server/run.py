@@ -2,6 +2,7 @@
 import os
 
 from flask import Flask, render_template, jsonify, request, Markup
+from flask_cors import CORS
 
 import annotate
 import config
@@ -12,6 +13,15 @@ import stats
 image_manager.GetNewImage.refresh()
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
+app.secret_key = os.urandom(24)
+# TODO: remove below line
+print('Print: {}'.format(app.secret_key))
+
+UPLOAD_FOLDER = "./static/uploads/"
+if not os.path.exists(UPLOAD_FOLDER):
+    os.mkdir(UPLOAD_FOLDER)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+CORS(app)
 
 sample_data = {"url": "static/images/NoImage.png",
                "id": "NoImage.png",
@@ -84,13 +94,36 @@ def _rest_page_text_extraction(start=None, end=None):
     html_data = jsonify(list(data))
     return html_data
 
-
-
-
 # ##################################### Page Call #################################
+from werkzeug import secure_filename
 
+ALLOWED_EXTENSIONS = set(['txt', 'csv', 'jpg', 'pdf', 'png'])
+
+
+def allowed_filename(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 @app.route('/')
+@app.route('/upload_file/')
+def page_upload_file():
+    if request.method == 'POST':
+        submitted_file = request.files['file']
+        if submitted_file and allowed_filename(submitted_file):
+            filename = secure_filename(submitted_file.filename)
+            submitted_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect(url_for('uploaded_file', filename=filename))
+
+    return '''
+    <!doctype html>
+    <title>Upload new File</title>
+    <h1>Upload new File</h1>
+    <form action="" method=post enctype=multipart/form-data>
+      <p><input type=file name=file>
+         <input type=submit value=Upload>
+    </form>
+    '''
+
+
 @app.route('/<image>')
 @app.route('/annotate_image')
 @app.route('/annotate_image/<image>')

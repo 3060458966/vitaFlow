@@ -28,10 +28,10 @@ def string_parser(text):
         print(text)
         print('--' * 15)
     try:
-        #TODO SAMPATH Check why this normalization was plugged in
-        # text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore')
-        # text =  text.decode('utf-8')
-        text
+        # TODO SAMPATH Check why this normalization was plugged in
+        text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore')
+        text = text.decode('utf-8')
+        # text
     except:
         text = ""
     return str(text)
