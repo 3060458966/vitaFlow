@@ -36,62 +36,30 @@ from vitaflow.engines import Executor
 
 
 @gin.configurable
-class Cifar10BasicIterator(IPreprocessor, IIteratorBase, ImageFeature):
+class Cifar10BasicIterator(IIteratorBase, ImageFeature):
     """
     References: https://github.com/Hvass-Labs/TensorFlow-Tutorials/blob/master/cifar10.py
     https://cntk.ai/pythondocs/CNTK_201A_CIFAR-10_DataLoader.html
     """
 
-    def __init__(self,
-                 experiment_root_directory,
-                 experiment_name,
-                 number_test_of_samples,
-                 batch_size=32,
-                 prefetch_size=32,
-                 dataset=None,
-                 iterator_name = "Cifar10BasicIterator",
-                 preprocessed_data_path = "preprocessed_data",
-                 train_data_path = "train",
-                 validation_data_path = "val",
-                 test_data_path = "test"):
+    def __init__(self, hparams=None, dataset=None):
         ImageFeature.__init__(self)
-        IPreprocessor.__init__(self,
-                               experiment_name=experiment_name,
-                               preprocessed_data_path=preprocessed_data_path,
-                               experiment_root_directory=experiment_root_directory,
-                               train_data_path=train_data_path,
-                               validation_data_path=validation_data_path,
-                               test_data_path=test_data_path)
-        IIteratorBase.__init__(self,
-                               experiment_root_directory=experiment_root_directory,
-                               experiment_name=experiment_name,
-                               batch_size=batch_size,
-                               prefetch_size=prefetch_size,
-                               dataset=dataset)
+        IIteratorBase.__init__(self, dataset=dataset)
 
-        self._experiment_root_directory = experiment_root_directory
-        self._experiment_name = experiment_name
-        self._batch_size = batch_size
-        self._prefetch_size = prefetch_size
+        self._hparams = HParams(hparams, self.default_hparams())
         self._dataset = dataset
-        self._iterator_name = iterator_name
-        self._preprocessed_data_path = preprocessed_data_path
-        self._train_data_path = train_data_path
-        self._validation_data_path = validation_data_path
-        self._test_data_path = test_data_path
-
 
         # TODO - make `EXPERIMENT_ROOT_DIR` as local variable
-        self.EXPERIMENT_ROOT_DIR = os.path.join(self._experiment_root_directory,
-                                                self._experiment_name)
+        self.EXPERIMENT_ROOT_DIR = os.path.join(self._hparams.experiment_root_directory,
+                                                self._hparams.experiment_name)
         self.PREPROCESSED_DATA_OUT_DIR = os.path.join(self.EXPERIMENT_ROOT_DIR,
-                                                      self._preprocessed_data_path)
+                                                      self._hparams.preprocessed_data_path)
         self.TRAIN_OUT_PATH = os.path.join(self.PREPROCESSED_DATA_OUT_DIR,
-                                           self._train_data_path)
+                                           self._hparams.train_data_path)
         self.TEST_OUT_PATH = os.path.join(self.PREPROCESSED_DATA_OUT_DIR,
-                                          self._test_data_path)
+                                          self._hparams.test_data_path)
         self.OUT_DIR = os.path.join(self.EXPERIMENT_ROOT_DIR,
-                                    self._iterator_name)
+                                    self._hparams.iterator_name)
 
         # This rule is assumed to be correct if the previous stage is of IPreprocessor
         self.TRAIN_FILES_IN_PATH = os.path.join(self.PREPROCESSED_DATA_OUT_DIR, "train/")
@@ -124,7 +92,7 @@ class Cifar10BasicIterator(IPreprocessor, IIteratorBase, ImageFeature):
         self.images, self.labels = self._load_training_data()
         self.images = self.images.astype("float32")
 
-        self._number_test_of_samples = number_test_of_samples
+        self._number_test_of_samples = self._hparams.number_test_of_samples
 
     @property
     def num_labels(self):
@@ -142,68 +110,68 @@ class Cifar10BasicIterator(IPreprocessor, IIteratorBase, ImageFeature):
     def num_test_samples(self):
         raise 10000
 
-    # @staticmethod
-    # def default_hparams():
-    #     """
-    #     .. role:: python(code)
-    #        :language: python
-    #
-    #     .. code-block:: python
-    #
-    #         {
-    #             "experiment_root_directory" : os.path.expanduser("~") + "/vitaFlow/",
-    #             "experiment_name" : "test_experiment",
-    #             "iterator_name" : "conll_data_iterator",
-    #             "preprocessed_data_path" : "preprocessed_data",
-    #             "train_data_path" : "train",
-    #             "validation_data_path" : "val",
-    #             "test_data_path" : "test",
-    #             "batch_size" : 32,
-    #             number_test_of_samples
-    #         }
-    #
-    #     Here:
-    #
-    #     "experiment_root_directory" : str
-    #         Root directory where the data is downloaded or copied, also
-    #         acts as the folder for any subsequent experimentation
-    #
-    #     "experiment_name" : str
-    #         Name for the current experiment
-    #
-    #     "iterator_name" : str
-    #         Name of the data iterator
-    #
-    #     "preprocessed_data_path" : str
-    #         Folder path under `experiment_root_directory` where the preprocessed data
-    #         should be stored
-    #
-    #     "train_data_path" : str
-    #         Folder path under `experiment_root_directory` where the train data is stored
-    #
-    #     "validation_data_path" : str
-    #         Folder path under `experiment_root_directory` where the validation data is stored
-    #
-    #     "test_data_path" : str
-    #         Folder path under `experiment_root_directory` where the test data is stored
-    #
-    #     "batch_size" : int
-    #         Batch size for the current iterator
-    #
-    #     "number_test_of_samples" : int
-    #         Number of test samples to consider for predictions
-    #
-    #
-    #     :return: A dictionary of hyperparameters with default values
-    #     """
-    #
-    #     hparams = IPreprocessor.default_hparams()
-    #     update(IIteratorBase.default_hparams())
-    #     update({
-    #         "iterator_name": "Cifar10BasicIterator",
-    #         "number_test_of_samples" : 4
-    #     })
-    #     return hparams
+    @staticmethod
+    def default_hparams():
+        """
+        .. role:: python(code)
+           :language: python
+
+        .. code-block:: python
+
+            {
+                "experiment_root_directory" : os.path.expanduser("~") + "/vitaFlow/",
+                "experiment_name" : "test_experiment",
+                "iterator_name" : "conll_data_iterator",
+                "preprocessed_data_path" : "preprocessed_data",
+                "train_data_path" : "train",
+                "validation_data_path" : "val",
+                "test_data_path" : "test",
+                "batch_size" : 32,
+                number_test_of_samples
+            }
+
+        Here:
+
+        "experiment_root_directory" : str
+            Root directory where the data is downloaded or copied, also
+            acts as the folder for any subsequent experimentation
+
+        "experiment_name" : str
+            Name for the current experiment
+
+        "iterator_name" : str
+            Name of the data iterator
+
+        "preprocessed_data_path" : str
+            Folder path under `experiment_root_directory` where the preprocessed data
+            should be stored
+
+        "train_data_path" : str
+            Folder path under `experiment_root_directory` where the train data is stored
+
+        "validation_data_path" : str
+            Folder path under `experiment_root_directory` where the validation data is stored
+
+        "test_data_path" : str
+            Folder path under `experiment_root_directory` where the test data is stored
+
+        "batch_size" : int
+            Batch size for the current iterator
+
+        "number_test_of_samples" : int
+            Number of test samples to consider for predictions
+
+
+        :return: A dictionary of hyperparameters with default values
+        """
+
+        hparams = IPreprocessor.default_hparams()
+        hparams.update(IIteratorBase.default_hparams())
+        hparams.update({
+            "iterator_name": "Cifar10BasicIterator",
+            "number_test_of_samples" : 4
+        })
+        return hparams
 
 
     def _unpickle(self, file):
@@ -356,8 +324,8 @@ class Cifar10BasicIterator(IPreprocessor, IIteratorBase, ImageFeature):
                                                  output_shapes=(TensorShape([Dimension(32), Dimension(32), Dimension(3)]),
                                                                 TensorShape(Dimension(10))))
         dataset = dataset.map(lambda image, label: ({self.FEATURE_NAME: image}, label))
-        dataset = dataset.batch(batch_size=self._batch_size)
-        dataset = dataset.prefetch(self._prefetch_size)
+        dataset = dataset.batch(batch_size=self._hparams.batch_size)
+        dataset = dataset.prefetch(self._hparams.prefetch_size)
         print_info("Trianing Dataset output sizes are: ")
         print_info(dataset.output_shapes)
         return dataset
@@ -370,8 +338,8 @@ class Cifar10BasicIterator(IPreprocessor, IIteratorBase, ImageFeature):
                                                  output_shapes=(TensorShape([Dimension(32), Dimension(32), Dimension(3)]),
                                                                 TensorShape(Dimension(10))))
         dataset = dataset.map(lambda image, label: ({self.FEATURE_NAME: image}, label))
-        dataset = dataset.batch(batch_size=self._batch_size)
-        dataset = dataset.prefetch(self._prefetch_size)
+        dataset = dataset.batch(batch_size=self._hparams.batch_size)
+        dataset = dataset.prefetch(self._hparams.prefetch_size)
         print_info("Validation Dataset output sizes are: ")
         print_info(dataset.output_shapes)
         return dataset
@@ -384,8 +352,8 @@ class Cifar10BasicIterator(IPreprocessor, IIteratorBase, ImageFeature):
                                                  output_shapes=(TensorShape([Dimension(32), Dimension(32), Dimension(3)]),
                                                                 TensorShape(Dimension(10))))
         dataset = dataset.map(lambda image, label: ({self.FEATURE_NAME: image}, label))
-        dataset = dataset.batch(batch_size=self._batch_size)
-        dataset = dataset.prefetch(self._prefetch_size)
+        dataset = dataset.batch(batch_size=self._hparams.batch_size)
+        dataset = dataset.prefetch(self._hparams.prefetch_size)
         print_info("Dataset output sizes are: ")
         print_info(dataset.output_shapes)
         return dataset

@@ -14,25 +14,33 @@
 """
 A class that sets up default Tensorflow operations for classifying audio
 """
-
+import os
 import tensorflow as tf
 from overrides import overrides
 
-from vitaflow.utils.hyperparams import HParams
+# from vitaflow.utils.hyperparams import HParams
+import gin
 from vitaflow.internal.models.model_base import ModelBase
 
-
+@gin.configurable
 class ClassifierBase(ModelBase):
     """
     Base class for classification models
     """
 
-    def __init__(self, hparams):
-        ModelBase.__init__(self, hparams=hparams)
-        self._hparams = HParams(hparams, self.default_hparams())
+    def __init__(self,
+                 experiment_name,
+                model_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/", "default_model_dir"),
+                name="classifier_base",
+                out_dim=-1,
+                learning_rate=0.001):
+        ModelBase.__init__(self,
+                           experiment_name=experiment_name,
+                           model_root_directory=model_root_directory)
+        # self._hparams = HParams(hparams, self.default_hparams())
 
-        self._out_dim = self._hparams.out_dim
-        self._learning_rate = self.hparams.learning_rate
+        self._out_dim = out_dim
+        self._learning_rate = learning_rate
 
     def __call__(self, features, labels, params, mode, config=None):
         """
@@ -42,44 +50,44 @@ class ClassifierBase(ModelBase):
         """
         return self._build(features, labels, params, mode, config=config)
 
-    @staticmethod
-    def default_hparams():
-        """
-        .. role:: python(code)
-           :language: python
-
-        .. code-block:: python
-
-            {
-                "experiment_name": "model_name_or_dataset_name",
-                "model_root_directory" : os.path.join(os.path.expanduser("~"), "vitaFlow/", "default_model_dir"),
-                "name": "classifier_base",
-                "out_dim": -1,
-                "learning_rate": 0.001,
-            }
-
-        Here:
-
-        "experiment_name" : str
-            Name of the experiment
-        "model_root_directory" : str
-            Model root directory to store the model data under it with model class name as folder name
-        "name": str
-            Name of the classifier
-        "out_dim":
-            Number of output labels/classes
-        "learning_rate" : float
-            Learning rate
-
-        :return:  A dictionary of hyperparameters with default values
-        """
-        params = ModelBase.default_hparams()
-        params.update({
-            "name": "classifier_base",
-            "out_dim": -1,
-            "learning_rate": 0.001,
-        })
-        return params
+    # @staticmethod
+    # def default_hparams():
+    #     """
+    #     .. role:: python(code)
+    #        :language: python
+    #
+    #     .. code-block:: python
+    #
+    #         {
+    #             "experiment_name": "model_name_or_dataset_name",
+    #             "model_root_directory" : os.path.join(os.path.expanduser("~"), "vitaFlow/", "default_model_dir"),
+    #             "name": "classifier_base",
+    #             "out_dim": -1,
+    #             "learning_rate": 0.001,
+    #         }
+    #
+    #     Here:
+    #
+    #     "experiment_name" : str
+    #         Name of the experiment
+    #     "model_root_directory" : str
+    #         Model root directory to store the model data under it with model class name as folder name
+    #     "name": str
+    #         Name of the classifier
+    #     "out_dim":
+    #         Number of output labels/classes
+    #     "learning_rate" : float
+    #         Learning rate
+    #
+    #     :return:  A dictionary of hyperparameters with default values
+    #     """
+    #     params = ModelBase.default_hparams()
+    #     params.update({
+    #         "name": "classifier_base",
+    #         "out_dim": -1,
+    #         "learning_rate": 0.001,
+    #     })
+    #     return params
 
     def _get_loss(self, labels, logits):
         """

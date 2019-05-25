@@ -27,8 +27,17 @@ from vitaflow.engines import Executor
 
 
 class IIteratorBase(ABC):
-    def __init__(self, hparams=None, dataset=None):
-        self._hparams = HParams(hparams, self.default_hparams())
+    def __init__(self,
+                 experiment_root_directory,
+                 experiment_name,
+                 batch_size=32,
+                 prefetch_size=32,
+                 dataset=None):
+        self._experiment_root_directory = experiment_root_directory
+        self._experiment_name = experiment_name
+        self._batch_size = batch_size
+        self._prefetch_size = prefetch_size
+        self._dataset = None
         # self.set_dataset(dataset=dataset)
 
         #TODO experiment name is not getin gupdated with actual value by this time
@@ -37,41 +46,14 @@ class IIteratorBase(ABC):
         #                              type(self).__name__)
         # check_n_makedirs(self.temp_dir)
 
-    @staticmethod
-    def default_hparams():
-        """
-        .. role:: python(code)
-           :language: python
-
-        .. code-block:: python
-
-            {
-                "batch_size" : 32
-            }
-
-        Here:
-
-        "batch_size" : int
-            Batch size for the current iterator
-
-        :return:  A dictionary of hyperparameters with default values
-        """
-
-        params = IPreprocessor.default_hparams()
-        params.update({
-            "batch_size": 32,
-            "prefetch_size": 32,
-        })
-        return params
-
     @property
     def iterator_dir(self):
         """
         Returns iterator directory `experiment_root_directory`/`experiment_name`/`iterator_name`
         :return:
         """
-        path = os.path.join(self._hparams.experiment_root_directory,
-                            self._hparams.experiment_name,
+        path = os.path.join(self._experiment_root_directory,
+                            self._experiment_name,
                             type(self).__name__)
         if not os.path.exists(path):
             os.makedirs(path)
@@ -83,7 +65,7 @@ class IIteratorBase(ABC):
 
     @property
     def batch_size(self):
-        return self._hparams.batch_size
+        return self.batch_size
 
     @property
     def num_train_samples(self):

@@ -25,9 +25,10 @@ There are 50000 training images and 10000 test images.
 python vitaflow/bin/run_experiments.py --config_python_file=examples/cifar10/gan_config.py --mode=train
 #By default the generator images are logged under ~/vitaflow/runtime/model_name/
 ```
+
 **Classifier**
 ```
-python vitaflow/bin/run_experiments.py --config_python_file=examples/cifar10/classifier_config.py --mode=train
+python vitaflow/bin/run_experiments.py --config=vitaflow/playground/cifar10/classifier_config.gin --mode=train
 # for now it takes first 4 images and predicts based in the trained model
 python vitaflow/bin/run_experiments.py --config_python_file=examples/cifar10/classifier_config.py --mode=predict
 ```

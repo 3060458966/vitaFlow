@@ -45,7 +45,7 @@ experiments = {
 
     # data model
     "vitaflow.models.image.classification.naive_convnet.NaiveConvNet" : {
-        "model_root_directory":  experiment_root_directory,
+        "modehparams.l_root_directory":  experiment_root_directory,
         "experiment_name": experiment_name,
         # hyper parameters
         "keep_probability": 0.5,

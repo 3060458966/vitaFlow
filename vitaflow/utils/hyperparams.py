@@ -33,7 +33,7 @@ import six
 #   <variable name>[<index>]? = <rhs>
 # where <rhs> is either a single token or [] enclosed list of tokens.
 # For example:  "var[1] = a" or "x = [1,2,3]"
-from vitaflow.utils.dtypes import is_callable
+# from vitaflow.utils.dtypes import is_callable
 from vitaflow.utils.print_helper import print_info, print_error
 
 

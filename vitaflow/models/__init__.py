@@ -14,17 +14,17 @@
 
 """Models defined in vitaFlow. Imports here force registration."""
 
-import six
-
-# pylint: disable=unused-import
-
-from vitaflow.models.text import lstm
-from vitaflow.models.text import transformer
-
-from vitaflow.utils import registry
-
-# pylint: enable=unused-import
-
-
-def model(name):
-    return registry.model(name)
+# import six
+#
+# # pylint: disable=unused-import
+#
+# from vitaflow.models.text import lstm
+# from vitaflow.models.text import transformer
+#
+# from vitaflow.utils import registry
+#
+# # pylint: enable=unused-import
+#
+#
+# def model(name):
+#     return registry.model(name)

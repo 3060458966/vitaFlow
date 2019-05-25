@@ -15,23 +15,37 @@
 Naive Convolutional Network
 """
 
+import os
+import gin
 from overrides import overrides
 import tensorflow as tf
 
-from vitaflow.internal import HParams
+# from vitaflow.internal import HParams
 from vitaflow.internal.features import ImageFeature
 from vitaflow.internal.models import ClassifierBase
 from vitaflow.utils.print_helper import print_info
 
-
+@gin.configurable
 class NaiveConvNet(ClassifierBase, ImageFeature):
-    def __init__(self, hparams=None, data_iterator=None):
-        ClassifierBase.__init__(self, hparams=hparams)
+    def __init__(self,
+                 experiment_name,
+                 name="NaiveConvNet",
+                 model_root_directory=os.path.expanduser("~") + "/vitaFlow/",
+                 out_dim=-1,
+                 learning_rate=0.001,
+                 keep_probability=0.5,
+                 data_iterator=None):
+        ClassifierBase.__init__(self,
+                                experiment_name=experiment_name,
+                                model_root_directory=model_root_directory,
+                                name=name,
+                                out_dim=out_dim,
+                                learning_rate=learning_rate)
         ImageFeature.__init__(self)
-        self._hparams = HParams(hparams, self.default_hparams())
+        # self._hparams = HParams(hparams, self.default_hparams())
 
         self._data_iterator = data_iterator
-        self._keep_prob = self._hparams.keep_probability
+        self._keep_prob = keep_probability
 
         self._conv_num_outputs = 32 # TODO
         self._conv_ksize = (5, 5)

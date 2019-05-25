@@ -1,0 +1,51 @@
+import os
+import vitaflow.playground.cifar10
+
+
+#Experiments
+Experiments.batch_size=8
+Experiments.num_epochs=100
+Experiments.dataset_class_with_path="vitaflow.playground.cifar10.cifar10_dataset.Cifar10Dataset"
+Experiments.iterator_class_with_path="vitaflow.playground.cifar10.cifar10_basic_iterator.Cifar10BasicIterator"
+Experiments.model_class_with_path="vitaflow.models.image.classification.naive_convnet.NaiveConvNet"
+#(45000 // batch_size) // 5 = 112
+Experiments.save_checkpoints_steps=112
+Experiments.keep_checkpoint_max=5
+#(45000 // batch_size) // 100
+Experiments.save_summary_steps=5
+Experiments.log_step_count_steps=2
+Experiments.clear_model_data=False
+Experiments.plug_dataset=True
+Experiments.mode='train'
+
+
+# Dataset
+Cifar10Dataset.experiment_name="Cifiar10"
+Cifar10Dataset.preprocessed_data_path="preprocessed_data"
+Cifar10Dataset.experiment_root_directory="/opt/tmp/vitaFlow/"
+Cifar10Dataset.train_data_path = "train"
+Cifar10Dataset.validation_data_path = "val"
+Cifar10Dataset.test_data_path = "test"
+Cifar10Dataset.over_write=False
+
+
+#Iterator
+Cifar10BasicIterator.experiment_root_directory="/opt/tmp/vitaFlow/"
+Cifar10BasicIterator.experiment_name="Cifiar10"
+Cifar10BasicIterator.number_test_of_samples=8
+Cifar10BasicIterator.batch_size=32
+Cifar10BasicIterator.prefetch_size=32
+Cifar10BasicIterator.dataset=None
+Cifar10BasicIterator.iterator_name = "Cifar10BasicIterator"
+Cifar10BasicIterator.preprocessed_data_path = "preprocessed_data"
+Cifar10BasicIterator.train_data_path = "train"
+Cifar10BasicIterator.validation_data_path = "val"
+Cifar10BasicIterator.test_data_path = "test"
+
+
+#Model
+NaiveConvNet.experiment_name="cifar10"
+NaiveConvNet.model_root_directory="/opt/tmp/vitaFlow/cifar10"
+NaiveConvNet.name="classifier_base"
+NaiveConvNet.out_dim=-1
+NaiveConvNet.learning_rate=0.001

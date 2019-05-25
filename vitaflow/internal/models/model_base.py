@@ -38,9 +38,11 @@ class ModelBase(object):
     .. automethod:: _build
     """
 
-    def __init__(self, hparams=None):
-        self._hparams = HParams(hparams, self.default_hparams())
-
+    def __init__(self,
+                 experiment_name,
+                 model_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/", "default_model_dir")):
+        self._experiment_name = experiment_name
+        self._model_root_directory = model_root_directory
 
     def __call__(self, features, labels, params, mode, config=None):
         """
@@ -50,41 +52,41 @@ class ModelBase(object):
         """
         return self._build(features, labels, params, mode, config=config)
 
-    @staticmethod
-    def default_hparams():
-        """
-        .. role:: python(code)
-           :language: python
+    # @staticmethod
+    # def default_hparams():
+    #     """
+    #     .. role:: python(code)
+    #        :language: python
+    #
+    #     .. code-block:: python
+    #
+    #         {
+    #             "experiment_name": "model_name_or_dataset_name",
+    #             "model_root_directory" : os.path.join(os.path.expanduser("~"), "vitaFlow/", "default_model_dir")
+    #         }
+    #
+    #     Here:
+    #
+    #     "experiment_name" : str
+    #         Name of the experiment
+    #     "model_root_directory" : str
+    #         Model root directory to store the model data under it with model class name as folder name
+    #
+    #     :return:  A dictionary of hyperparameters with default values
+    #     """
+    #     hparams = {
+    #         "experiment_name": "model_name_or_dataset_name",
+    #         "model_root_directory" : os.path.join(os.path.expanduser("~"), "vitaFlow/", "default_model_dir")
+    #     }
+    #     return hparams
 
-        .. code-block:: python
-
-            {
-                "experiment_name": "model_name_or_dataset_name",
-                "model_root_directory" : os.path.join(os.path.expanduser("~"), "vitaFlow/", "default_model_dir")
-            }
-
-        Here:
-
-        "experiment_name" : str
-            Name of the experiment
-        "model_root_directory" : str
-            Model root directory to store the model data under it with model class name as folder name
-
-        :return:  A dictionary of hyperparameters with default values
-        """
-        hparams = {
-            "experiment_name": "model_name_or_dataset_name",
-            "model_root_directory" : os.path.join(os.path.expanduser("~"), "vitaFlow/", "default_model_dir")
-        }
-        return hparams
-
-    @property
-    def hparams(self):
-        """
-        A :class:`~vitaflow.core.HParams` instance. The hyperparameters
-        of the model.
-        """
-        return self._hparams
+    # @property
+    # def hparams(self):
+    #     """
+    #     A :class:`~vitaflow.core.HParams` instance. The hyperparameters
+    #     of the model.
+    #     """
+    #     return self._hparams
 
     @property
     def model_dir(self):
@@ -92,10 +94,9 @@ class ModelBase(object):
         Returns model directory `model_root_directory`/`experiment_name`/VanillaGAN
         :return:
         """
-        return os.path.join(self._hparams.model_root_directory,
-                            self._hparams.experiment_name,
+        return os.path.join(self._model_root_directory,
+                            self._experiment_name,
                             type(self).__name__)
-
 
     def _build_layers(self, features, mode):
         raise NotImplementedError

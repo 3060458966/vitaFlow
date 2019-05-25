@@ -19,26 +19,50 @@ import os
 import shutil
 
 import numpy as np
-
-from vitaflow.internal import HParams
+import gin
+# from vitaflow.internal import HParams
 from vitaflow.internal import IPreprocessor
 from vitaflow.utils.print_helper import print_info
 from vitaflow.utils.data_io import maybe_download
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelBinarizer
 
+@gin.configurable
 class Cifar10Dataset(IPreprocessor):
     """
     Cifar10 Dataset Downloader and preprocessor
     Link: https://www.cs.toronto.edu/~kriz/cifar.html
     """
-    def __init__(self, hparams=None):
-        IPreprocessor.__init__(self, hparams=hparams)
-        self._hparams = HParams(hparams, self.default_hparams())
+    def __init__(self, 
+                 experiment_name,
+                 preprocessed_data_path,
+                 experiment_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/"),
+                 train_data_path = "train",
+                 validation_data_path = "val",
+                 test_data_path = "test",
+                 over_write=False):
+        """
+        """
+
+        self._experiment_name = experiment_name 
+        self._preprocessed_data_path = preprocessed_data_path
+        self._experiment_root_directory = experiment_root_directory
+        self._train_data_path = train_data_path
+        self._validation_data_path = validation_data_path
+        self._test_data_path = test_data_path
+        self._over_write = over_write
+        
+        IPreprocessor.__init__(self,
+                               experiment_name=experiment_name,
+                               preprocessed_data_path=preprocessed_data_path,
+                               experiment_root_directory=experiment_root_directory,
+                               train_data_path=train_data_path,
+                               validation_data_path=validation_data_path,
+                               test_data_path=test_data_path)
 
         self._download_path = os.path.join(
-            self._hparams.experiment_root_directory,
-            self._hparams.experiment_name,
+            self._experiment_root_directory,
+            self._experiment_name,
             "raw_data/"
         )
         self._link = "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
@@ -51,59 +75,59 @@ class Cifar10Dataset(IPreprocessor):
         self._prepare_data()
 
 
-    @staticmethod
-    def default_hparams():
-        """
-        .. role:: python(code)
-           :language: python
-
-        .. code-block:: python
-
-            {
-                "experiment_root_directory" : os.path.expanduser("~") + "/vitaFlow/" ,
-                "experiment_name" : "Cifiar10Dataset",
-                "preprocessed_data_path" : "preprocessed_data",
-                "train_data_path" : "train",
-                "validation_data_path" : "val",
-                "test_data_path" : "test",
-                "over_write" : False,
-            }
-
-        Here:
-
-        "experiment_root_directory" : str
-            Root directory where the data is downloaded or copied, also
-            acts as the folder for any subsequent experimentation
-
-        "experiment_name" : str
-            Name of the data set
-
-        "preprocessed_data_path" : str
-            Folder path under `experiment_root_directory` where the preprocessed data
-            should be stored
-
-        "train_data_path" : str
-            Folder path under `experiment_root_directory` where the train data is stored
-
-        "validation_data_path" : str
-            Folder path under `experiment_root_directory` where the validation data is stored
-
-        "test_data_path" : str
-            Folder path under `experiment_root_directory` where the test data is stored
-
-        "over_write" : boolean
-            Flag to over write the previous copy of the downloaded data
-
-        :return: A dictionary of hyperparameters with default values
-        """
-        hparams = IPreprocessor.default_hparams()
-
-        hparams.update({
-            "experiment_name": "Cifiar10Dataset",
-            "over_write" : False
-        })
-
-        return hparams
+    # @staticmethod
+    # def default_hparams():
+    #     """
+    #     .. role:: python(code)
+    #        :language: python
+    # 
+    #     .. code-block:: python
+    # 
+    #         {
+    #             "experiment_root_directory" : os.path.expanduser("~") + "/vitaFlow/" ,
+    #             "experiment_name" : "Cifiar10Dataset",
+    #             "preprocessed_data_path" : "preprocessed_data",
+    #             "train_data_path" : "train",
+    #             "validation_data_path" : "val",
+    #             "test_data_path" : "test",
+    #             "over_write" : False,
+    #         }
+    # 
+    #     Here:
+    # 
+    #     "experiment_root_directory" : str
+    #         Root directory where the data is downloaded or copied, also
+    #         acts as the folder for any subsequent experimentation
+    # 
+    #     "experiment_name" : str
+    #         Name of the data set
+    # 
+    #     "preprocessed_data_path" : str
+    #         Folder path under `experiment_root_directory` where the preprocessed data
+    #         should be stored
+    # 
+    #     "train_data_path" : str
+    #         Folder path under `experiment_root_directory` where the train data is stored
+    # 
+    #     "validation_data_path" : str
+    #         Folder path under `experiment_root_directory` where the validation data is stored
+    # 
+    #     "test_data_path" : str
+    #         Folder path under `experiment_root_directory` where the test data is stored
+    # 
+    #     "over_write" : boolean
+    #         Flag to over write the previous copy of the downloaded data
+    # 
+    #     :return: A dictionary of hyperparameters with default values
+    #     """
+    #     hparams = IPreprocessor.default_hparams()
+    # 
+    #     update({
+    #         "experiment_name": "Cifiar10Dataset",
+    #         "over_write" : False
+    #     })
+    # 
+    #     return hparams
 
     def _create_target_directories(self):
         """
@@ -111,7 +135,7 @@ class Cifar10Dataset(IPreprocessor):
         :return:
         """
         if os.path.exists(self.PREPROCESSED_DATA_OUT_DIR):
-            if self._hparams.over_write:
+            if self._over_write:
                 print_info("Deleting data folder: {}".format(self.PREPROCESSED_DATA_OUT_DIR))
                 shutil.rmtree(self.PREPROCESSED_DATA_OUT_DIR)
                 print_info("Recreating data folder: {}".format(self.PREPROCESSED_DATA_OUT_DIR))

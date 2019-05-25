@@ -24,9 +24,11 @@ __version__ = '0.0.1'
 __author__ = 'Mageswaran Dhandapani <mageswaran1989@gmail.com>'
 
 import os
+import gin
 
 from vitaflow.utils.hyperparams import HParams
 
+@gin.configurable
 class IPreprocessor:
     """
     A pre-processing interface that every dataset class should inherit.
@@ -46,84 +48,95 @@ class IPreprocessor:
                 test/
 
     """
-    def __init__(self, hparams=None):
+    def __init__(self,
+                 experiment_name,
+                 preprocessed_data_path,
+                 experiment_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/"),
+                 train_data_path = "train",
+                 validation_data_path = "val",
+                 test_data_path = "test"):
         """
         """
 
-        self._hparams = HParams(hparams, self.default_hparams())
-
-        self.EXPERIMENT_ROOT_DIR = os.path.join(self._hparams.experiment_root_directory,
-                                                self._hparams.experiment_name)
+        self._experiment_name = experiment_name 
+        self._preprocessed_data_path = preprocessed_data_path
+        self._experiment_root_directory = experiment_root_directory
+        self._train_data_path = train_data_path
+        self._validation_data_path = validation_data_path
+        self._test_data_path = test_data_path
+        
+        self.EXPERIMENT_ROOT_DIR = os.path.join(self._experiment_root_directory,
+                                                self._experiment_name)
 
         self.TRAIN_IN_PATH = os.path.join(self.EXPERIMENT_ROOT_DIR,
                                           "raw_data",
-                                          self._hparams.train_data_path)
+                                          self._train_data_path)
         self.VAL_IN_PATH = os.path.join(self.EXPERIMENT_ROOT_DIR,
                                         "raw_data",
-                                        self._hparams.validation_data_path)
+                                        self._validation_data_path)
         self.TEST_IN_PATH = os.path.join(self.EXPERIMENT_ROOT_DIR,
                                          "raw_data",
-                                         self._hparams.test_data_path)
+                                         self._test_data_path)
 
         self.PREPROCESSED_DATA_OUT_DIR = os.path.join(self.EXPERIMENT_ROOT_DIR,
-                                                      self._hparams.preprocessed_data_path)
+                                                      self._preprocessed_data_path)
         self.TRAIN_OUT_PATH = os.path.join(self.PREPROCESSED_DATA_OUT_DIR,
-                                           self._hparams.train_data_path)
+                                           self._train_data_path)
         self.VAL_OUT_PATH = os.path.join(self.PREPROCESSED_DATA_OUT_DIR,
-                                         self._hparams.validation_data_path)
+                                         self._validation_data_path)
         self.TEST_OUT_PATH = os.path.join(self.PREPROCESSED_DATA_OUT_DIR,
-                                          self._hparams.test_data_path)
+                                          self._test_data_path)
 
-    @staticmethod
-    def default_hparams():
-        """
-        .. role:: python(code)
-           :language: python
-
-        .. code-block:: python
-
-            {
-                "experiment_root_directory" : os.path.expanduser("~") + "/vitaFlow/",
-                "experiment_name" : "experiment_name",
-                "preprocessed_data_path" : "preprocessed_data",
-                "train_data_path" : "train",
-                "validation_data_path" : "val",
-                "test_data_path" : "test"
-            }
-
-        Here:
-
-        "experiment_root_directory" : str
-            Root directory where the data is downloaded or copied, also
-            acts as the folder for any subsequent experimentation
-
-        "experiment_name" : str
-            Name for the current experiment
-
-        "preprocessed_data_path" : str
-            Folder path under `experiment_root_directory` where the preprocessed data
-            should be stored
-
-        "train_data_path" : str
-            Folder path under `experiment_root_directory` where the train data is stored
-
-        "validation_data_path" : str
-            Folder path under `experiment_root_directory` where the validation data is stored
-
-        "test_data_path" : str
-            Folder path under `experiment_root_directory` where the test data is stored
-
-
-        :return: A dictionary of hyperparameters with default values
-        """
-        return {
-            "experiment_root_directory": os.path.join(os.path.expanduser("~"), "vitaFlow/"),
-            "experiment_name": "experiment_name",
-            "preprocessed_data_path": "preprocessed_data",
-            "train_data_path": "train",
-            "validation_data_path": "val",
-            "test_data_path": "test"
-        }
+    # @staticmethod
+    # def default_hparams():
+    #     """
+    #     .. role:: python(code)
+    #        :language: python
+    # 
+    #     .. code-block:: python
+    # 
+    #         {
+    #             "experiment_root_directory" : os.path.expanduser("~") + "/vitaFlow/",
+    #             "experiment_name" : "experiment_name",
+    #             "preprocessed_data_path" : "preprocessed_data",
+    #             "train_data_path" : "train",
+    #             "validation_data_path" : "val",
+    #             "test_data_path" : "test"
+    #         }
+    # 
+    #     Here:
+    # 
+    #     "experiment_root_directory" : str
+    #         Root directory where the data is downloaded or copied, also
+    #         acts as the folder for any subsequent experimentation
+    # 
+    #     "experiment_name" : str
+    #         Name for the current experiment
+    # 
+    #     "preprocessed_data_path" : str
+    #         Folder path under `experiment_root_directory` where the preprocessed data
+    #         should be stored
+    # 
+    #     "train_data_path" : str
+    #         Folder path under `experiment_root_directory` where the train data is stored
+    # 
+    #     "validation_data_path" : str
+    #         Folder path under `experiment_root_directory` where the validation data is stored
+    # 
+    #     "test_data_path" : str
+    #         Folder path under `experiment_root_directory` where the test data is stored
+    # 
+    # 
+    #     :return: A dictionary of hyperparameters with default values
+    #     """
+    #     return {
+    #         "experiment_root_directory": os.path.join(os.path.expanduser("~"), "vitaFlow/"),
+    #         "experiment_name": "experiment_name",
+    #         "preprocessed_data_path": "preprocessed_data",
+    #         "train_data_path": "train",
+    #         "validation_data_path": "val",
+    #         "test_data_path": "test"
+    #     }
 
     @property
     def dataset_dir(self):
@@ -131,8 +144,8 @@ class IPreprocessor:
         Returns iterator directory `experiment_root_directory`/`experiment_name`/`iterator_name`
         :return:
         """
-        path = os.path.join(self._hparams.experiment_root_directory,
-                            self._hparams.experiment_name,
+        path = os.path.join(self._experiment_root_directory,
+                            self._experiment_name,
                             type(self).__name__)
         if not os.path.exists(path):
             os.makedirs(path)

@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from vitaflow.utils.dtypes import maybe_hparams_to_dict
+# from vitaflow.utils.dtypes import maybe_hparams_to_dict
 
 # pylint: disable=too-many-instance-attributes, too-many-arguments
 
@@ -80,13 +80,13 @@ class Executor(object):
         self._train_hooks = train_hooks
         self._eval_hooks = eval_hooks
         self._session_config = session_config
-
-        if model_hparams is None:
-            model_hparams = model.hparams
-        self._model_hparams = maybe_hparams_to_dict(model_hparams)
+        #
+        # if model_hparams is None:
+        #     model_hparams = model.hparams
+        # self._model_hparams = model_hparams
 
         self._estimator = tf.estimator.Estimator(
-            model_fn=self._model, config=config, params=self._model_hparams)
+            model_fn=self._model, config=config, params=None)
 
     @property
     def model(self):

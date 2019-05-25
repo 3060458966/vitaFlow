@@ -20,6 +20,8 @@ import shutil
 import time
 from importlib import import_module
 
+import gin
+
 import tensorflow as tf
 from tqdm import tqdm
 
@@ -35,6 +37,7 @@ CGREEN2 = '\33[92m'
 CEND = '\33[0m'
 
 
+@gin.configurable
 class Experiments(object):
     """
     Experiments uses dataset, data iterator & model factory classes and import them
@@ -43,27 +46,36 @@ class Experiments(object):
     code when we need mix and experiment dataset and modules.
     """
 
-    def __init__(self, hparams, mode='train'):
-        self._hparams = HParams(hparams, self.default_hparams(), allow_new_hparam=True)
+    def __init__(self,
+                 num_epochs=5,
+                 dataset_class_with_path=None,
+                 iterator_class_with_path=None,
+                 model_class_with_path=None,
+                 save_checkpoints_steps=50,
+                 keep_checkpoint_max=5,
+                 save_summary_steps=25,
+                 log_step_count_steps=10,
+                 clear_model_data=False,
+                 plug_dataset=True,
+                 mode='train',
+                 batch_size=8):
+        
         self.mode = mode
         self._dataset = None
         self.data_iterator = None
         self._model = None
 
-    @staticmethod
-    def default_hparams():
-        return {
-            "num_epochs": 5,
-            "dataset_class_with_path": None,
-            "iterator_class_with_path": None,
-            "model_class_with_path": None,
-            "save_checkpoints_steps" : 50,
-            "keep_checkpoint_max" : 5,
-            "save_summary_steps" : 25,
-            "log_step_count_steps" : 10,
-            "clear_model_data" : False,
-            "plug_dataset" : True
-        }
+        self.num_epochs = num_epochs
+        self.dataset_class_with_path = dataset_class_with_path
+        self.iterator_class_with_path = iterator_class_with_path
+        self.model_class_with_path = model_class_with_path
+        self.save_checkpoints_steps = save_checkpoints_steps
+        self.keep_checkpoint_max = keep_checkpoint_max
+        self.save_summary_steps = save_summary_steps
+        self.log_step_count_steps = log_step_count_steps
+        self.clear_model_data = clear_model_data
+        self.plug_dataset = plug_dataset
+        self.batch_size = batch_size
 
     def _get_class(self, package, name):
         """
@@ -74,7 +86,6 @@ class Experiments(object):
         """
         return getattr(import_module(package), name)
 
-    #@profile
     def get_dataset_reference(self, dataset_class_with_path):
         """
         Uses the dataset name to get the reference from the dataset factory class
@@ -88,8 +99,7 @@ class Experiments(object):
         # dataset = DatasetFactory.get(dataset_file_name=dataset_name)
         dataset = self._get_class(package=package, name=name)
         return dataset
-
-    #@profile
+    
     def get_iterator_reference(self, iterator_class_with_path):
         """
         Uses the iterator name to get the reference from the iterator factory class
@@ -103,7 +113,6 @@ class Experiments(object):
         iterator = self._get_class(package=package, name=name)
         return iterator
 
-    #@profile
     def get_model_reference(self, model_class_with_path):
         """
         Uses the model name to get the reference from the model factory class
@@ -119,10 +128,10 @@ class Experiments(object):
 
     def check_interoperability_n_import(self):
         # Using factory classes get the handle for the actual classes from string
-        if self._hparams.plug_dataset:
-            self._dataset = self.get_dataset_reference(self._hparams['dataset_class_with_path'])
-        self._data_iterator = self.get_iterator_reference(self._hparams['iterator_class_with_path'])
-        self._model = self.get_model_reference(self._hparams['model_class_with_path'])
+        if self.plug_dataset:
+            self._dataset = self.get_dataset_reference(self.dataset_class_with_path)
+        self._data_iterator = self.get_iterator_reference(self.iterator_class_with_path)
+        self._model = self.get_model_reference(self.model_class_with_path)
 
         # if not self._data_iterator.dataset_type == self._dataset.dataset_type:
         #     print_info("Possible data iterators are: {}".
@@ -134,7 +143,6 @@ class Experiments(object):
         #                format(ModelsFactory.get_supported_data_iterators(self._dataset.dataset_type)))
         #     raise RuntimeError("Selected model and data iterator can't be used together")
 
-    #@profile
     def _init_tf_config(self):
         run_config = tf.ConfigProto()
         run_config.gpu_options.allow_growth = True
@@ -143,37 +151,34 @@ class Experiments(object):
         run_config.log_device_placement = False
         model_dir = self._model.model_dir
 
-        if self._hparams.clear_model_data:
+        if self.clear_model_data:
             if os.path.exists(model_dir):
                 shutil.rmtree(model_dir)
 
         self._run_config = tf.estimator.RunConfig(session_config=run_config,
-                                                  save_checkpoints_steps=self._hparams.save_checkpoints_steps,
-                                                  keep_checkpoint_max=self._hparams.keep_checkpoint_max,
-                                                  save_summary_steps=self._hparams.save_summary_steps,
+                                                  save_checkpoints_steps=self.save_checkpoints_steps,
+                                                  keep_checkpoint_max=self.keep_checkpoint_max,
+                                                  save_summary_steps=self.save_summary_steps,
                                                   model_dir=model_dir,
-                                                  log_step_count_steps=self._hparams.log_step_count_steps)
+                                                  log_step_count_steps=self.log_step_count_steps)
         return run_config
 
-    #@profile
     def setup(self):
         self.check_interoperability_n_import()
         # Initialize the handles and call any user specific init() methods
-        if self._hparams.plug_dataset:
-            self._dataset = self._dataset(hparams=self._hparams[self._hparams['dataset_class_with_path']])
+        if self.plug_dataset:
+            self._dataset = self._dataset()
         #TODO avoid loading train data while prediction
-        self._data_iterator = self._data_iterator(hparams=self._hparams[self._hparams['iterator_class_with_path']],
-                                                  dataset=self._dataset)
+        self._data_iterator = self._data_iterator(dataset=self._dataset)
         print_error(self._model)
-        self._model = self._model(hparams=self._hparams[self._hparams['model_class_with_path']],
-                                  data_iterator=self._data_iterator)
+        self._model = self._model(data_iterator=self._data_iterator)
 
     def test_iterator(self):
         iterator = self._data_iterator.train_input_fn().make_initializable_iterator()
         training_init_op = iterator.initializer
         num_samples = self._data_iterator.num_train_samples
         next_element = iterator.get_next()
-        batch_size = self._hparams[self._hparams['iterator_class_with_path']].batch_size
+        batch_size = self.batch_size
 
         with tf.Session() as sess:
             sess.run(training_init_op)
@@ -201,13 +206,13 @@ class Experiments(object):
         exit(0)
 
 
-    #@profile
+    
     def run(self, args):
         self.setup()
         num_samples = self._data_iterator.num_train_samples
         print_info("Number of trianing samples : {}".format(num_samples))
-        batch_size = self._hparams[self._hparams['iterator_class_with_path']].batch_size
-        num_epochs = self._hparams.num_epochs
+        batch_size = self.batch_size
+        num_epochs = self.num_epochs
         mode = self.mode
         self._init_tf_config()
 
