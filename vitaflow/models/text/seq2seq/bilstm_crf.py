@@ -16,28 +16,22 @@ A model class that uses BiLSTM word and char level embeddings
 """
 
 import os
-from overrides import overrides
 
+import gin
 import tensorflow as tf
-from tensorflow.contrib.learn import ModeKeys
+from overrides import overrides
 from tensorflow.contrib import lookup
+from tensorflow.contrib.learn import ModeKeys
 
-from vitaflow.utils.hyperparams import HParams
+from vitaflow.internal.features.feature_types import ITextFeature
+from vitaflow.internal.models.model_base import ModelBase
 from vitaflow.iterators.text.csv_seq_to_seq_iterator import CSVSeqToSeqIterator
 from vitaflow.iterators.text.vocabulary import SpecialTokens
-from vitaflow.internal.models.model_base import ModelBase
-from vitaflow.internal.features.feature_types import ITextFeature
-from vitaflow.utils.tf_data_helper import get_sequence_length
 from vitaflow.utils.print_helper import *
-# from vitaflow.core.hyperparams import HParams
-# from vitaflow.iterators.text.csv_seq_to_seq_iterator import CSVSeqToSeqIterator
-# from vitaflow.iterators.text.vocabulary import SpecialTokens
-# from vitaflow.core.models.model_base import ModelBase
-# from vitaflow.core.features.feature_types import ITextFeature
-# from vitaflow.helpers.tf_data_helper import get_sequence_length
-# from vitaflow.helpers.print_helper import *
+from vitaflow.utils.tf_data_helper import get_sequence_length
 
 
+@gin.configurable
 class BiLSTMCrf(ModelBase, ITextFeature):
     """
 
@@ -71,19 +65,30 @@ class BiLSTMCrf(ModelBase, ITextFeature):
 
     """
 
-    def __init__(self, hparams=None, data_iterator: CSVSeqToSeqIterator = None):
+    def __init__(self, experiment_name,
+                 model_root_directory,
+                 data_iterator: CSVSeqToSeqIterator,
+                 seperator, learning_rate,
+                 use_char_embd,
+                 keep_probability,
+                 word_emd_size,
+                 char_emd_size,
+                 word_level_lstm_hidden_size,
+                 char_level_lstm_hidden_size,
+                 num_lstm_layers
+                 ):
         ITextFeature.__init__(self)
-        ModelBase.__init__(self, hparams=hparams)
-        self._hparams = HParams(hparams,
-                                self.default_hparams())
+        ModelBase.__init__(self, experiment_name=experiment_name, model_root_directory=model_root_directory)
+        # self._hparams = HParams(hparams,
+        #                         self.default_hparams())
 
         # if not isinstance(data_iterator, CoNLLCsvDataIterator):
         #     raise RuntimeError
 
         # Constant params
-        self.UNKNOWN_WORD = SpecialTokens.UNK_WORD
-        self.PAD_WORD = SpecialTokens.PAD_WORD
-        self.SEPERATOR = "~"
+        # self.UNKNOWN_WORD = SpecialTokens.UNK_WORD
+        # self.PAD_WORD = SpecialTokens.PAD_WORD
+        self.SEPERATOR = seperator
 
         # Preprocessing Paramaters
         self.TAGS_VOCAB_FILE = data_iterator.ENTITY_VOCAB_FILE
@@ -95,14 +100,14 @@ class BiLSTMCrf(ModelBase, ITextFeature):
         self.NUM_TAGS = data_iterator.num_lables
 
         # Model hyper parameters
-        self.USE_CHAR_EMBEDDING = self._hparams.use_char_embd
-        self.LEARNING_RATE = self._hparams.learning_rate
-        self.KEEP_PROP = self._hparams.keep_probability
-        self.WORD_EMBEDDING_SIZE = self._hparams.word_emd_size
-        self.CHAR_EMBEDDING_SIZE = self._hparams.char_emd_size
-        self.WORD_LEVEL_LSTM_HIDDEN_SIZE = self._hparams.word_level_lstm_hidden_size
-        self.CHAR_LEVEL_LSTM_HIDDEN_SIZE = self._hparams.char_level_lstm_hidden_size
-        self.NUM_LSTM_LAYERS = self._hparams.num_lstm_layers
+        self.USE_CHAR_EMBEDDING = use_char_embd
+        self.LEARNING_RATE = learning_rate
+        self.KEEP_PROP = keep_probability
+        self.WORD_EMBEDDING_SIZE = word_emd_size
+        self.CHAR_EMBEDDING_SIZE = char_emd_size
+        self.WORD_LEVEL_LSTM_HIDDEN_SIZE = word_level_lstm_hidden_size
+        self.CHAR_LEVEL_LSTM_HIDDEN_SIZE = char_level_lstm_hidden_size
+        self.NUM_LSTM_LAYERS = num_lstm_layers
 
     @staticmethod
     def default_hparams():
@@ -168,7 +173,6 @@ class BiLSTMCrf(ModelBase, ITextFeature):
             "keep_probability": 0.5
         }
         return hparams
-
 
     def _build_layers(self, features, mode):
 

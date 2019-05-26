@@ -22,12 +22,15 @@ __author__ = 'Gaurish Thakkar'
 import os
 import shutil
 
+import gin
+
 from vitaflow.internal.dataset_types.dataset_types import ICSVSeq2SeqType1
-from vitaflow.utils.hyperparams import HParams
+# from vitaflow.utils.hyperparams import HParams
 from vitaflow.internal.ipreprocessor import IPreprocessor
 from vitaflow.utils.print_helper import *
 
 
+@gin.configurable
 class CLIENTXDataset(IPreprocessor, ICSVSeq2SeqType1):
     """
     Converts the given train, val, test folder to IOB format
@@ -37,69 +40,95 @@ class CLIENTXDataset(IPreprocessor, ICSVSeq2SeqType1):
 
     """
 
-    def __init__(self, hparams=None):
-        IPreprocessor.__init__(self, hparams=hparams)
-        self._hparams = HParams(hparams, self.default_hparams())
+    def __init__(self,
+                 experiment_name,
+                 preprocessed_data_path,
+                 experiment_root_directory,
+                 train_data_path="train",
+                 validation_data_path="val",
+                 test_data_path="test",
+                 minimum_num_words=5,
+                 over_write=False
+                 ):
+        self._experiment_name = experiment_name
+        self._preprocessed_data_path = preprocessed_data_path
+        self._experiment_root_directory = experiment_root_directory
+        self._train_data_path = train_data_path
+        self._validation_data_path = validation_data_path
+        self._test_data_path = test_data_path
+        self._over_write = over_write
+        self._temp_data = experiment_root_directory
+
+        IPreprocessor.__init__(self,
+                               experiment_name=experiment_name,
+                               experiment_root_directory=experiment_root_directory,
+                               train_data_path=train_data_path,
+                               validation_data_path=validation_data_path,
+                               test_data_path=test_data_path,
+                               preprocessed_data_path=preprocessed_data_path,
+                               )
+        # self._hparams = HParams(hparams, self.default_hparams())
         self._prepare_data()
-    @staticmethod
-    def default_hparams():
-        """
-        .. role:: python(code)
-           :language: python
 
-        .. code-block:: python
-
-            {
-                "experiment_root_directory" : os.path.expanduser("~") + "/vitaFlow/" ,
-                "experiment_name" : "CoNLL2003Dataset",
-                "preprocessed_data_path" : "preprocessed_data",
-                "train_data_path" : "train",
-                "validation_data_path" : "val",
-                "test_data_path" : "test",
-                "minimum_num_words" : 5,
-                "over_write" : False,
-            }
-
-        Here:
-
-        "experiment_root_directory" : str
-            Root directory where the data is downloaded or copied, also
-            acts as the folder for any subsequent experimentation
-
-        "experiment_name" : str
-            Name of the data set
-
-        "preprocessed_data_path" : str
-            Folder path under `experiment_root_directory` where the preprocessed data
-            should be stored
-
-        "train_data_path" : str
-            Folder path under `experiment_root_directory` where the train data is stored
-
-        "validation_data_path" : str
-            Folder path under `experiment_root_directory` where the validation data is stored
-
-        "test_data_path" : str
-            Folder path under `experiment_root_directory` where the test data is stored
-
-        "minimum_num_words" : str
-            Number of word to be considered for a sentence to be used down the flow
-
-        "over_write" : boolean
-            Flag to over write the previous copy of the downloaded data
-
-
-        :return: A dictionary of hyperparameters with default values
-        """
-        hparams = IPreprocessor.default_hparams()
-
-        hparams.update({
-            "experiment_name": "CLIENTXDataset",
-            "minimum_num_words": 5,
-            "over_write": False,
-            "temp-data": os.environ['DEMO_DATA_PATH'], #os.path.join("/opt/data", "vitaFlow-clientx/"),
-        })
-        return hparams
+    # @staticmethod
+    # def default_hparams():
+    #     """
+    #     .. role:: python(code)
+    #        :language: python
+    #
+    #     .. code-block:: python
+    #
+    #         {
+    #             "experiment_root_directory" : os.path.expanduser("~") + "/vitaFlow/" ,
+    #             "experiment_name" : "CoNLL2003Dataset",
+    #             "preprocessed_data_path" : "preprocessed_data",
+    #             "train_data_path" : "train",
+    #             "validation_data_path" : "val",
+    #             "test_data_path" : "test",
+    #             "minimum_num_words" : 5,
+    #             "over_write" : False,
+    #         }
+    #
+    #     Here:
+    #
+    #     "experiment_root_directory" : str
+    #         Root directory where the data is downloaded or copied, also
+    #         acts as the folder for any subsequent experimentation
+    #
+    #     "experiment_name" : str
+    #         Name of the data set
+    #
+    #     "preprocessed_data_path" : str
+    #         Folder path under `experiment_root_directory` where the preprocessed data
+    #         should be stored
+    #
+    #     "train_data_path" : str
+    #         Folder path under `experiment_root_directory` where the train data is stored
+    #
+    #     "validation_data_path" : str
+    #         Folder path under `experiment_root_directory` where the validation data is stored
+    #
+    #     "test_data_path" : str
+    #         Folder path under `experiment_root_directory` where the test data is stored
+    #
+    #     "minimum_num_words" : str
+    #         Number of word to be considered for a sentence to be used down the flow
+    #
+    #     "over_write" : boolean
+    #         Flag to over write the previous copy of the downloaded data
+    #
+    #
+    #     :return: A dictionary of hyperparameters with default values
+    #     """
+    #     hparams = IPreprocessor.default_hparams()
+    #
+    #     hparams.update({
+    #         "experiment_name": "CLIENTXDataset",
+    #         "minimum_num_words": 5,
+    #         "over_write": False,
+    #         "temp-data": os.environ['DEMO_DATA_PATH'], #os.path.join("/opt/data", "vitaFlow-clientx/"),
+    #     })
+    #     return hparams
 
     def _create_target_directories(self):
         """
@@ -107,7 +136,7 @@ class CLIENTXDataset(IPreprocessor, ICSVSeq2SeqType1):
         :return:
         """
         if os.path.exists(self.PROCESSED_DATA_OUT_DIR):
-            if self._hparams.over_write:
+            if self._over_write:
                 print_info("Deleting data folder: {}".format(self.PROCESSED_DATA_OUT_DIR))
                 shutil.rmtree(self.PROCESSED_DATA_OUT_DIR)
                 print_info("Recreating data folder: {}".format(self.PROCESSED_DATA_OUT_DIR))
@@ -139,22 +168,20 @@ class CLIENTXDataset(IPreprocessor, ICSVSeq2SeqType1):
 
         print_info("Writing data to {}...".format(out_dir))
 
-
-
     def _prepare_data(self):
         """
         Prepares the data for training
         :return:
         """
-        #TODO hardcoded values need to change
+        # TODO hardcoded values need to change
         print_info("Preprocessing the train data...")
-        self._place_dataset(os.path.join(self._hparams["temp-data"], "train"),
-                           self.TRAIN_OUT_PATH)
+        self._place_dataset(os.path.join(self._temp_data, "train"),
+                            self.TRAIN_OUT_PATH)
 
         print_info("Preprocessing the test data...")
-        self._place_dataset(os.path.join(self._hparams["temp-data"], "test"),
-                           self.TEST_OUT_PATH)
+        self._place_dataset(os.path.join(self._temp_data, "test"),
+                            self.TEST_OUT_PATH)
 
         print_info("Preprocessing the validation data...")
-        self._place_dataset(os.path.join(self._hparams["temp-data"], "val"),
-                           self.VAL_OUT_PATH)
+        self._place_dataset(os.path.join(self._temp_data, "val"),
+                            self.VAL_OUT_PATH)

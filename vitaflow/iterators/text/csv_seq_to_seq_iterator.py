@@ -15,60 +15,99 @@
 CoNLL 2003 dataset iterator class
 """
 
+import csv
 import os
 import pickle
 
+import gin
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 from overrides import overrides
 from tqdm import tqdm
 
-from vitaflow.utils.hyperparams import HParams
+from vitaflow.engines import Executor
 from vitaflow.internal import IIteratorBase
-from vitaflow.internal import IPreprocessor
 from vitaflow.internal.features import ITextFeature
 from vitaflow.internal.nlp.spacy_helper import naive_vocab_creater, get_char_vocab, vocab_to_tsv
 from vitaflow.iterators.text.vocabulary import SpecialTokens
 from vitaflow.utils.os_helper import check_n_makedirs
 from vitaflow.utils.print_helper import print_info
-from vitaflow.engines import Executor
-import csv
 
+
+@gin.configurable
 class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
-    def __init__(self, hparams=None, dataset=None):
+    def __init__(self, experiment_root_directory,
+                 experiment_name,
+                 number_test_of_samples,
+                 text_col,
+                 entity_col,
+                 batch_size,
+                 seperator,
+                 quotechar,
+                 max_word_length,
+                 use_char_embd,
+                 prefetch_size=32,
+                 dataset=None,
+                 iterator_name="CSVSeqToSeqIterator",
+                 preprocessed_data_path="preprocessed_data",
+                 train_data_path="train",
+                 validation_data_path="val",
+                 test_data_path="test",
+                 ):
         '''
         :param hparams:
         :param dataset:
         '''
-        IIteratorBase.__init__(self, hparams=hparams, dataset=dataset)
+        IIteratorBase.__init__(self,
+                               experiment_root_directory=experiment_root_directory,
+                               experiment_name=experiment_name,
+                               batch_size=batch_size,
+                               prefetch_size=prefetch_size,
+                               dataset=dataset)
         ITextFeature.__init__(self)
-        self._hparams = HParams(hparams, self.default_hparams())
-
+        self._experiment_root_directory = experiment_root_directory
+        self._experiment_name = experiment_name
+        self._batch_size = batch_size
+        self._prefetch_size = prefetch_size
+        self._dataset = dataset
+        self._iterator_name = iterator_name
+        self._preprocessed_data_path = preprocessed_data_path
+        self._train_data_path = train_data_path
+        self._validation_data_path = validation_data_path
+        self._test_data_path = test_data_path
+        self._number_test_of_samples = number_test_of_samples
+        self._text_col = text_col
+        self._entity_col = entity_col
+        self._batch_size = batch_size
+        self._seperator = seperator
+        self._quotechar = quotechar
+        self._max_word_length = max_word_length
+        self._use_char_embd = use_char_embd
         #
         # def _init(self):
 
-        self.EXPERIMENT_ROOT_DIR = os.path.join(self._hparams.experiment_root_directory,
-                                                self._hparams.experiment_name)
+        self.EXPERIMENT_ROOT_DIR = os.path.join(self._experiment_root_directory,
+                                                self._experiment_name)
         self.PREPROCESSED_DATA_OUT_DIR = os.path.join(self.EXPERIMENT_ROOT_DIR,
-                                                      self._hparams.preprocessed_data_path)
+                                                      self._preprocessed_data_path)
         self.TRAIN_OUT_PATH = os.path.join(self.PREPROCESSED_DATA_OUT_DIR,
-                                           self._hparams.train_data_path)
+                                           self._train_data_path)
         self.VAL_OUT_PATH = os.path.join(self.PREPROCESSED_DATA_OUT_DIR,
-                                         self._hparams.validation_data_path)
+                                         self._validation_data_path)
         self.TEST_OUT_PATH = os.path.join(self.PREPROCESSED_DATA_OUT_DIR,
-                                          self._hparams.test_data_path)
+                                          self._test_data_path)
         self.OUT_DIR = os.path.join(self.EXPERIMENT_ROOT_DIR,
-                                    self._hparams.iterator_name)
+                                    self._iterator_name)
 
         # This rule is assumed to be correct if the previous stage is of IPreprocessor
         self.TRAIN_FILES_IN_PATH = os.path.join(self.PREPROCESSED_DATA_OUT_DIR, "train/")
         self.VAL_FILES_IN_PATH = os.path.join(self.PREPROCESSED_DATA_OUT_DIR, "val/")
         self.TEST_FILES_IN_PATH = os.path.join(self.PREPROCESSED_DATA_OUT_DIR, "test/")
 
-        self.WORDS_VOCAB_FILE = os.path.join(self.OUT_DIR, self._hparams.text_col + "_" + "vocab.tsv")
-        self.CHARS_VOCAB_FILE = os.path.join(self.OUT_DIR, self._hparams.text_col + "_" + "chars_vocab.tsv")
-        self.ENTITY_VOCAB_FILE = os.path.join(self.OUT_DIR, self._hparams.entity_col + "_vocab.tsv")
+        self.WORDS_VOCAB_FILE = os.path.join(self.OUT_DIR, self._text_col + "_" + "vocab.tsv")
+        self.CHARS_VOCAB_FILE = os.path.join(self.OUT_DIR, self._text_col + "_" + "chars_vocab.tsv")
+        self.ENTITY_VOCAB_FILE = os.path.join(self.OUT_DIR, self._entity_col + "_vocab.tsv")
 
         check_n_makedirs(self.OUT_DIR)
 
@@ -82,86 +121,86 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
 
         self._extract_vocab()
 
-    @staticmethod
-    def default_hparams():
-        """
-        .. role:: python(code)
-           :language: python
-
-        .. code-block:: python
-
-            {
-                "experiment_root_directory" : os.path.expanduser("~") + "/vitaFlow/",
-                "experiment_name" : "test_experiment",
-                "iterator_name" : "conll_data_iterator",
-                "preprocessed_data_path" : "preprocessed_data",
-                "train_data_path" : "train",
-                "validation_data_path" : "val",
-                "test_data_path" : "test",
-                "batch_size" : 32,
-                "text_col" : 0,
-                "entity_col" : 3,
-            }
-
-        Here:
-
-        "experiment_root_directory" : str
-            Root directory where the data is downloaded or copied, also
-            acts as the folder for any subsequent experimentation
-
-        "experiment_name" : str
-            Name for the current experiment
-
-        "iterator_name" : str
-            Name of the data iterator
-
-        "preprocessed_data_path" : str
-            Folder path under `experiment_root_directory` where the preprocessed data
-            should be stored
-
-        "train_data_path" : str
-            Folder path under `experiment_root_directory` where the train data is stored
-
-        "validation_data_path" : str
-            Folder path under `experiment_root_directory` where the validation data is stored
-
-        "test_data_path" : str
-            Folder path under `experiment_root_directory` where the test data is stored
-
-        "batch_size" : int
-            Batch size for the current iterator
-
-        "text_col" : str
-            Text column to be referred in the preprocessed CoNLL data CSV files
-
-        "entity_col" : str
-            Entity/Label column to be referred in the preprocessed CoNLL data CSV files
-
-        "seperator" : str
-            Seprator character to be used while joining the words from CSV
-
-        "max_word_length" : int
-            Maximum word length to be considerd while padding at character level
-
-        "use_char_embd" : boolean
-            Flag to enable character index as one of the feature
-
-        :return: A dictionary of hyperparameters with default values
-        """
-
-        hparams = IPreprocessor.default_hparams()
-        hparams.update(IIteratorBase.default_hparams())
-        hparams.update({
-            "iterator_name": "conll_data_iterator",
-            "text_col": "0",
-            "entity_col": "3",
-            "seperator": "~",
-            "quotechar": "^",
-            "max_word_length": 20,
-            "use_char_embd": False
-        })
-
-        return hparams
+    # @staticmethod
+    # def default_hparams():
+    #     """
+    #     .. role:: python(code)
+    #        :language: python
+    #
+    #     .. code-block:: python
+    #
+    #         {
+    #             "experiment_root_directory" : os.path.expanduser("~") + "/vitaFlow/",
+    #             "experiment_name" : "test_experiment",
+    #             "iterator_name" : "conll_data_iterator",
+    #             "preprocessed_data_path" : "preprocessed_data",
+    #             "train_data_path" : "train",
+    #             "validation_data_path" : "val",
+    #             "test_data_path" : "test",
+    #             "batch_size" : 32,
+    #             "text_col" : 0,
+    #             "entity_col" : 3,
+    #         }
+    #
+    #     Here:
+    #
+    #     "experiment_root_directory" : str
+    #         Root directory where the data is downloaded or copied, also
+    #         acts as the folder for any subsequent experimentation
+    #
+    #     "experiment_name" : str
+    #         Name for the current experiment
+    #
+    #     "iterator_name" : str
+    #         Name of the data iterator
+    #
+    #     "preprocessed_data_path" : str
+    #         Folder path under `experiment_root_directory` where the preprocessed data
+    #         should be stored
+    #
+    #     "train_data_path" : str
+    #         Folder path under `experiment_root_directory` where the train data is stored
+    #
+    #     "validation_data_path" : str
+    #         Folder path under `experiment_root_directory` where the validation data is stored
+    #
+    #     "test_data_path" : str
+    #         Folder path under `experiment_root_directory` where the test data is stored
+    #
+    #     "batch_size" : int
+    #         Batch size for the current iterator
+    #
+    #     "text_col" : str
+    #         Text column to be referred in the preprocessed CoNLL data CSV files
+    #
+    #     "entity_col" : str
+    #         Entity/Label column to be referred in the preprocessed CoNLL data CSV files
+    #
+    #     "seperator" : str
+    #         Seprator character to be used while joining the words from CSV
+    #
+    #     "max_word_length" : int
+    #         Maximum word length to be considerd while padding at character level
+    #
+    #     "use_char_embd" : boolean
+    #         Flag to enable character index as one of the feature
+    #
+    #     :return: A dictionary of hyperparameters with default values
+    #     """
+    #
+    #     hparams = IPreprocessor.default_hparams()
+    #     hparams.update(IIteratorBase.default_hparams())
+    #     hparams.update({
+    #         "iterator_name": "conll_data_iterator",
+    #         "text_col": "0",
+    #         "entity_col": "3",
+    #         "seperator": "~",
+    #         "quotechar": "^",
+    #         "max_word_length": 20,
+    #         "use_char_embd": False
+    #     })
+    #
+    #     return hparams
 
     @property
     def word_vocab_size(self):
@@ -214,7 +253,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         if not os.path.exists(self.WORDS_VOCAB_FILE) \
                 or not os.path.exists(self.ENTITY_VOCAB_FILE) \
                 or not os.path.exists(self.CHARS_VOCAB_FILE):
-            print_info("Preparing the vocab for the text col: {}".format(self._hparams.text_col))
+            print_info("Preparing the vocab for the text col: {}".format(self._text_col))
 
             lines = set()
             entities = set()
@@ -223,18 +262,18 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
                 df_file = os.path.join(self.TRAIN_FILES_IN_PATH, df_file)
 
                 if df_file.endswith(".csv"):
-                    df = pd.read_csv(df_file,sep="\t",quoting=csv.QUOTE_NONE).fillna(SpecialTokens.UNK_WORD)
+                    df = pd.read_csv(df_file, sep="\t", quoting=csv.QUOTE_NONE).fillna(SpecialTokens.UNK_WORD)
                 else:
                     raise RuntimeError
 
-                lines.update(set(df[self._hparams.text_col].values.tolist()))
-                entities.update(set(df[self._hparams.entity_col].values.tolist()))
+                lines.update(set(df[self._text_col].values.tolist()))
+                entities.update(set(df[self._entity_col].values.tolist()))
 
             self.WORD_VOCAB_SIZE, words_vocab = naive_vocab_creater(lines=lines,
                                                                     out_file_name=self.WORDS_VOCAB_FILE,
                                                                     use_nlp=True)
 
-            print_info("Preparing the character vocab for the text col: {}".format(self._hparams.text_col))
+            print_info("Preparing the character vocab for the text col: {}".format(self._text_col))
 
             # Get char level vocab
             char_vocab = [SpecialTokens.PAD_CHAR, SpecialTokens.UNK_CHAR]
@@ -247,7 +286,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
 
             self.CHAR_VOCAB_SIZE = len(self.CHAR_2_ID_MAP)
 
-            print_info("Preparing the vocab for the entity col: {}".format(self._hparams.entity_col))
+            print_info("Preparing the vocab for the entity col: {}".format(self._entity_col))
 
             # NUM_TAGS, tags_vocab = tf_vocab_processor(lines, ENTITY_VOCAB_FILE)
             self.NUM_TAGS, tags_vocab = naive_vocab_creater(lines=entities,
@@ -321,12 +360,12 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         '''
         sequence_padded, sequence_length = [], []
         if nlevels == 1:
-            max_length = max(map(lambda x: len(x.split(self._hparams.seperator)), sequences))
+            max_length = max(map(lambda x: len(x.split(self._seperator)), sequences))
             # sequence_padded, sequence_length = _pad_sequences(sequences,
             #                                                   pad_tok, max_length)
             # breaking the code to pad the string instead on its ids
             for seq in sequences:
-                current_length = len(seq.split(self._hparams.seperator))
+                current_length = len(seq.split(self._seperator))
                 diff = max_length - current_length
                 pad_data = pad_tok * diff
                 sequence_padded.append(seq + pad_data)
@@ -374,22 +413,22 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             df_file = os.path.join(df_files_path, df_file)
 
             if df_file.endswith(".csv"):  # TODO start and stop tags
-                df = pd.read_csv(df_file,sep="\t",quoting=csv.QUOTE_NONE).fillna(SpecialTokens.UNK_WORD)
+                df = pd.read_csv(df_file, sep="\t", quoting=csv.QUOTE_NONE).fillna(SpecialTokens.UNK_WORD)
             elif df_file.endswith(".json"):
                 df = pd.read_json(df_file).filla(SpecialTokens.UNK_WORD)
 
-            list_text = df[self._hparams.text_col].astype(str).values.tolist()
+            list_text = df[self._text_col].astype(str).values.tolist()
             list_char_ids = [[char_2_id_map.get(c, 0) for c in str(word)] for word in list_text]
-            list_tag = df[self._hparams.entity_col].astype(str).values.tolist()
-            print(list_text,list_char_ids,list_tag)
-            sentence_feature1.append("{}".format(self._hparams.seperator).join(list_text))
+            list_tag = df[self._entity_col].astype(str).values.tolist()
+            print(list_text, list_char_ids, list_tag)
+            sentence_feature1.append("{}".format(self._seperator).join(list_text))
             char_ids_feature2.append(list_char_ids)
-            tag_label.append("{}".format(self._hparams.seperator).join(list_tag))
+            tag_label.append("{}".format(self._seperator).join(list_tag))
 
         if use_char_embd:
             sentence_feature1, seq_length = self._pad_sequences(sentence_feature1,
                                                                 nlevels=1,
-                                                                pad_tok="{}{}".format(self._hparams.seperator,
+                                                                pad_tok="{}{}".format(self._seperator,
                                                                                       SpecialTokens.PAD_WORD))  # space is used so that it can append to the string sequence
             sentence_feature1 = np.array(sentence_feature1)
 
@@ -399,7 +438,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             seq_length = np.array(seq_length)
             tag_label, seq_length = self._pad_sequences(tag_label,
                                                         nlevels=1,
-                                                        pad_tok="{}{}".format(self._hparams.seperator,
+                                                        pad_tok="{}{}".format(self._seperator,
                                                                               SpecialTokens.PAD_WORD))
             tag_label = np.array(tag_label)
 
@@ -426,13 +465,13 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         list_text = sentence.split()
         list_char_ids = [[char_2_id_map.get(c, SpecialTokens.UNK_CHAR_ID) for c in str(word)] for word in list_text]
 
-        sentence_feature1.append("{}".format(self._hparams.seperator).join(list_text))
+        sentence_feature1.append("{}".format(self._seperator).join(list_text))
         char_ids_feature2.append(list_char_ids)
 
         if use_char_embd:
             sentence_feature1, seq_length = self._pad_sequences(sentence_feature1,
                                                                 nlevels=1,
-                                                                pad_tok="{}{}".format(self._hparams.seperator,
+                                                                pad_tok="{}{}".format(self._seperator,
                                                                                       SpecialTokens.PAD_WORD))  # space is used so that it can append to the string sequence
             sentence_feature1 = np.array(sentence_feature1)
 
@@ -448,7 +487,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             return sentence_feature1, None, None
 
     def get_padded_data(self, file_name):
-        file_path = os.path.join(self.EXPERIMENT_ROOT_DIR , file_name)
+        file_path = os.path.join(self.EXPERIMENT_ROOT_DIR, file_name)
         if os.path.exists(file_path):
             print_info("Reading the padded data...")
             with open(file_path, 'rb') as f:
@@ -458,7 +497,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             return None
 
     def store_padded_data(self, file_name, data):
-        file_path = os.path.join(self.EXPERIMENT_ROOT_DIR , file_name)
+        file_path = os.path.join(self.EXPERIMENT_ROOT_DIR, file_name)
         print_info("Writing the padded data...")
         with open(file_path, 'wb') as f:
             pickle.dump(data, f)
@@ -466,7 +505,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
 
     @overrides
     def _get_train_input_fn(self):
-        file_name = "train_padded_data_" + str(self._hparams.use_char_embd) + ".p"
+        file_name = "train_padded_data_" + str(self._use_char_embd) + ".p"
         train_sentences, train_char_ids, train_ner_tags = None, None, None
         data = self.get_padded_data(file_name=file_name)
 
@@ -474,28 +513,28 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             train_sentences, train_char_ids, train_ner_tags = \
                 self._make_seq_pair(df_files_path=self.TRAIN_FILES_IN_PATH,
                                     char_2_id_map=self.CHAR_2_ID_MAP,
-                                    use_char_embd=self._hparams.use_char_embd)
+                                    use_char_embd=self._use_char_embd)
             self.store_padded_data(data=(train_sentences, train_char_ids, train_ner_tags), file_name=file_name)
         else:
             train_sentences, train_char_ids, train_ner_tags = data
 
         # print_error(train_char_ids)
         # print_info(train_ner_tags)
-        if self._hparams.use_char_embd:
+        if self._use_char_embd:
             dataset = tf.data.Dataset.from_tensor_slices(({self.FEATURE_1_NAME: train_sentences,
                                                            self.FEATURE_2_NAME: train_char_ids},
                                                           train_ner_tags))
         else:
             dataset = tf.data.Dataset.from_tensor_slices(({self.FEATURE_1_NAME: train_sentences},
                                                           train_ner_tags))
-        dataset = dataset.batch(batch_size=self._hparams.batch_size)
+        dataset = dataset.batch(batch_size=self._batch_size)
         print_info("Dataset output sizes are: ")
         print_info(dataset.output_shapes)
         return dataset
 
     @overrides
     def _get_val_input_fn(self):
-        file_name = "val_padded_data_" + str(self._hparams.use_char_embd) + ".p"
+        file_name = "val_padded_data_" + str(self._use_char_embd) + ".p"
         train_sentences, train_char_ids, train_ner_tags = None, None, None
         data = self.get_padded_data(file_name=file_name)
 
@@ -503,28 +542,28 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             train_sentences, train_char_ids, train_ner_tags = \
                 self._make_seq_pair(df_files_path=self.VAL_FILES_IN_PATH,
                                     char_2_id_map=self.CHAR_2_ID_MAP,
-                                    use_char_embd=self._hparams.use_char_embd)
+                                    use_char_embd=self._use_char_embd)
             self.store_padded_data(data=(train_sentences, train_char_ids, train_ner_tags), file_name=file_name)
         else:
             train_sentences, train_char_ids, train_ner_tags = data
 
         # print_error(train_char_ids)
         # print_info(train_ner_tags)
-        if self._hparams.use_char_embd:
+        if self._use_char_embd:
             dataset = tf.data.Dataset.from_tensor_slices(({self.FEATURE_1_NAME: train_sentences,
                                                            self.FEATURE_2_NAME: train_char_ids},
                                                           train_ner_tags))
         else:
             dataset = tf.data.Dataset.from_tensor_slices(({self.FEATURE_1_NAME: train_sentences},
                                                           train_ner_tags))
-        dataset = dataset.batch(batch_size=self._hparams.batch_size)
+        dataset = dataset.batch(batch_size=self._batch_size)
         print_info("Dataset output sizes are: ")
         print_info(dataset.output_shapes)
         return dataset
 
     @overrides
     def _get_test_input_fn(self):
-        file_name = "test_padded_data_" + str(self._hparams.use_char_embd) + ".p"
+        file_name = "test_padded_data_" + str(self._use_char_embd) + ".p"
         train_sentences, train_char_ids, train_ner_tags = None, None, None
         data = self.get_padded_data(file_name=file_name)
 
@@ -532,21 +571,21 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             train_sentences, train_char_ids, train_ner_tags = \
                 self._make_seq_pair(df_files_path=self.TEST_FILES_IN_PATH,
                                     char_2_id_map=self.CHAR_2_ID_MAP,
-                                    use_char_embd=self._hparams.use_char_embd)
+                                    use_char_embd=self._use_char_embd)
             self.store_padded_data(data=(train_sentences, train_char_ids, train_ner_tags), file_name=file_name)
         else:
             train_sentences, train_char_ids, train_ner_tags = data
 
         # print_error(train_char_ids)
         # print_info(train_ner_tags)
-        if self._hparams.use_char_embd:
+        if self._use_char_embd:
             dataset = tf.data.Dataset.from_tensor_slices(({self.FEATURE_1_NAME: train_sentences,
                                                            self.FEATURE_2_NAME: train_char_ids},
                                                           train_ner_tags))
         else:
             dataset = tf.data.Dataset.from_tensor_slices(({self.FEATURE_1_NAME: train_sentences},
                                                           train_ner_tags))
-        dataset = dataset.batch(batch_size=self._hparams.batch_size)
+        dataset = dataset.batch(batch_size=self._batch_size)
         print_info("Dataset output sizes are: ")
         print_info(dataset.output_shapes)
         return dataset
@@ -559,16 +598,16 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         train_sentences, train_char_ids, train_ner_tags = \
             self._make_seq_pair_text(sentence=data,
                                      char_2_id_map=self.CHAR_2_ID_MAP,
-                                     use_char_embd=self._hparams.use_char_embd)
+                                     use_char_embd=self._use_char_embd)
 
         # print_error(train_char_ids)
         # print_info(train_ner_tags)
-        if self._hparams.use_char_embd:
+        if self._use_char_embd:
             dataset = tf.data.Dataset.from_tensor_slices(({self.FEATURE_1_NAME: train_sentences,
                                                            self.FEATURE_2_NAME: train_char_ids}, np.zeros(1)))
         else:
             dataset = tf.data.Dataset.from_tensor_slices(({self.FEATURE_1_NAME: train_sentences}, np.zeros(1)))
-        dataset = dataset.batch(batch_size=self._hparams.batch_size)
+        dataset = dataset.batch(batch_size=self._batch_size)
         print_info("Dataset output sizes are: ")
         print_info(dataset.output_shapes)
         return dataset
@@ -591,7 +630,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         # Get the files from test folder and zip it with predictions
         for each_prediction, file in zip(predictions, self._test_files_path):
 
-            df = pd.read_csv(file,sep="\t",quoting=csv.QUOTE_NONE)
+            df = pd.read_csv(file, sep="\t", quoting=csv.QUOTE_NONE)
 
             predicted_id = []
             confidence = []
@@ -619,7 +658,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             pred_3_confidence = top_3_predicted_confidence[:, 2:]
 
             results.append({
-                "tokens": df[self._hparams.text_col].astype(str).values.tolist(),
+                "tokens": df[self._text_col].astype(str).values.tolist(),
                 "predicted_id": predicted_id,
                 "confidence": confidence,
                 "pred_1": pred_1,
@@ -632,16 +671,16 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             })
 
             df["predicted_id"] = [j for i, j in
-                                  zip(df[self._hparams.text_col].astype(str).values.tolist(), predicted_id)]
-            df["confidence"]= confidence[:len(df)]
-            df["pred_1"]= pred_1[:len(df)]
-            df["pred_1_confidence"]= pred_1_confidence[:len(df)]
-            df["pred_2"]= pred_2[:len(df)]
-            df["pred_2_confidence"]= pred_2_confidence[:len(df)]
+                                  zip(df[self._text_col].astype(str).values.tolist(), predicted_id)]
+            df["confidence"] = confidence[:len(df)]
+            df["pred_1"] = pred_1[:len(df)]
+            df["pred_1_confidence"] = pred_1_confidence[:len(df)]
+            df["pred_2"] = pred_2[:len(df)]
+            df["pred_2_confidence"] = pred_2_confidence[:len(df)]
 
-            out_dir = os.path.join(self.OUT_DIR ,"predictions")
+            out_dir = os.path.join(self.OUT_DIR, "predictions")
             check_n_makedirs(out_dir)
-            df.to_csv(os.path.join(out_dir ,os.path.basename(file)), index=False)
+            df.to_csv(os.path.join(out_dir, os.path.basename(file)), index=False)
 
         return results
 
@@ -680,8 +719,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
 
         return predicted_id
 
-
-    def predict_on_test_files(self,  executor: Executor):
+    def predict_on_test_files(self, executor: Executor):
         """
         Runs the prediction on list of file to be tagged
         :return:
@@ -704,7 +742,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         # Get the files from test folder and zip it with predictions
         for each_prediction, file in zip(predictions, self._test_files_path):
 
-            df = pd.read_csv(file,sep="\t",quoting=csv.QUOTE_NONE)
+            df = pd.read_csv(file, sep="\t", quoting=csv.QUOTE_NONE)
 
             predicted_id = []
             confidence = []
@@ -727,12 +765,12 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             pred_3 = top_3_predicted_indices[:, 2:].flatten()
             pred_3 = list(map(lambda x: self.TAGS_2_ID[x], pred_3))
 
-            pred_1_confidence = top_3_predicted_confidence[:, 0:1]
-            pred_2_confidence = top_3_predicted_confidence[:, 1:2]
-            pred_3_confidence = top_3_predicted_confidence[:, 2:]
+            pred_1_confidence = top_3_predicted_confidence[:, 0:1].flatten()
+            pred_2_confidence = top_3_predicted_confidence[:, 1:2].flatten()
+            pred_3_confidence = top_3_predicted_confidence[:, 2:].flatten()
 
             results.append({
-                "tokens": df[self._hparams.text_col].astype(str).values.tolist(),
+                "tokens": df[self._text_col].astype(str).values.tolist(),
                 "predicted_id": predicted_id,
                 "confidence": confidence,
                 "pred_1": pred_1,
@@ -745,13 +783,13 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             })
 
             df["predicted_id"] = [j for i, j in
-                                  zip(df[self._hparams.text_col].astype(str).values.tolist(), predicted_id)]
+                                  zip(df[self._text_col].astype(str).values.tolist(), predicted_id)]
 
-            df["confidence"]= confidence[:len(df)]
-            df["pred_1"]= pred_1[:len(df)]
-            df["pred_1_confidence"]= pred_1_confidence[:len(df)]
-            df["pred_2"]= pred_2[:len(df)]
-            df["pred_2_confidence"]= pred_2_confidence[:len(df)]
+            df["confidence"] = confidence[:len(df)]
+            df["pred_1"] = pred_1[:len(df)]
+            df["pred_1_confidence"] = pred_1_confidence[:len(df)]
+            df["pred_2"] = pred_2[:len(df)]
+            df["pred_2_confidence"] = pred_2_confidence[:len(df)]
 
             out_dir = os.path.join(self.OUT_DIR, "predictions")
             check_n_makedirs(out_dir)
@@ -774,30 +812,31 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
                     else:
                         # second index onwards
                         if is_new_tag(prev_tag, row["predicted_id"]):
-                            doc_text = doc_text + text + "~" + strip_iob(prev_tag)+"\n"
+                            doc_text = doc_text + text + "~" + strip_iob(prev_tag) + "\n"
                             text = row["0"]
 
                         else:
                             text = text + " " + row["0"]
                         prev_tag = row["predicted_id"]
+                else:
+                    doc_text = doc_text + text + "~" + strip_iob(row["predicted_id"]) + "\n"
+                    prev_tag = row["predicted_id"]
+
             doc_text = doc_text + text + "~" + strip_iob(prev_tag) + "\n"
             print(doc_text)
 
             post_out_dir = os.path.join(self.OUT_DIR, "postprocessed")
             check_n_makedirs(post_out_dir)
-          
-            with open(os.path.join(post_out_dir,os.path.basename(file)), "w") as post_file:
+
+            with open(os.path.join(post_out_dir, os.path.basename(file)), "w") as post_file:
                 post_file.write("Item~Tag\n")
                 post_file.write(doc_text)
 
         # for loop ends
 
+    # function ends
 
-
-    #function ends        
-
-
-    def predict_sentence(self,  executor: Executor, sentence):
+    def predict_sentence(self, executor: Executor, sentence):
         """
         Runs prediction on a single sentence
         :param sentence: A single sentence whose tokens are separated by space
@@ -811,10 +850,15 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         results = data_iterator.predict_on_text(predict_fn)
         print(list(zip(sentence.split(), results)))
 
+
 def strip_iob(iob_tag):
-    tag = iob_tag.replace("B-", "")
-    tag = tag.replace("I-", "")
-    return tag
+    if iob_tag:
+        tag = iob_tag.replace("B-", "")
+        tag = tag.replace("I-", "")
+        return tag
+    else:
+        return ""
+
 
 def is_new_tag(prev, current):
     if "O" in prev:
@@ -829,11 +873,11 @@ def is_new_tag(prev, current):
     if prev_w != current_w:
         return True
     else:
-        if prev_t =="B" and current_t =="I":
+        if prev_t == "B" and current_t == "I":
             return False
-        elif prev_t =="I" and current_t =="B":
+        elif prev_t == "I" and current_t == "B":
             return True
-        elif prev_t =="I" and current_t =="I":
+        elif prev_t == "I" and current_t == "I":
             return False
         else:
             return False
