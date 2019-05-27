@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Copyright 2018 The vitFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +17,7 @@
 """
 import tensorflow as tf
 
+import tensorflow as tf
 from tensorflow.python.platform import gfile
 
 

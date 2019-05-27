@@ -16,27 +16,19 @@ A model class that uses BiLSTM word and char level embeddings
 """
 
 import os
-from overrides import overrides
 
 import tensorflow as tf
-from tensorflow.contrib.learn import ModeKeys
+from overrides import overrides
 from tensorflow.contrib import lookup
+from tensorflow.contrib.learn import ModeKeys
 
 import gin
-# from vitaflow.utils.hyperparams import HParams
+from vitaflow.internal.features.feature_types import ITextFeature
+from vitaflow.internal.models.model_base import ModelBase
 from vitaflow.iterators.text.csv_seq_to_seq_iterator import CSVSeqToSeqIterator
 from vitaflow.iterators.text.vocabulary import SpecialTokens
-from vitaflow.internal.models.model_base import ModelBase
-from vitaflow.internal.features.feature_types import ITextFeature
-from vitaflow.utils.tf_data_helper import get_sequence_length
 from vitaflow.utils.print_helper import *
-# from vitaflow.core.hyperparams import HParams
-# from vitaflow.iterators.text.csv_seq_to_seq_iterator import CSVSeqToSeqIterator
-# from vitaflow.iterators.text.vocabulary import SpecialTokens
-# from vitaflow.core.models.model_base import ModelBase
-# from vitaflow.core.features.feature_types import ITextFeature
-# from vitaflow.helpers.tf_data_helper import get_sequence_length
-# from vitaflow.helpers.print_helper import *
+from vitaflow.utils.tf_data_helper import get_sequence_length
 
 
 @gin.configurable
@@ -74,8 +66,9 @@ class BiLSTMCrf(ModelBase, ITextFeature):
     """
 
     def __init__(self,
-                 model_root_directory=os.path.expanduser("~") + "/vitaFlow/",
-                 experiment_name="default",
+                 model_root_directory,
+                 experiment_name,
+                 seperator,
                  use_char_embd=False,
                  learning_rate=0.001,
                  word_level_lstm_hidden_size=24,
@@ -94,9 +87,9 @@ class BiLSTMCrf(ModelBase, ITextFeature):
         #     raise RuntimeError
 
         # Constant params
-        self.UNKNOWN_WORD = SpecialTokens.UNK_WORD
-        self.PAD_WORD = SpecialTokens.PAD_WORD
-        self.SEPERATOR = "~"
+        # self.UNKNOWN_WORD = SpecialTokens.UNK_WORD
+        # self.PAD_WORD = SpecialTokens.PAD_WORD
+        self.SEPERATOR = seperator
 
         # Preprocessing Paramaters
         self.TAGS_VOCAB_FILE = data_iterator.ENTITY_VOCAB_FILE
@@ -116,72 +109,6 @@ class BiLSTMCrf(ModelBase, ITextFeature):
         self.WORD_LEVEL_LSTM_HIDDEN_SIZE = word_level_lstm_hidden_size
         self.CHAR_LEVEL_LSTM_HIDDEN_SIZE = char_level_lstm_hidden_size
         self.NUM_LSTM_LAYERS = num_lstm_layers
-
-    # @staticmethod
-    # def default_hparams():
-    #     """
-    #     .. role:: python(code)
-    #        :language: python
-    #
-    #     .. code-block:: python
-    #
-    #         {
-    #             "model_root_directory" : os.path.expanduser("~") + "/vitaFlow/",
-    #             "experiment_name" : "experiment_name",
-    #             # hyper parameters
-    #             "use_char_embd": False,
-    #             "learning_rate": 0.001,
-    #             "word_level_lstm_hidden_size": 24,
-    #             "char_level_lstm_hidden_size": 24,
-    #             "word_emd_size": 24,
-    #             "char_emd_size": 24,
-    #             "num_lstm_layers": 1,
-    #             "keep_probability": 0.5,
-    #         }
-    #
-    #     Here:
-    #
-    #     "use_char_embd" : boolean
-    #         Use character level embedding as part of the model
-    #
-    #     "learning_rate" : float
-    #         Learning rate
-    #
-    #     "word_level_lstm_hidden_size" : int
-    #         Word layer LSTM hidden size
-    #
-    #     "char_level_lstm_hidden_size" : int
-    #         Character layer LSTM hidden size
-    #
-    #     "word_emd_size" : int
-    #         Word embedding size
-    #
-    #     "char_emd_size" : int
-    #         Character embedding size
-    #
-    #     "num_lstm_layers" : int
-    #         Number of LSTM layer
-    #
-    #     "keep_probability" : float
-    #         Drop out layer `keep` probability value
-    #
-    #     :return: A dictionary of hyperparameters with default values
-    #     """
-    #     hparams = {
-    #         "model_root_directory": os.path.expanduser("~") + "/vitaFlow/",
-    #         "experiment_name": "default",
-    #         # hyper parameters
-    #         "use_char_embd": False,
-    #         "learning_rate": 0.001,
-    #         "word_level_lstm_hidden_size": 24,
-    #         "char_level_lstm_hidden_size": 24,
-    #         "word_emd_size": 24,
-    #         "char_emd_size": 24,
-    #         "num_lstm_layers": 1,
-    #         "keep_probability": 0.5
-    #     }
-    #     return hparams
-
 
     def _build_layers(self, features, mode):
 

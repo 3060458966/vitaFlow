@@ -15,9 +15,11 @@
 CoNLL 2003 dataset iterator class
 """
 
+import csv
 import os
 import pickle
 
+import gin
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -25,16 +27,13 @@ from overrides import overrides
 from tqdm import tqdm
 import gin
 
-# from vitaflow.utils.hyperparams import HParams
+from vitaflow.engines import Executor
 from vitaflow.internal import IIteratorBase
-from vitaflow.internal import IPreprocessor
 from vitaflow.internal.features import ITextFeature
 from vitaflow.internal.nlp.spacy_helper import naive_vocab_creater, get_char_vocab, vocab_to_tsv
 from vitaflow.iterators.text.vocabulary import SpecialTokens
 from vitaflow.utils.os_helper import check_n_makedirs
 from vitaflow.utils.print_helper import print_info
-from vitaflow.engines import Executor
-import csv
 
 @gin.configurable
 class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
@@ -56,7 +55,6 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
                  quotechar="^",
                  max_word_length=20,
                  use_char_embd=False):
-    
         '''
         :param hparams:
         :param dataset:
@@ -71,7 +69,6 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
 
         self._experiment_root_directory = experiment_root_directory
         self._experiment_name = experiment_name
-        self._batch_size = batch_size
         self._prefetch_size = prefetch_size
         self._dataset = dataset
         self._iterator_name = iterator_name
@@ -79,15 +76,14 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         self._train_data_path = train_data_path
         self._validation_data_path = validation_data_path
         self._test_data_path = test_data_path
+        self._number_test_of_samples = number_test_of_samples
         self._text_col = text_col
         self._entity_col = entity_col
-        self._number_test_of_samples = number_test_of_samples
-
+        self._batch_size = batch_size
         self._seperator = seperator
         self._quotechar = quotechar
         self._max_word_length = max_word_length
         self._use_char_embd = use_char_embd
-
 
         self.EXPERIMENT_ROOT_DIR = os.path.join(self._experiment_root_directory,
                                                 self._experiment_name)
@@ -123,86 +119,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
 
         self._extract_vocab()
 
-    # @staticmethod
-    # def default_hparams():
-    #     """
-    #     .. role:: python(code)
-    #        :language: python
-    #
-    #     .. code-block:: python
-    #
-    #         {
-    #             "experiment_root_directory" : os.path.expanduser("~") + "/vitaFlow/",
-    #             "experiment_name" : "test_experiment",
-    #             "iterator_name" : "conll_data_iterator",
-    #             "preprocessed_data_path" : "preprocessed_data",
-    #             "train_data_path" : "train",
-    #             "validation_data_path" : "val",
-    #             "test_data_path" : "test",
-    #             "batch_size" : 32,
-    #             "text_col" : 0,
-    #             "entity_col" : 3,
-    #         }
-    #
-    #     Here:
-    #
-    #     "experiment_root_directory" : str
-    #         Root directory where the data is downloaded or copied, also
-    #         acts as the folder for any subsequent experimentation
-    #
-    #     "experiment_name" : str
-    #         Name for the current experiment
-    #
-    #     "iterator_name" : str
-    #         Name of the data iterator
-    #
-    #     "preprocessed_data_path" : str
-    #         Folder path under `experiment_root_directory` where the preprocessed data
-    #         should be stored
-    #
-    #     "train_data_path" : str
-    #         Folder path under `experiment_root_directory` where the train data is stored
-    #
-    #     "validation_data_path" : str
-    #         Folder path under `experiment_root_directory` where the validation data is stored
-    #
-    #     "test_data_path" : str
-    #         Folder path under `experiment_root_directory` where the test data is stored
-    #
-    #     "batch_size" : int
-    #         Batch size for the current iterator
-    #
-    #     "text_col" : str
-    #         Text column to be referred in the preprocessed CoNLL data CSV files
-    #
-    #     "entity_col" : str
-    #         Entity/Label column to be referred in the preprocessed CoNLL data CSV files
-    #
-    #     "seperator" : str
-    #         Seprator character to be used while joining the words from CSV
-    #
-    #     "max_word_length" : int
-    #         Maximum word length to be considerd while padding at character level
-    #
-    #     "use_char_embd" : boolean
-    #         Flag to enable character index as one of the feature
-    #
-    #     :return: A dictionary of hyperparameters with default values
-    #     """
-    #
-    #     hparams = IPreprocessor.default_hparams()
-    #     update(IIteratorBase.default_hparams())
-    #     update({
-    #         "iterator_name": "conll_data_iterator",
-    #         "text_col": "0",
-    #         "entity_col": "3",
-    #         "seperator": "~",
-    #         "quotechar": "^",
-    #         "max_word_length": 20,
-    #         "use_char_embd": False
-    #     })
-    #
-    #     return hparams
+
 
     @property
     def word_vocab_size(self):
@@ -424,7 +341,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             list_text = df[self._text_col].astype(str).values.tolist()
             list_char_ids = [[char_2_id_map.get(c, 0) for c in str(word)] for word in list_text]
             list_tag = df[self._entity_col].astype(str).values.tolist()
-            print(list_text,list_char_ids,list_tag)
+            print(list_text, list_char_ids, list_tag)
             sentence_feature1.append("{}".format(self._seperator).join(list_text))
             char_ids_feature2.append(list_char_ids)
             tag_label.append("{}".format(self._seperator).join(list_tag))
@@ -491,7 +408,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             return sentence_feature1, None, None
 
     def get_padded_data(self, file_name):
-        file_path = os.path.join(self.EXPERIMENT_ROOT_DIR , file_name)
+        file_path = os.path.join(self.EXPERIMENT_ROOT_DIR, file_name)
         if os.path.exists(file_path):
             print_info("Reading the padded data...")
             with open(file_path, 'rb') as f:
@@ -501,7 +418,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             return None
 
     def store_padded_data(self, file_name, data):
-        file_path = os.path.join(self.EXPERIMENT_ROOT_DIR , file_name)
+        file_path = os.path.join(self.EXPERIMENT_ROOT_DIR, file_name)
         print_info("Writing the padded data...")
         with open(file_path, 'wb') as f:
             pickle.dump(data, f)
@@ -682,9 +599,10 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             df["pred_2"]= pred_2[:len(df)]
             df["pred_2_confidence"]= pred_2_confidence[:len(df)]
 
-            out_dir = os.path.join(self.OUT_DIR ,"predictions")
+            out_dir = os.path.join(self.OUT_DIR, "predictions")
+
             check_n_makedirs(out_dir)
-            df.to_csv(os.path.join(out_dir ,os.path.basename(file)), index=False)
+            df.to_csv(os.path.join(out_dir, os.path.basename(file)), index=False)
 
         return results
 
@@ -723,8 +641,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
 
         return predicted_id
 
-
-    def predict_on_test_files(self,  executor: Executor):
+    def predict_on_test_files(self, executor: Executor):
         """
         Runs the prediction on list of file to be tagged
         :return:
@@ -770,9 +687,9 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             pred_3 = top_3_predicted_indices[:, 2:].flatten()
             pred_3 = list(map(lambda x: self.TAGS_2_ID[x], pred_3))
 
-            pred_1_confidence = top_3_predicted_confidence[:, 0:1]
-            pred_2_confidence = top_3_predicted_confidence[:, 1:2]
-            pred_3_confidence = top_3_predicted_confidence[:, 2:]
+            pred_1_confidence = top_3_predicted_confidence[:, 0:1].flatten()
+            pred_2_confidence = top_3_predicted_confidence[:, 1:2].flatten()
+            pred_3_confidence = top_3_predicted_confidence[:, 2:].flatten()
 
             results.append({
                 "tokens": df[self._text_col].astype(str).values.tolist(),
@@ -790,11 +707,11 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             df["predicted_id"] = [j for i, j in
                                   zip(df[self._text_col].astype(str).values.tolist(), predicted_id)]
 
-            df["confidence"]= confidence[:len(df)]
-            df["pred_1"]= pred_1[:len(df)]
-            df["pred_1_confidence"]= pred_1_confidence[:len(df)]
-            df["pred_2"]= pred_2[:len(df)]
-            df["pred_2_confidence"]= pred_2_confidence[:len(df)]
+            df["confidence"] = confidence[:len(df)]
+            df["pred_1"] = pred_1[:len(df)]
+            df["pred_1_confidence"] = pred_1_confidence[:len(df)]
+            df["pred_2"] = pred_2[:len(df)]
+            df["pred_2_confidence"] = pred_2_confidence[:len(df)]
 
             out_dir = os.path.join(self.OUT_DIR, "predictions")
             check_n_makedirs(out_dir)
@@ -817,30 +734,31 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
                     else:
                         # second index onwards
                         if is_new_tag(prev_tag, row["predicted_id"]):
-                            doc_text = doc_text + text + "~" + strip_iob(prev_tag)+"\n"
+                            doc_text = doc_text + text + "~" + strip_iob(prev_tag) + "\n"
                             text = row["0"]
 
                         else:
                             text = text + " " + row["0"]
                         prev_tag = row["predicted_id"]
+                else:
+                    doc_text = doc_text + text + "~" + strip_iob(row["predicted_id"]) + "\n"
+                    prev_tag = row["predicted_id"]
+
             doc_text = doc_text + text + "~" + strip_iob(prev_tag) + "\n"
             print(doc_text)
 
             post_out_dir = os.path.join(self.OUT_DIR, "postprocessed")
             check_n_makedirs(post_out_dir)
-          
-            with open(os.path.join(post_out_dir,os.path.basename(file)), "w") as post_file:
+
+            with open(os.path.join(post_out_dir, os.path.basename(file)), "w") as post_file:
                 post_file.write("Item~Tag\n")
                 post_file.write(doc_text)
 
         # for loop ends
 
+    # function ends
 
-
-    #function ends        
-
-
-    def predict_sentence(self,  executor: Executor, sentence):
+    def predict_sentence(self, executor: Executor, sentence):
         """
         Runs prediction on a single sentence
         :param sentence: A single sentence whose tokens are separated by space
@@ -854,10 +772,15 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         results = data_iterator.predict_on_text(predict_fn)
         print(list(zip(sentence.split(), results)))
 
+
 def strip_iob(iob_tag):
-    tag = iob_tag.replace("B-", "")
-    tag = tag.replace("I-", "")
-    return tag
+    if iob_tag:
+        tag = iob_tag.replace("B-", "")
+        tag = tag.replace("I-", "")
+        return tag
+    else:
+        return ""
+
 
 def is_new_tag(prev, current):
     if "O" in prev:
@@ -872,11 +795,11 @@ def is_new_tag(prev, current):
     if prev_w != current_w:
         return True
     else:
-        if prev_t =="B" and current_t =="I":
+        if prev_t == "B" and current_t == "I":
             return False
-        elif prev_t =="I" and current_t =="B":
+        elif prev_t == "I" and current_t == "B":
             return True
-        elif prev_t =="I" and current_t =="I":
+        elif prev_t == "I" and current_t == "I":
             return False
         else:
             return False
