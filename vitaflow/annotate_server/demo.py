@@ -107,8 +107,13 @@ def show_uploaded_image_details(filename):
     text_data.sort()
     text_data_images = sorted([_ for _ in text_data if '.png' in _],
                               key=lambda fn: int(fn.rsplit('/')[-1].split('.')[0]))
-    text_data_tesseract = [_ for _ in text_data if '.tesseract' in _]
-    text_data_calamari = [_ for _ in text_data if '.pred' in _]
+    # Tesseract Text
+    f_name = os.path.join(config.TEXT_DIR, filename.split('.')[0] + '.tesseract.txt')
+    print(f_name)
+    text_data_tesseract = open(f_name).read() if os.path.isfile(f_name) else ""
+    # Calamari Text
+    f_name = os.path.join(config.TEXT_DIR, filename.split('.')[0] + '.pred.txt')
+    text_data_calamari = open(f_name).read() if os.path.isfile(f_name) else ""
     print(bin_data)
     data = {
         'image_data': image_data,

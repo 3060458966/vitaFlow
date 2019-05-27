@@ -17,14 +17,14 @@
     <p>
         {% with messages = get_flashed_messages() %}
         {% if messages %}
-<ul class=flashes>
-    {% for message in messages %}
-    <li>{{ message }}</li>
-    {% endfor %}
-</ul>
-{% endif %}
-{% endwith %}
-</p>
+    <ul class=flashes>
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+    </p>
 
 
     <div class="container">
@@ -38,23 +38,46 @@
                 <td>Image</td>
             </tr>
             </thead>
+
+            <!--Input Image-->
             <tr>
                 <td>{{data.image_data}}</td>
                 <td><img src="{{data.image_data}}" style="height=400;"></td>
             </tr>
+
+
+            <!--Binaraisation Image-->
+            <!--<tr>-->
+            <!--<td>{{data.binarisation}}</td>-->
+            <!--<td><img src="/{{data.binarisation}}" style="height=400;"></td>-->
+            <!--</tr>-->
+
+            <!--TextLine Images-->
+            <!--{% for item in data.text2Lines %}-->
+            <!--<tr>-->
+            <!--<td>{{item}}</td>-->
+            <!--<td><img src="/{{item}}" style="height=400;"></td>-->
+            <!--</tr>-->
+            <!--{% endfor %}-->
+
+
+            <!--Tesseract Data-->
             <tr>
-                <td>{{data.binarisation}}</td>
-                <td><img src="/{{data.binarisation}}" style="height=400;"></td>
+                <td>TESSERACT:</td>
+                <td>
+                    <pre>{{data.tesseract}}</pre>
+                </td>
             </tr>
-            {% for item in data.text2Lines %}
+
+            <!--Calamari Data-->
             <tr>
-                <td>{{item}}</td>
-                <td><img src="/{{item}}" style="height=400;"></td>
+                <td>CALAMARI:</td>
+                <td>
+                    <pre> {{data.calamari}}</pre>
+                </td>
             </tr>
-            {% endfor %}
+
         </table>
-        <!--<p>{{data.tesseract}}</p>-->
-        <!--<p>{{data.calamari}}</p>-->
     </div>
 
 
