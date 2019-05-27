@@ -23,7 +23,7 @@ from tqdm import tqdm
 import tensorflow as tf
 from tensorflow import TensorShape, Dimension
 
-from vitaflow.internal import HParams
+# from vitaflow.internal import HParams
 from vitaflow.internal import IPreprocessor
 from vitaflow.internal import IIteratorBase
 from vitaflow.internal.features import GANFeature
@@ -36,22 +36,50 @@ class Cifar10GanIterator(IIteratorBase, GANFeature):
     https://cntk.ai/pythondocs/CNTK_201A_CIFAR-10_DataLoader.html
     """
 
-    def __init__(self, hparams=None, dataset=None):
+    def __init__(self,experiment_root_directory,
+                 experiment_name,
+                 number_test_of_samples,
+                 batch_size=32,
+                 prefetch_size=32,
+                 noise_dim=30,
+                 iterator_name="Cifar10BasicIterator",
+                 preprocessed_data_path="preprocessed_data",
+                 train_data_path="train",
+                 validation_data_path="val",
+                 test_data_path="test",
+                 dataset=None):
         GANFeature.__init__(self)
-        IIteratorBase.__init__(self, dataset=dataset)
+        IIteratorBase.__init__(self,
+                               experiment_root_directory=experiment_root_directory,
+                               experiment_name=experiment_name,
+                               batch_size=batch_size,
+                               prefetch_size=prefetch_size,
+                               dataset=dataset)
 
-        self._hparams = HParams(hparams, self.default_hparams())
+        self._experiment_root_directory = experiment_root_directory
+        self._experiment_name = experiment_name
+        self._batch_size = batch_size
+        self._prefetch_size = prefetch_size
+        self._dataset = dataset
+        self._iterator_name = iterator_name
+        self._preprocessed_data_path = preprocessed_data_path
+        self._train_data_path = train_data_path
+        self._validation_data_path = validation_data_path
+        self._test_data_path = test_data_path
+        self._noise_dim = noise_dim
+        
+        # self._hparams = HParams(hparams, self.default_hparams())
 
-        self.EXPERIMENT_ROOT_DIR = os.path.join(self._hparams.experiment_root_directory,
-                                                self._hparams.experiment_name)
+        self.EXPERIMENT_ROOT_DIR = os.path.join(self._experiment_root_directory,
+                                                self._experiment_name)
         self.PREPROCESSED_DATA_OUT_DIR = os.path.join(self.EXPERIMENT_ROOT_DIR,
-                                                      self._hparams.preprocessed_data_path)
+                                                      self._preprocessed_data_path)
         self.TRAIN_OUT_PATH = os.path.join(self.PREPROCESSED_DATA_OUT_DIR,
-                                           self._hparams.train_data_path)
+                                           self._train_data_path)
         self.TEST_OUT_PATH = os.path.join(self.PREPROCESSED_DATA_OUT_DIR,
-                                          self._hparams.test_data_path)
+                                          self._test_data_path)
         self.OUT_DIR = os.path.join(self.EXPERIMENT_ROOT_DIR,
-                                    self._hparams.iterator_name)
+                                    self._iterator_name)
 
         # This rule is assumed to be correct if the previous stage is of IPreprocessor
         self.TRAIN_FILES_IN_PATH = os.path.join(self.PREPROCESSED_DATA_OUT_DIR, "train/")
@@ -85,67 +113,67 @@ class Cifar10GanIterator(IIteratorBase, GANFeature):
         self._images, self._labels = self._load_training_data()
         self._images = self._images.astype("float32")
 
-    @staticmethod
-    def default_hparams():
-        """
-        .. role:: python(code)
-           :language: python
-
-        .. code-block:: python
-
-            {
-                "experiment_root_directory" : os.path.expanduser("~") + "/vitaFlow/",
-                "experiment_name" : "test_experiment",
-                "iterator_name" : "conll_data_iterator",
-                "preprocessed_data_path" : "preprocessed_data",
-                "train_data_path" : "train",
-                "validation_data_path" : "val",
-                "test_data_path" : "test",
-                "batch_size" : 32,
-            }
-
-        Here:
-
-        "experiment_root_directory" : str
-            Root directory where the data is downloaded or copied, also
-            acts as the folder for any subsequent experimentation
-
-        "experiment_name" : str
-            Name for the current experiment
-
-        "iterator_name" : str
-            Name of the data iterator
-
-        "preprocessed_data_path" : str
-            Folder path under `experiment_root_directory` where the preprocessed data
-            should be stored
-
-        "train_data_path" : str
-            Folder path under `experiment_root_directory` where the train data is stored
-
-        "validation_data_path" : str
-            Folder path under `experiment_root_directory` where the validation data is stored
-
-        "test_data_path" : str
-            Folder path under `experiment_root_directory` where the test data is stored
-
-        "batch_size" : int
-            Batch size for the current iterator
-
-        "noise_dim" : int
-            1D Dimension of noise signal
-
-
-        :return: A dictionary of hyperparameters with default values
-        """
-
-        hparams = IPreprocessor.default_hparams()
-        hparams.update(IIteratorBase.default_hparams())
-        hparams.update({
-            "iterator_name": "Cifar10GanIterator",
-            "noise_dim" : 30
-        })
-        return hparams
+    # @staticmethod
+    # def default_hparams():
+    #     """
+    #     .. role:: python(code)
+    #        :language: python
+    #
+    #     .. code-block:: python
+    #
+    #         {
+    #             "experiment_root_directory" : os.path.expanduser("~") + "/vitaFlow/",
+    #             "experiment_name" : "test_experiment",
+    #             "iterator_name" : "conll_data_iterator",
+    #             "preprocessed_data_path" : "preprocessed_data",
+    #             "train_data_path" : "train",
+    #             "validation_data_path" : "val",
+    #             "test_data_path" : "test",
+    #             "batch_size" : 32,
+    #         }
+    #
+    #     Here:
+    #
+    #     "experiment_root_directory" : str
+    #         Root directory where the data is downloaded or copied, also
+    #         acts as the folder for any subsequent experimentation
+    #
+    #     "experiment_name" : str
+    #         Name for the current experiment
+    #
+    #     "iterator_name" : str
+    #         Name of the data iterator
+    #
+    #     "preprocessed_data_path" : str
+    #         Folder path under `experiment_root_directory` where the preprocessed data
+    #         should be stored
+    #
+    #     "train_data_path" : str
+    #         Folder path under `experiment_root_directory` where the train data is stored
+    #
+    #     "validation_data_path" : str
+    #         Folder path under `experiment_root_directory` where the validation data is stored
+    #
+    #     "test_data_path" : str
+    #         Folder path under `experiment_root_directory` where the test data is stored
+    #
+    #     "batch_size" : int
+    #         Batch size for the current iterator
+    #
+    #     "noise_dim" : int
+    #         1D Dimension of noise signal
+    #
+    #
+    #     :return: A dictionary of hyperparameters with default values
+    #     """
+    #
+    #     hparams = IPreprocessor.default_hparams()
+    #     update(IIteratorBase.default_hparams())
+    #     update({
+    #         "iterator_name": "Cifar10GanIterator",
+    #         "noise_dim" : 30
+    #     })
+    #     return hparams
 
     @property
     def num_labels(self):
@@ -277,7 +305,6 @@ class Cifar10GanIterator(IIteratorBase, GANFeature):
 
         return images, self._one_hot_encoded(class_numbers=cls, num_classes=self._num_classes)
 
-
     def _load_test_data(self):
         """
         Load all the test-data for the CIFAR-10 data-set.
@@ -290,7 +317,7 @@ class Cifar10GanIterator(IIteratorBase, GANFeature):
 
     def _yield_samples(self, features, labels):
         for feature, label in zip(features, labels):
-            noise = np.random.random(self._hparams.noise_dim)
+            noise = np.random.random(self._noise_dim)
             yield feature, noise, label
 
     def _yield_train_samples(self):
@@ -309,14 +336,14 @@ class Cifar10GanIterator(IIteratorBase, GANFeature):
         dataset = tf.data.Dataset.from_generator(self._yield_train_samples,
                                                  (tf.float32, tf.float32, tf.int32),
                                                  output_shapes=(TensorShape([Dimension(32), Dimension(32), Dimension(3)]),
-                                                                TensorShape([Dimension(self._hparams.noise_dim)]),
+                                                                TensorShape([Dimension(self._noise_dim)]),
                                                                 TensorShape(Dimension(10))))
 
         dataset = dataset.map(lambda image, noise, label: ({self.FEATURE_1_NAME: image, self.FEATURE_2_NAME: noise},
                                                            label))
 
-        dataset = dataset.batch(batch_size=self._hparams.batch_size)
-        dataset = dataset.prefetch(self._hparams.prefetch_size)
+        dataset = dataset.batch(batch_size=self._batch_size)
+        dataset = dataset.prefetch(self._prefetch_size)
         print_info("Trianing Dataset output sizes are: ")
         print_info(dataset.output_shapes)
         return dataset
@@ -327,14 +354,14 @@ class Cifar10GanIterator(IIteratorBase, GANFeature):
         dataset = tf.data.Dataset.from_generator(self._yield_val_samples,
                                                  (tf.float32, tf.float32, tf.int32),
                                                  output_shapes=(TensorShape([Dimension(32), Dimension(32), Dimension(3)]),
-                                                                TensorShape([Dimension(self._hparams.noise_dim)]),
+                                                                TensorShape([Dimension(self._noise_dim)]),
                                                                 TensorShape(Dimension(10))))
 
         dataset = dataset.map(lambda image, noise, label: ({self.FEATURE_1_NAME: image, self.FEATURE_2_NAME: noise},
                                                            label))
 
-        dataset = dataset.batch(batch_size=self._hparams.batch_size)
-        dataset = dataset.prefetch(self._hparams.prefetch_size)
+        dataset = dataset.batch(batch_size=self._batch_size)
+        dataset = dataset.prefetch(self._prefetch_size)
         print_info("Validation Dataset output sizes are: ")
         print_info(dataset.output_shapes)
         return dataset
@@ -345,14 +372,14 @@ class Cifar10GanIterator(IIteratorBase, GANFeature):
         dataset = tf.data.Dataset.from_generator(self._yield_test_samples,
                                                  (tf.float32, tf.float32, tf.int32),
                                                  output_shapes=(TensorShape([Dimension(32), Dimension(32), Dimension(3)]),
-                                                                TensorShape([Dimension(self._hparams.noise_dim)]),
+                                                                TensorShape([Dimension(self._noise_dim)]),
                                                                 TensorShape(Dimension(10))))
 
         dataset = dataset.map(lambda image, noise, label: ({self.FEATURE_1_NAME: image, self.FEATURE_2_NAME: noise},
                                                            label))
 
-        dataset = dataset.batch(batch_size=self._hparams.batch_size)
-        dataset = dataset.prefetch(self._hparams.prefetch_size)
+        dataset = dataset.batch(batch_size=self._batch_size)
+        dataset = dataset.prefetch(self._prefetch_size)
         print_info("Dataset output sizes are: ")
         print_info(dataset.output_shapes)
         return dataset

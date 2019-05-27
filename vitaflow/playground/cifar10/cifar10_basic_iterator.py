@@ -49,11 +49,11 @@ class Cifar10BasicIterator(IPreprocessor, IIteratorBase, ImageFeature):
                  batch_size=32,
                  prefetch_size=32,
                  dataset=None,
-                 iterator_name = "Cifar10BasicIterator",
-                 preprocessed_data_path = "preprocessed_data",
-                 train_data_path = "train",
-                 validation_data_path = "val",
-                 test_data_path = "test"):
+                 iterator_name="Cifar10BasicIterator",
+                 preprocessed_data_path="preprocessed_data",
+                 train_data_path="train",
+                 validation_data_path="val",
+                 test_data_path="test"):
         ImageFeature.__init__(self)
         IPreprocessor.__init__(self,
                                experiment_name=experiment_name,

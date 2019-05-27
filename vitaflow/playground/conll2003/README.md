@@ -117,7 +117,7 @@ The entry point in the system is *run_experiments.py*. The arguments passed to i
 ```bash
 python vitaflow/bin/run_experiments.py \
 	--mode=train \
-	--config_python_file=examples/conll2003/config.py 
+	--config=vitaflow/playground/conll2003/config.gin
 ```
 
 We start the training by passing **--mode = train** . *run_experiments.py* will pickup the config file provided to it  and look for the dataset. 
@@ -150,7 +150,7 @@ Incase the experiments needs to be repeated for more number of epochs or require
 ```bash
 python vitaflow/bin/run_experiments.py \
 	--mode=retrain \
-	--config_python_file=examples/conll2003/config.py 
+	--config=vitaflow/playground/conll2003/config.gin 
 ```
 
 ### 3. Predict

@@ -23,16 +23,20 @@ import os
 import shutil
 
 import pandas as pd
+import gin
 from tqdm import tqdm
 
-from vitaflow.utils.hyperparams import HParams
+# from vitaflow.utils.hyperparams import HParams
 from vitaflow.internal import IPreprocessor
 from vitaflow.internal.dataset_types.dataset_types import ICSVSeq2SeqType1
 from vitaflow.iterators.text.vocabulary import SpecialTokens
 from vitaflow.utils.print_helper import *
 from vitaflow.utils.data_io import maybe_download
+from vitaflow.utils import registry
 
 
+@registry.register_problem
+@gin.configurable
 class CoNLL2003Dataset(IPreprocessor, ICSVSeq2SeqType1):
     """
     Downloads the data and converts the text file into CSV file for each sentence along with its tags.
@@ -77,12 +81,40 @@ class CoNLL2003Dataset(IPreprocessor, ICSVSeq2SeqType1):
                     test/
     """
 
-    def __init__(self, hparams=None):
-        IPreprocessor.__init__(self, hparams=hparams)
-        self._hparams = HParams(hparams, self.default_hparams())
+    def __init__(self,
+                 experiment_name,
+                 preprocessed_data_path,
+                 experiment_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/"),
+                 train_data_path="train",
+                 validation_data_path="val",
+                 test_data_path="test",
+                 over_write=False,
+                 minimum_num_words=5,
+                 seperator="~"):
+        """
+        """
+
+        self._experiment_name = experiment_name
+        self._preprocessed_data_path = preprocessed_data_path
+        self._experiment_root_directory = experiment_root_directory
+        self._train_data_path = train_data_path
+        self._validation_data_path = validation_data_path
+        self._test_data_path = test_data_path
+        self._over_write = over_write
+        self._minimum_num_words = minimum_num_words
+        self._seperator = seperator
+
+        IPreprocessor.__init__(self,
+                               experiment_name=experiment_name,
+                               preprocessed_data_path=preprocessed_data_path,
+                               experiment_root_directory=experiment_root_directory,
+                               train_data_path=train_data_path,
+                               validation_data_path=validation_data_path,
+                               test_data_path=test_data_path)
+
         self._download_path = os.path.join(
-            self._hparams.experiment_root_directory,
-            self._hparams.experiment_name,
+            self._experiment_root_directory,
+            self._experiment_name,
             "raw_data/"
         )
         self._link = "https://drive.google.com/open?id=1tdwxPJnnkyO-s1oHDETj89cfgLC2xp0c"
@@ -94,64 +126,64 @@ class CoNLL2003Dataset(IPreprocessor, ICSVSeq2SeqType1):
 
         self._prepare_data()
 
-    @staticmethod
-    def default_hparams():
-        """
-        .. role:: python(code)
-           :language: python
-
-        .. code-block:: python
-
-            {
-                "experiment_root_directory" : os.path.expanduser("~") + "/vitaFlow/" ,
-                "experiment_name" : "CoNLL2003Dataset",
-                "preprocessed_data_path" : "preprocessed_data",
-                "train_data_path" : "train",
-                "validation_data_path" : "val",
-                "test_data_path" : "test",
-                "minimum_num_words" : 5,
-                "over_write" : False,
-            }
-
-        Here:
-
-        "experiment_root_directory" : str
-            Root directory where the data is downloaded or copied, also
-            acts as the folder for any subsequent experimentation
-
-        "experiment_name" : str
-            Name of the data set
-
-        "preprocessed_data_path" : str
-            Folder path under `experiment_root_directory` where the preprocessed data
-            should be stored
-
-        "train_data_path" : str
-            Folder path under `experiment_root_directory` where the train data is stored
-
-        "validation_data_path" : str
-            Folder path under `experiment_root_directory` where the validation data is stored
-
-        "test_data_path" : str
-            Folder path under `experiment_root_directory` where the test data is stored
-
-        "minimum_num_words" : str
-            Number of word to be considered for a sentence to be used down the flow
-
-        "over_write" : boolean
-            Flag to over write the previous copy of the downloaded data
-
-
-        :return: A dictionary of hyperparameters with default values
-        """
-        hparams = IPreprocessor.default_hparams()
-
-        hparams.update({
-            "experiment_name": "CoNLL2003Dataset",
-            "minimum_num_words": 5,
-            "over_write": False,
-        })
-        return hparams
+    # @staticmethod
+    # def default_hparams():
+    #     """
+    #     .. role:: python(code)
+    #        :language: python
+    #
+    #     .. code-block:: python
+    #
+    #         {
+    #             "experiment_root_directory" : os.path.expanduser("~") + "/vitaFlow/" ,
+    #             "experiment_name" : "CoNLL2003Dataset",
+    #             "preprocessed_data_path" : "preprocessed_data",
+    #             "train_data_path" : "train",
+    #             "validation_data_path" : "val",
+    #             "test_data_path" : "test",
+    #             "minimum_num_words" : 5,
+    #             "over_write" : False,
+    #         }
+    #
+    #     Here:
+    #
+    #     "experiment_root_directory" : str
+    #         Root directory where the data is downloaded or copied, also
+    #         acts as the folder for any subsequent experimentation
+    #
+    #     "experiment_name" : str
+    #         Name of the data set
+    #
+    #     "preprocessed_data_path" : str
+    #         Folder path under `experiment_root_directory` where the preprocessed data
+    #         should be stored
+    #
+    #     "train_data_path" : str
+    #         Folder path under `experiment_root_directory` where the train data is stored
+    #
+    #     "validation_data_path" : str
+    #         Folder path under `experiment_root_directory` where the validation data is stored
+    #
+    #     "test_data_path" : str
+    #         Folder path under `experiment_root_directory` where the test data is stored
+    #
+    #     "minimum_num_words" : str
+    #         Number of word to be considered for a sentence to be used down the flow
+    #
+    #     "over_write" : boolean
+    #         Flag to over write the previous copy of the downloaded data
+    #
+    #
+    #     :return: A dictionary of hyperparameters with default values
+    #     """
+    #     hparams = IPreprocessor.default_hparams()
+    #
+    #     update({
+    #         "experiment_name": "CoNLL2003Dataset",
+    #         "minimum_num_words": 5,
+    #         "over_write": False,
+    #     })
+    #     return hparams
 
     def _create_target_directories(self):
         """
@@ -159,7 +191,7 @@ class CoNLL2003Dataset(IPreprocessor, ICSVSeq2SeqType1):
         :return:
         """
         if os.path.exists(self.PREPROCESSED_DATA_OUT_DIR):
-            if self._hparams.over_write:
+            if self._over_write:
                 print_info("Deleting data folder: {}".format(self.PREPROCESSED_DATA_OUT_DIR))
                 shutil.rmtree(self.PREPROCESSED_DATA_OUT_DIR)
                 print_info("Recreating data folder: {}".format(self.PREPROCESSED_DATA_OUT_DIR))
@@ -203,9 +235,9 @@ class CoNLL2003Dataset(IPreprocessor, ICSVSeq2SeqType1):
                 current_file.append(row)
             else:
                 # Consider dumping files with size 2
-                if len(current_file) > self._hparams.minimum_num_words:
+                if len(current_file) > self._minimum_num_words:
                     current_file = pd.DataFrame(current_file)
-                    current_file.to_csv(out_dir + "/{}.csv".format(i), index=False)
+                    current_file.to_csv(out_dir + "/{}.csv".format(i), index=False, sep=self._seperator)
                     current_file = []
 
     def _prepare_data(self):

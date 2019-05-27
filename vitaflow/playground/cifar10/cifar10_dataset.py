@@ -26,7 +26,10 @@ from vitaflow.utils.print_helper import print_info
 from vitaflow.utils.data_io import maybe_download
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelBinarizer
+from vitaflow.utils import registry
 
+
+@registry.register_problem
 @gin.configurable
 class Cifar10Dataset(IPreprocessor):
     """
@@ -37,9 +40,9 @@ class Cifar10Dataset(IPreprocessor):
                  experiment_name,
                  preprocessed_data_path,
                  experiment_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/"),
-                 train_data_path = "train",
-                 validation_data_path = "val",
-                 test_data_path = "test",
+                 train_data_path="train",
+                 validation_data_path="val",
+                 test_data_path="test",
                  over_write=False):
         """
         """
