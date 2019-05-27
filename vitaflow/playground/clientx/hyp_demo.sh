@@ -24,9 +24,9 @@ echo $DEMO_DATA_PATH/standoff2conll/annotations/
 ##Split files into train test val
 #python $DEMO_DATA_PATH/standoff2conll/split2train.py $DEMO_DATA_PATH/csv $DEMO_DATA_PATH
 
-#cd ../../../
+cd ../../../
 #
-#python vitaflow/bin/run_experiments.py --mode=train --config=vitaflow/playground/clientx/config.gin
+python vitaflow/bin/run_experiments.py --mode=train --config=vitaflow/playground/clientx/config.gin
 #
 #python vitaflow/app/main.py
 

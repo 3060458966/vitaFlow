@@ -1,7 +1,6 @@
 '''
 Prg
 '''
-import codecs
 import os
 import sys
 from logging import error
@@ -11,16 +10,19 @@ from sklearn.model_selection import train_test_split
 def split_data(in_directory, out_directory):
     import shutil
     data = os.listdir(in_directory)
+
     # Split the files into train test and val
-    train_val, test = train_test_split(data, test_size = 0.2)
-    train, val = train_test_split(train_val, test_size = 0.1)
+    train_val, test = train_test_split(data, test_size = 0.2,random_state=42)
+    train, val = train_test_split(train_val, test_size = 0.1,random_state=42)
 
     #move the files into train folder
     for i in train:
         shutil.copy(os.path.join(in_directory,i), os.path.join(out_directory,'train'))
+
     #move the files into val folder
     for i in val:
         shutil.copy(os.path.join(in_directory, i), os.path.join(out_directory, 'val'))
+
     #move the files into test folder
     for i in test:
         shutil.copy(os.path.join(in_directory, i), os.path.join(out_directory, 'test'))
