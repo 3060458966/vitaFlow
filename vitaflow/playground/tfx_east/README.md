@@ -12,8 +12,11 @@
     mkdir tfx; cd tfx
     
     pip install tensorflow==1.13.1
-    pip install tfx==0.12.0
     git clone https://github.com/tensorflow/tfx.git
+    cd /path/to/tfx/
+    pip install setup.py --user
+    jupyter nbextension install --py --symlink --sys-prefix tensorflow_model_analysis
+    jupyter nbextension enable --py --sys-prefix tensorflow_model_analysis
     cd ~/tfx/tfx/tfx/examples/workshop/setup
     ./setup_demo.sh
 ```
@@ -37,17 +40,6 @@
     sed -i'.orig' 's/scheduler_heartbeat_sec = 5/scheduler_heartbeat_sec = 1/g' $AIRFLOW_HOME/airflow.cfg
     sed -i'.orig' 's/dag_default_view = tree/dag_default_view = graph/g' $AIRFLOW_HOME/airflow.cfg
     sed -i'.orig' 's/load_examples = True/load_examples = False/g' $AIRFLOW_HOME/airflow.cfg
-
-    airflow resetdb --yes
-    airflow initdb
-  
-    git clone https://github.com/tensorflow/tfx.git  
-    cd /path/to/tfx/
-    pip install setup.py --user
-    jupyter nbextension install --py --symlink --sys-prefix tensorflow_model_analysis
-    jupyter nbextension enable --py --sys-prefix tensorflow_model_analysis
-    
-    cd tfx/examples/workshop/
   
 ```
 
@@ -58,9 +50,11 @@
     # https://vujade.co/install-apache-airflow-ubuntu-18-04/
     # https://gist.github.com/zacgca/9e0401aa205e7c54cbae0e85afca479d
     # https://gist.github.com/rosiehoyem/9e111067fe4373eb701daf9e7abcc423
-    
     #posgres url 
-    postgresql://user:password@localhost:5432/database_name
+    #postgresql://user:password@localhost:5432/database_name
+    
+    apt-get -y install postgresql postgresql-contrib libpq-dev postgresql-client postgresql-client-common
+    pip install psycopg2
     
     #create Posgresql user and DB for Airflow metadata store
     sudo -u postgres psql
@@ -83,6 +77,7 @@
     
     \c airflow
     \conninfo 
+    \q
     
     
     sudo vim /etc/postgresql/10/main/pg_hba.conf
@@ -94,23 +89,18 @@
     
     sudo service postgresql restart
     
-    #posgres url 
-    postgresql://airflow:airflow@localhost:5432/airflow
-    
     vim $AIRFLOW_HOME/airflow.cfg
-    
-    executor = CeleryExecutor
+    # update below 4 parameters
+    executor = LocalExecutor
     sql_alchemy_conn = postgresql+psycopg2://airflow:airflow@localhost:5432/airflow
-    
-    # experimental #TODO
-    broker_url = amqp://guest:guest@localhost:5672//
-    celery_result_backend = amqp://guest:guest@localhost:5672//
-    
-    broker_url = db+postgresql://airflow:airflow@localhost:5432/airflow
-    celery_result_backend = db+postgresql://airflow:airflow@localhost:5432/airflow
     
     broker_url = postgresql+psycopg2://airflow:airflow@localhost:5432/airflow
     celery_result_backend = postgresql+psycopg2://airflow:airflow@localhost:5432/airflow
+    
+    
+    
+    airflow resetdb --yes
+    airflow initdb
 
 ```
 
