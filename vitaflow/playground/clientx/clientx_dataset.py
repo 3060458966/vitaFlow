@@ -25,10 +25,8 @@ import shutil
 import gin
 
 from vitaflow.internal.dataset_types.dataset_types import ICSVSeq2SeqType1
-# from vitaflow.utils.hyperparams import HParams
 from vitaflow.internal.ipreprocessor import IPreprocessor
 from vitaflow.utils.print_helper import *
-
 
 @gin.configurable
 class CLIENTXDataset(IPreprocessor, ICSVSeq2SeqType1):
@@ -67,68 +65,7 @@ class CLIENTXDataset(IPreprocessor, ICSVSeq2SeqType1):
                                test_data_path=test_data_path,
                                preprocessed_data_path=preprocessed_data_path,
                                )
-        # self._hparams = HParams(hparams, self.default_hparams())
         self._prepare_data()
-
-    # @staticmethod
-    # def default_hparams():
-    #     """
-    #     .. role:: python(code)
-    #        :language: python
-    #
-    #     .. code-block:: python
-    #
-    #         {
-    #             "experiment_root_directory" : os.path.expanduser("~") + "/vitaFlow/" ,
-    #             "experiment_name" : "CoNLL2003Dataset",
-    #             "preprocessed_data_path" : "preprocessed_data",
-    #             "train_data_path" : "train",
-    #             "validation_data_path" : "val",
-    #             "test_data_path" : "test",
-    #             "minimum_num_words" : 5,
-    #             "over_write" : False,
-    #         }
-    #
-    #     Here:
-    #
-    #     "experiment_root_directory" : str
-    #         Root directory where the data is downloaded or copied, also
-    #         acts as the folder for any subsequent experimentation
-    #
-    #     "experiment_name" : str
-    #         Name of the data set
-    #
-    #     "preprocessed_data_path" : str
-    #         Folder path under `experiment_root_directory` where the preprocessed data
-    #         should be stored
-    #
-    #     "train_data_path" : str
-    #         Folder path under `experiment_root_directory` where the train data is stored
-    #
-    #     "validation_data_path" : str
-    #         Folder path under `experiment_root_directory` where the validation data is stored
-    #
-    #     "test_data_path" : str
-    #         Folder path under `experiment_root_directory` where the test data is stored
-    #
-    #     "minimum_num_words" : str
-    #         Number of word to be considered for a sentence to be used down the flow
-    #
-    #     "over_write" : boolean
-    #         Flag to over write the previous copy of the downloaded data
-    #
-    #
-    #     :return: A dictionary of hyperparameters with default values
-    #     """
-    #     hparams = IPreprocessor.default_hparams()
-    #
-    #     hparams.update({
-    #         "experiment_name": "CLIENTXDataset",
-    #         "minimum_num_words": 5,
-    #         "over_write": False,
-    #         "temp-data": os.environ['DEMO_DATA_PATH'], #os.path.join("/opt/data", "vitaFlow-clientx/"),
-    #     })
-    #     return hparams
 
     def _create_target_directories(self):
         """
