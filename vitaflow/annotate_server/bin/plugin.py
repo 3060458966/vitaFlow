@@ -7,10 +7,9 @@ from common import verify_isimagefile, verify_isfile
 try:
     from vitaflow.annotate_server import config
     import sys
-
     # Add the draft folder path to the sys.path list
     sys.path.append('..')
-except ModuleNotFoundError:
+except ImportError:
     import config
 
 

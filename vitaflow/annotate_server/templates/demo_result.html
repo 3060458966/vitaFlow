@@ -25,62 +25,29 @@
     {% endif %}
     {% endwith %}
     </p>
-
-
-    <div class="container">
-
-
-        # TODO
-        <table border="1">
-            <thead>
-            <tr>
-                <td>Title</td>
-                <td>Image</td>
-            </tr>
-            </thead>
-
-            <!--Input Image-->
-            <tr>
-                <td>{{data.image_data}}</td>
-                <td><img src="{{data.image_data}}" style="height=400;"></td>
-            </tr>
-
-
-            <!--Binaraisation Image-->
-            <!--<tr>-->
-            <!--<td>{{data.binarisation}}</td>-->
-            <!--<td><img src="/{{data.binarisation}}" style="height=400;"></td>-->
-            <!--</tr>-->
-
-            <!--TextLine Images-->
-            <!--{% for item in data.text2Lines %}-->
-            <!--<tr>-->
-            <!--<td>{{item}}</td>-->
-            <!--<td><img src="/{{item}}" style="height=400;"></td>-->
-            <!--</tr>-->
-            <!--{% endfor %}-->
-
-
-            <!--Tesseract Data-->
-            <tr>
-                <td>TESSERACT:</td>
-                <td>
-                    <pre>{{data.tesseract}}</pre>
-                </td>
-            </tr>
-
-            <!--Calamari Data-->
-            <tr>
-                <td>CALAMARI:</td>
-                <td>
-                    <pre> {{data.calamari}}</pre>
-                </td>
-            </tr>
-
-        </table>
-    </div>
-
-
 </div>
+
+<div>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-4">
+                <p>{{data.image_data}}</p>
+                <p><img src="{{data.image_data}}"></p>
+            </div>
+            <div class="col-sm-4">
+                <p>TESSERACT:
+                <pre>{{data.tesseract}}</pre>
+                </p>
+            </div>
+            <div class="col-sm-4">
+                <p>CALAMARI:
+                <pre> {{data.calamari}}</pre>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 </body>
 </html>
