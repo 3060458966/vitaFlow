@@ -3,9 +3,9 @@ import vitaflow.playground.clientx
 
 experiment_name="clientx_dataset"
 get_experiment_root_directory.value="/home/gaurishk/Projects/vitaFlow/vitaflow/playground/clientx"
-
+batch_size = 32
 #Experiments
-Experiments.batch_size=8
+Experiments.batch_size=%batch_size
 Experiments.num_epochs=150
 Experiments.dataset_class_with_path="vitaflow.playground.clientx.clientx_dataset.CLIENTXDataset"
 Experiments.iterator_class_with_path="vitaflow.iterators.text.csv_seq_to_seq_iterator.CSVSeqToSeqIterator"
@@ -34,7 +34,6 @@ CLIENTXDataset.over_write=False
 CSVSeqToSeqIterator.experiment_name=%experiment_name
 CSVSeqToSeqIterator.experiment_root_directory= @get_experiment_root_directory()
 CSVSeqToSeqIterator.number_test_of_samples=8
-CSVSeqToSeqIterator.batch_size=32
 CSVSeqToSeqIterator.prefetch_size=32
 CSVSeqToSeqIterator.dataset=None
 CSVSeqToSeqIterator.iterator_name = "clientx_data_iterator"
@@ -44,7 +43,7 @@ CSVSeqToSeqIterator.validation_data_path = "val"
 CSVSeqToSeqIterator.test_data_path = "test"
 CSVSeqToSeqIterator.text_col = "0"
 CSVSeqToSeqIterator.entity_col = "1"
-CSVSeqToSeqIterator.batch_size = 16
+CSVSeqToSeqIterator.batch_size = %batch_size
 # potential error point depending on the dataset
 CSVSeqToSeqIterator.in_seperator ="\t"
 CSVSeqToSeqIterator.out_seperator ="~"
