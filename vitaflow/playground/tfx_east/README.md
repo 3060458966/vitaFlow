@@ -53,7 +53,7 @@
     #posgres url 
     #postgresql://user:password@localhost:5432/database_name
     
-    apt-get -y install postgresql postgresql-contrib libpq-dev postgresql-client postgresql-client-common
+    sudo apt-get -y install postgresql postgresql-contrib libpq-dev postgresql-client postgresql-client-common
     pip install psycopg2
     
     #create Posgresql user and DB for Airflow metadata store
