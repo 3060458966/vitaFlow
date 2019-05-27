@@ -11,9 +11,12 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"></script>
 </head>
 <body>
-<p>
-    {% with messages = get_flashed_messages() %}
-    {% if messages %}
+<img src="/static/images/logo.png">
+<div class="container">
+
+    <p>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
 <ul class=flashes>
     {% for message in messages %}
     <li>{{ message }}</li>
@@ -24,12 +27,37 @@
 </p>
 
 
-<div class="container">
-    <img src="{{image_data}}" style="height=400;">
+    <div class="container">
+
+
+        # TODO
+        <table border="1">
+            <thead>
+            <tr>
+                <td>Title</td>
+                <td>Image</td>
+            </tr>
+            </thead>
+            <tr>
+                <td>{{data.image_data}}</td>
+                <td><img src="{{data.image_data}}" style="height=400;"></td>
+            </tr>
+            <tr>
+                <td>{{data.binarisation}}</td>
+                <td><img src="/{{data.binarisation}}" style="height=400;"></td>
+            </tr>
+            {% for item in data.text2Lines %}
+            <tr>
+                <td>{{item}}</td>
+                <td><img src="/{{item}}" style="height=400;"></td>
+            </tr>
+            {% endfor %}
+        </table>
+        <!--<p>{{data.tesseract}}</p>-->
+        <!--<p>{{data.calamari}}</p>-->
+    </div>
+
+
 </div>
-
-# TODO
-
-
 </body>
 </html>

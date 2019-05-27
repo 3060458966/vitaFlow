@@ -14,7 +14,9 @@ app.secret_key = os.urandom(24)
 # TODO: remove below line
 print('Print: {}'.format(app.secret_key))
 
-UPLOAD_FOLDER = "static/data/uploads/"
+# UPLOAD_FOLDER = "static/data/uploads/"
+UPLOAD_FOLDER = "static/data/images/"
+
 if not os.path.exists(UPLOAD_FOLDER):
     os.mkdir(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -51,20 +53,18 @@ def allowed_filename(filename):
 #     </form>
 #     '''
 
-@app.route('/')
-@app.route('/upload_file/', methods=['GET'])
-@app.route('/upload_file/<filename>')
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/upload_file/', methods=['GET', 'POST'])
 def page_upload_form(filename=None):
-    if filename:
-        print('printing {}'.format(filename))
-    return render_template('demo.html')
-
-
-@app.route('/upload_file/', methods=['POST'])
-@app.route('/upload_file/', methods=['POST'])
-def page_upload_file():
+    if request.method == 'GET':
+        if filename:
+            print('printing {}'.format(filename))
+        return render_template('demo.html')
+    # @app.route('/upload_file/', methods=['POST'])
+    # def page_upload_file():
     if request.method == 'POST':
         # check if the post request has the file part
+        print('POST')
         if 'file' not in request.files:
             flash('No file part')
             return redirect(request.url)
@@ -76,13 +76,16 @@ def page_upload_file():
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             flash('File(s) successfully uploaded')
-            return redirect('/upload_file', filename=file.filename)
+            # Run pipeline
+            run_pipeline()
+            # return redirect('/upload_file', filename=file.filename)
+            return redirect('/upload_file/')
 
 
 def show_uploaded_images():
     from glob import glob
     html_data = ''
-    for url in glob(UPLOAD_FOLDER + '*'):
+    for url in glob(UPLOAD_FOLDER + '*.jpg'):
         filename = url.split('/')[-1]
         html_data += '<li><a href="/{}">{}</a>     <a href="/uploads/{}">ProcessingDetails</a>      </li>   '.format(
             url, filename, filename)
@@ -92,14 +95,42 @@ def show_uploaded_images():
 
 @app.route('/uploads/<filename>')
 def show_uploaded_image_details(filename):
+    import config
+    from glob import glob
     image_data = "/{}/{}".format(UPLOAD_FOLDER, filename)
-    return render_template('demo_result.html', image_data=image_data)
+    bin_data = glob(os.path.join(config.BINARIZE_ROOT_DIR, '*' + filename))
+    if bin_data:
+        bin_data = bin_data[0]
+    else:
+        bin_data = ''
+    text_data = glob(os.path.join(config.TEXT_IMAGES, filename.rsplit('.', 1)[-2] + '/*'))
+    text_data.sort()
+    text_data_images = sorted([_ for _ in text_data if '.png' in _],
+                              key=lambda fn: int(fn.rsplit('/')[-1].split('.')[0]))
+    text_data_tesseract = [_ for _ in text_data if '.tesseract' in _]
+    text_data_calamari = [_ for _ in text_data if '.pred' in _]
+    print(bin_data)
+    data = {
+        'image_data': image_data,
+        'binarisation': bin_data,
+        'text2Lines': text_data_images,
+        'tesseract': text_data_tesseract,
+        'calamari': text_data_calamari
+    }
+    return render_template('demo_result.html', image_data=image_data, data=data)
 
 
 @app.route('/uploads/')
 def page_show_uploads():
     return show_uploaded_images()
 
+
+def run_pipeline():
+    import subprocess
+    # command = ['make', '-f', '../../Makefile', 'help']
+    command = 'cd ../.. && make east_ocr_pipeline'.split(' ')
+    print(' '.join(command))
+    subprocess.check_call(command)
 
 if __name__ == '__main__':
     app.run(debug=True)  # host='172.16.49.198'
