@@ -222,6 +222,9 @@ docker cp {CONTAINER ID}:/app/vitaflow/annotate_server/static/data/ .
 
 This will copy the entire data folder from the container to the host machine which can be checked by the user for outputs/predictions. 
 
+# OCR Demo
+Refer [here](vitaflow/playground/east/README.md) for EAST based TExt extraction from receipts.
+
 # License
 
 Apache License - Version 2.0.

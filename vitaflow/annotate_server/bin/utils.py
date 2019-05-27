@@ -19,7 +19,7 @@ def trim_file_ext(x):
 def check_n_create(full_path):
     if not os.path.isdir(full_path):
         print('Created missing dir `{}`!'.format(full_path))
-        os.mkdir(full_path)
+        os.makedirs(full_path)
     else:
         # TODO: remove below
         # print('Using dir at `{}`!'.format(full_path))
