@@ -25,7 +25,6 @@ import pandas as pd
 import tensorflow as tf
 from overrides import overrides
 from tqdm import tqdm
-import gin
 
 from vitaflow.engines import Executor
 from vitaflow.internal import IIteratorBase
@@ -35,9 +34,10 @@ from vitaflow.iterators.text.vocabulary import SpecialTokens
 from vitaflow.utils.os_helper import check_n_makedirs
 from vitaflow.utils.print_helper import print_info
 
+
 @gin.configurable
 class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
-    def __init__(self, 
+    def __init__(self,
                  experiment_root_directory,
                  experiment_name,
                  number_test_of_samples=4,
@@ -51,7 +51,8 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
                  dataset=None,
                  text_col=0,
                  entity_col=3,
-                 seperator="~",
+                 in_seperator="~",
+                 out_seperator="~",
                  quotechar="^",
                  max_word_length=20,
                  use_char_embd=False):
@@ -80,7 +81,8 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         self._text_col = text_col
         self._entity_col = entity_col
         self._batch_size = batch_size
-        self._seperator = seperator
+        self._in_seperator = in_seperator
+        self._out_seperator = out_seperator
         self._quotechar = quotechar
         self._max_word_length = max_word_length
         self._use_char_embd = use_char_embd
@@ -182,7 +184,8 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
                 df_file = os.path.join(self.TRAIN_FILES_IN_PATH, df_file)
 
                 if df_file.endswith(".csv"):
-                    df = pd.read_csv(df_file, sep=self._seperator, quoting=csv.QUOTE_NONE).fillna(SpecialTokens.UNK_WORD)
+                    df = pd.read_csv(df_file, sep=self._in_seperator, quoting=csv.QUOTE_NONE).fillna(
+                        SpecialTokens.UNK_WORD)
                 else:
                     raise RuntimeError
                 # print(df["0,1,2,3"])
@@ -281,12 +284,12 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         '''
         sequence_padded, sequence_length = [], []
         if nlevels == 1:
-            max_length = max(map(lambda x: len(x.split(self._seperator)), sequences))
+            max_length = max(map(lambda x: len(x.split(self._out_seperator)), sequences))
             # sequence_padded, sequence_length = _pad_sequences(sequences,
             #                                                   pad_tok, max_length)
             # breaking the code to pad the string instead on its ids
             for seq in sequences:
-                current_length = len(seq.split(self._seperator))
+                current_length = len(seq.split(self._out_seperator))
                 diff = max_length - current_length
                 pad_data = pad_tok * diff
                 sequence_padded.append(seq + pad_data)
@@ -334,7 +337,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             df_file = os.path.join(df_files_path, df_file)
 
             if df_file.endswith(".csv"):  # TODO start and stop tags
-                df = pd.read_csv(df_file,sep=self._seperator, quoting=csv.QUOTE_NONE).fillna(SpecialTokens.UNK_WORD)
+                df = pd.read_csv(df_file, sep=self._in_seperator, quoting=csv.QUOTE_NONE).fillna(SpecialTokens.UNK_WORD)
             elif df_file.endswith(".json"):
                 df = pd.read_json(df_file).filla(SpecialTokens.UNK_WORD)
 
@@ -342,14 +345,14 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             list_char_ids = [[char_2_id_map.get(c, 0) for c in str(word)] for word in list_text]
             list_tag = df[self._entity_col].astype(str).values.tolist()
             print(list_text, list_char_ids, list_tag)
-            sentence_feature1.append("{}".format(self._seperator).join(list_text))
+            sentence_feature1.append("{}".format(self._out_seperator).join(list_text))
             char_ids_feature2.append(list_char_ids)
-            tag_label.append("{}".format(self._seperator).join(list_tag))
+            tag_label.append("{}".format(self._out_seperator).join(list_tag))
 
         if use_char_embd:
             sentence_feature1, seq_length = self._pad_sequences(sentence_feature1,
                                                                 nlevels=1,
-                                                                pad_tok="{}{}".format(self._seperator,
+                                                                pad_tok="{}{}".format(self._out_seperator,
                                                                                       SpecialTokens.PAD_WORD))  # space is used so that it can append to the string sequence
             sentence_feature1 = np.array(sentence_feature1)
 
@@ -359,7 +362,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             seq_length = np.array(seq_length)
             tag_label, seq_length = self._pad_sequences(tag_label,
                                                         nlevels=1,
-                                                        pad_tok="{}{}".format(self._seperator,
+                                                        pad_tok="{}{}".format(self._out_seperator,
                                                                               SpecialTokens.PAD_WORD))
             tag_label = np.array(tag_label)
 
@@ -386,13 +389,13 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         list_text = sentence.split()
         list_char_ids = [[char_2_id_map.get(c, SpecialTokens.UNK_CHAR_ID) for c in str(word)] for word in list_text]
 
-        sentence_feature1.append("{}".format(self._seperator).join(list_text))
+        sentence_feature1.append("{}".format(self._out_seperator).join(list_text))
         char_ids_feature2.append(list_char_ids)
 
         if use_char_embd:
             sentence_feature1, seq_length = self._pad_sequences(sentence_feature1,
                                                                 nlevels=1,
-                                                                pad_tok="{}{}".format(self._seperator,
+                                                                pad_tok="{}{}".format(self._out_seperator,
                                                                                       SpecialTokens.PAD_WORD))  # space is used so that it can append to the string sequence
             sentence_feature1 = np.array(sentence_feature1)
 
@@ -551,7 +554,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         # Get the files from test folder and zip it with predictions
         for each_prediction, file in zip(predictions, self._test_files_path):
 
-            df = pd.read_csv(file, sep=self._seperator, quoting=csv.QUOTE_NONE)
+            df = pd.read_csv(file, sep=self._in_seperator, quoting=csv.QUOTE_NONE)
 
             predicted_id = []
             confidence = []
@@ -664,7 +667,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         # Get the files from test folder and zip it with predictions
         for each_prediction, file in zip(predictions, self._test_files_path):
 
-            df = pd.read_csv(file, sep=self._seperator, quoting=csv.QUOTE_NONE)
+            df = pd.read_csv(file, sep=self._in_seperator, quoting=csv.QUOTE_NONE)
 
             predicted_id = []
             confidence = []

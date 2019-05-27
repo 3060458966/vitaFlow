@@ -1,6 +1,9 @@
 import os
 import vitaflow.playground.clientx
 
+experiment_name="clientx_dataset"
+get_experiment_root_directory.value="/home/gaurishk/Projects/vitaFlow/vitaflow/playground/clientx"
+
 #Experiments
 Experiments.batch_size=8
 Experiments.num_epochs=150
@@ -18,9 +21,9 @@ Experiments.plug_dataset=True
 Experiments.mode='train'
 
 # Dataset
-CLIENTXDataset.experiment_name="clientx_dataset"
+CLIENTXDataset.experiment_name=%experiment_name
+CLIENTXDataset.experiment_root_directory=@get_experiment_root_directory()
 CLIENTXDataset.preprocessed_data_path="preprocessed_data"
-CLIENTXDataset.experiment_root_directory="/home/gaurishk/Projects/vitaFlow/vitaflow/playground/clientx" #"/opt/tmp/vitaFlow/"
 CLIENTXDataset.train_data_path = "train"
 CLIENTXDataset.validation_data_path = "val"
 CLIENTXDataset.test_data_path = "test"
@@ -28,8 +31,8 @@ CLIENTXDataset.minimum_num_words = 5
 CLIENTXDataset.over_write=False
 
 #Iterator
-CSVSeqToSeqIterator.experiment_root_directory= "/home/gaurishk/Projects/vitaFlow/vitaflow/playground/clientx" #"/opt/tmp/vitaFlow/"
-CSVSeqToSeqIterator.experiment_name="clientx_dataset"
+CSVSeqToSeqIterator.experiment_name=%experiment_name
+CSVSeqToSeqIterator.experiment_root_directory= @get_experiment_root_directory()
 CSVSeqToSeqIterator.number_test_of_samples=8
 CSVSeqToSeqIterator.batch_size=32
 CSVSeqToSeqIterator.prefetch_size=32
@@ -43,14 +46,15 @@ CSVSeqToSeqIterator.text_col = "0"
 CSVSeqToSeqIterator.entity_col = "1"
 CSVSeqToSeqIterator.batch_size = 16
 # potential error point depending on the dataset
-CSVSeqToSeqIterator.seperator ="~"
+CSVSeqToSeqIterator.in_seperator ="\t"
+CSVSeqToSeqIterator.out_seperator ="~"
 CSVSeqToSeqIterator.quotechar = "^"
 CSVSeqToSeqIterator.max_word_length = 20
 CSVSeqToSeqIterator.use_char_embd = True
 
 #Model
-BiLSTMCrf.experiment_name="clientx_dataset"
-BiLSTMCrf.model_root_directory= "/home/gaurishk/Projects/vitaFlow/vitaflow/playground/clientx" #"/opt/tmp/vitaFlow/"
+BiLSTMCrf.experiment_name=%experiment_name
+BiLSTMCrf.model_root_directory= @get_experiment_root_directory()
 BiLSTMCrf.learning_rate=0.001
 BiLSTMCrf.experiment_name= "clientx_dataset"
 BiLSTMCrf.use_char_embd= True

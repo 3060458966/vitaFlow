@@ -40,7 +40,9 @@ CSVSeqToSeqIterator.test_data_path="test"
 CSVSeqToSeqIterator.text_col="0"
 CSVSeqToSeqIterator.entity_col="3"
 CSVSeqToSeqIterator.batch_size=4
-CSVSeqToSeqIterator.seperator="~"  # potential error point depending on the dataset
+CSVSeqToSeqIterator.in_seperator ="~"
+CSVSeqToSeqIterator.out_seperator ="~"
+# potential error point depending on the dataset
 CSVSeqToSeqIterator.quotechar="^"
 CSVSeqToSeqIterator.max_word_length=20
 CSVSeqToSeqIterator.use_char_embd=True
