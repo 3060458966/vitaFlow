@@ -21,7 +21,8 @@ os.environ['OMP_THREAD_LIMIT'] = '1'
 def main(source_file):
     source_file_folder = os.path.dirname(source_file)
     ext = os.path.splitext(os.path.basename(source_file).split(os.extsep)[1])[0]
-    destination_file = os.path.join(source_file_folder, "output.{}.txt".format(ext))
+    new_file_name = source_file_folder.split('/')[-1] + ".{}.txt".format(ext)
+    destination_file = os.path.join(config.ROOT_DIR, config.TEXT_DIR, new_file_name)  # TODO fix path
     if os.path.isfile(destination_file):
         #  read the file and append values
         with open(destination_file, "a") as fd:
@@ -43,13 +44,20 @@ def main_parallel(text_list):
     # create a folder in output directory with name as input folder
     for folder_path in tqdm(folders, desc="text_post_processing"):
         for ext in config.OCR_TEXT_EXTS:
-            files = sorted(glob.glob(folder_path + "/*{}".format(ext)),
+            files = glob.glob(folder_path + "/*{}".format(ext))
+            files = sorted(files,
                            key=lambda x: int(os.path.splitext(os.path.basename(x).split(os.extsep)[0])[0]))
-            with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-                for text_file_path, out_file in zip(files, executor.map(main, files)):
-                    completed_jobs.append(
-                        (text_file_path.split("\\")[-1], ',', out_file, ', processed')
-                    )
+            # pprint(files)
+            try:
+                with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+                    for text_file_path, out_file in zip(files, executor.map(main, files)):
+                        completed_jobs.append(
+                            (text_file_path.split("\\")[-1], ',', out_file, ', processed')
+                        )
+            except:
+                # TODO: improvise - single threaded
+                for each in files:
+                    main(each)
 
 
 class TextFileStitch(StitchTextExtPluginModel):

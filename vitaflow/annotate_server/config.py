@@ -26,7 +26,7 @@ DOC2TEXT_DIR = "static/data/preprocess"
 # To store text images
 TEXT_IMAGES = "static/data/text_images"
 
-# To store annotation xml files
+# To store annotation txt files
 TEXT_DIR = "static/data/text_data"
 
 # Testing Purposes
