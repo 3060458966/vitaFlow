@@ -14,13 +14,12 @@
 """
 A class that executes training, evaluation, prediction, export of estimators.
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
+import gin
+import time
 import tensorflow as tf
-
-# from vitaflow.utils.dtypes import maybe_hparams_to_dict
+import os
+from tqdm import tqdm
 
 # pylint: disable=too-many-instance-attributes, too-many-arguments
 
@@ -70,7 +69,6 @@ class Executor(object):
                  model,
                  data_iterator,
                  config,
-                 model_hparams=None,
                  train_hooks=None,
                  eval_hooks=None,
                  session_config=None):
@@ -80,13 +78,16 @@ class Executor(object):
         self._train_hooks = train_hooks
         self._eval_hooks = eval_hooks
         self._session_config = session_config
-        #
-        # if model_hparams is None:
-        #     model_hparams = model.hparams
-        # self._model_hparams = model_hparams
 
         self._estimator = tf.estimator.Estimator(
             model_fn=self._model, config=config, params=None)
+
+        hook = tf.contrib.estimator.stop_if_no_decrease_hook(self._estimator, "loss", 1000)
+
+        if self._train_hooks is None:
+            self._train_hooks = [hook]
+        else:
+            self._train_hooks.append(hook)
 
     @property
     def model(self):
@@ -171,3 +172,45 @@ class Executor(object):
         train_spec = self._get_train_spec(max_steps=max_train_steps)
         eval_spec = self._get_eval_spec(steps=eval_steps)
         tf.estimator.train_and_evaluate(self._estimator, train_spec, eval_spec)
+
+
+    def test_iterator(self):
+        iterator = self._data_iterator.train_input_fn().make_initializable_iterator()
+        training_init_op = iterator.initializer
+        num_samples = self._data_iterator._num_train_examples
+        batch_size = self._data_iterator._batch_size
+        next_element = iterator.get_next()
+
+        with tf.Session() as sess:
+            sess.run(training_init_op)
+            start_time = time.time()
+
+            pbar = tqdm(desc="steps", total=int(num_samples/batch_size))
+
+            i = 0
+            while (True):
+                try:
+                    res = sess.run(next_element)
+                    pbar.update()
+
+                    if True:
+                        print("Data shapes : ", end=" ")
+                        for key in res[0].keys():
+                            print(res[0][key].shape, end=", ")
+                        print(" label shape : {}".format(res[1].shape))
+
+                except tf.errors.OutOfRangeError:
+                    print("tf.errors.OutOfRangeError")
+                    break
+            end_time = time.time()
+
+            print("Time taken : ", end_time - start_time)
+            exit(-1)
+
+    def export_model(self, model_export_path):
+        print("=====================", model_export_path)
+        if not os.path.exists(model_export_path):
+            os.makedirs(model_export_path)
+        self._estimator.export_savedmodel(
+            model_export_path,
+            serving_input_receiver_fn=self._data_iterator.serving_input_receiver_fn)

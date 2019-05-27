@@ -1,11 +1,13 @@
 """
 """
 import time
-import logging 
+import logging
 import gin
 import tensorflow as tf
 from tqdm import tqdm
-
+import os
+import numpy as np
+import cv2
 from east_model import EASTModel
 from executor import Executor
 from icdar_data import ICDARTFDataset, get_images
@@ -33,10 +35,10 @@ def run(save_checkpoints_steps=10,
         output_dir=gin.REQUIRED):
     """
     """
-                                                      
+
     model = EASTModel()
     data_iterator = CIDARIterator()
-    
+
     run_config = tf.ConfigProto()
     run_config.gpu_options.allow_growth = True
     # run_config.gpu_options.per_process_gpu_memory_fraction = 0.50
@@ -45,25 +47,25 @@ def run(save_checkpoints_steps=10,
     model_dir = model.model_dir
 
     run_config = tf.estimator.RunConfig(session_config=run_config,
-                                            save_checkpoints_steps=save_checkpoints_steps,
-                                            keep_checkpoint_max=keep_checkpoint_max,
-                                            save_summary_steps=save_summary_steps,
-                                            model_dir=model_dir,
-                                            log_step_count_steps=log_step_count_steps)
+                                        save_checkpoints_steps=save_checkpoints_steps,
+                                        keep_checkpoint_max=keep_checkpoint_max,
+                                        save_summary_steps=save_summary_steps,
+                                        model_dir=model_dir,
+                                        log_step_count_steps=log_step_count_steps)
 
     executor = Executor(model=model,
-                data_iterator=data_iterator,
-                config=run_config,
-                train_hooks=None,
-                eval_hooks=None,
-                session_config=None)
+                        data_iterator=data_iterator,
+                        config=run_config,
+                        train_hooks=None,
+                        eval_hooks=None,
+                        session_config=None)
 
     if test_iterator:
         executor.test_iterator()
-    
+
     num_samples = data_iterator._num_train_examples
     batch_size = data_iterator._batch_size
-    
+
     if not FLAGS.predict:
         for current_epoch in tqdm(range(num_epochs), desc="Epoch"):
             current_max_steps = (num_samples // batch_size) * (current_epoch + 1)
@@ -83,24 +85,24 @@ def run(save_checkpoints_steps=10,
             start_time = time.time()
             im_resized, (ratio_h, ratio_w) = resize_image(im)
             im_resized = np.expand_dims(im_resized, axis=0).astype(np.float32)
-            
+
             def get_dataset():
-                dataset = tf.data.Dataset.from_tensor_slices(({"images": im_resized}, 
-                                                                np.ones_like(im_resized)))
+                dataset = tf.data.Dataset.from_tensor_slices(({"images": im_resized},
+                                                              np.ones_like(im_resized)))
                 dataset = dataset.batch(batch_size=1)
                 print(dataset.output_shapes)
                 return dataset
             start = time.time()
             timer = {'net': 0, 'restore': 0, 'nms': 0}
             predict_fn = estimator.predict(input_fn=lambda: get_dataset())
-            
+
             for prediction in predict_fn:
                 score = prediction["f_score"]
                 geometry = prediction["f_geometry"]
-            
+
             score = np.expand_dims(score, axis=0)
             geometry = np.expand_dims(geometry, axis=0)
-            
+
             print("===============================")
             print(score.shape)
             print(geometry.shape)
@@ -141,7 +143,7 @@ def run(save_checkpoints_steps=10,
             # if not FLAGS.no_write_images:
             img_path = os.path.join(output_dir, os.path.basename(image_file_path))
             cv2.imwrite(img_path, im[:, :, ::-1])
-            
+
 
 if __name__ == "__main__":
     gin.parse_config_file('config.gin')

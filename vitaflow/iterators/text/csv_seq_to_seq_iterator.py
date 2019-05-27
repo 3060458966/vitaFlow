@@ -772,6 +772,18 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         results = data_iterator.predict_on_text(predict_fn)
         print(list(zip(sentence.split(), results)))
 
+    def serving_input_receiver_fn(self):
+        if self._use_char_embd:
+            inputs = {
+                self.FEATURE_1_NAME : tf.placeholder(tf.string, [None]),
+                self.FEATURE_2_NAME : tf.placeholder(tf.int64, [None, None, None])
+            }
+        else:
+            inputs = {
+                self.FEATURE_1_NAME: tf.placeholder(tf.string, [None, None, None])
+            }
+        return tf.estimator.export.ServingInputReceiver(inputs, inputs)
+
 
 def strip_iob(iob_tag):
     if iob_tag:
