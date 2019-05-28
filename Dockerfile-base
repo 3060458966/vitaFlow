@@ -1,0 +1,12 @@
+FROM python:3.6-jessie
+LABEL maintainer="Sampath Kumar M"
+
+RUN apt-get update && \
+ apt-get install vim -y
+
+WORKDIR /app
+COPY . /app
+
+RUN pip install Cython --install-option="--no-cython-compile"
+RUN pip install tensorflow
+
