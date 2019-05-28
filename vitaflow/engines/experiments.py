@@ -228,7 +228,7 @@ class Experiments(object):
                 executor.train(max_steps=None)
                 print("\n\n Evaluating for epoch\n\n", current_epoch)
                 executor.evaluate(steps=200)
-                executor.export_model(self._model.model_dir + "/exported/")
+                # executor.export_model(self._model.model_dir + "/exported/")
 
         elif mode == "predict":
             self._data_iterator.predict_on_test_files(executor=executor)
