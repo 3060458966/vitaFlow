@@ -49,9 +49,9 @@ class SpecialTokens(object):
     EOS_WORD = "<EOS>"
     UNK_WORD = "<UNK>"
     PAD_WORD_ID = 0
-    BOS_WORD_ID = 1
-    EOS_WORD_ID = 2
-    UNK_WORD_ID = 3
+    UNK_WORD_ID = 1
+    BOS_WORD_ID = 2
+    EOS_WORD_ID = 3
 
     PAD_TAG = "<TAG>"
     PAD_TAG_ID = 0
@@ -61,10 +61,11 @@ class SpecialTokens(object):
     EOS_CHAR = "<E>"
     UNK_CHAR = "<U>"
     PAD_CHAR_ID = 0
-    BOS_CHAR_ID = 1
-    EOS_CHAR_ID = 2
-    UNK_CHAR_ID = 3
+    UNK_CHAR_ID = 1
+    BOS_CHAR_ID = 2
+    EOS_CHAR_ID = 3
 
+    UNK_TAG_ID = 1
 
 def _make_defaultdict(keys, values, default_value):
     """

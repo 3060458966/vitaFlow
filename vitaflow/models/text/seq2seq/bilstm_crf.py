@@ -419,7 +419,7 @@ class BiLSTMCrf(ModelBase, ITextFeature):
             if mode != ModeKeys.INFER:
                 ner_table = lookup.index_table_from_file(vocabulary_file=self.TAGS_VOCAB_FILE,
                                                          num_oov_buckets=0,
-                                                         default_value=0,  # id of <UNK> w.r.t ENTITY VOCAB
+                                                         default_value=SpecialTokens.UNK_TAG_ID,  # id of <UNK> w.r.t ENTITY VOCAB
                                                          name="table")
 
                 tf.logging.info('ner_table info: {}'.format(ner_table))
