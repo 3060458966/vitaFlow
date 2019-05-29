@@ -60,7 +60,6 @@ def show_logs(filename):
     from glob import glob
     fmt = 'static/data/logs/*{}*'.format(filename)
     files = glob(fmt)
-    print(fmt, files)
     if files:
         data = open(files[0]).read()
     else:
@@ -75,9 +74,11 @@ def show_uploaded_images():
     html_data = ''
     for url in glob(UPLOAD_FOLDER + '*.jpg'):
         filename = url.split('/')[-1]
-        html_data += '<li><a href="/{}">{}</a>' \
-                     ' <a href="/uploads/{}">ProcessingDetails</a>' \
-                     ' <a href="/logs/{}">Logs</a>      </li>   '.format(
+        html_data += '<li>' \
+                     '<a href="/{}">{}</a> ' \
+                     '<a href="/uploads/{}">Output</a> ' \
+                     '<a href="/logs/{}">Logs</a>' \
+                     '</li>   '.format(
             url, filename, filename, filename)
     html_data = "<html><body><ul>{}<ul></body></html>".format(html_data)
     from flask import Markup
@@ -124,9 +125,10 @@ def page_show_uploads():
 def run_pipeline(filename=None):
     print('Running East Pipeline')
     import os
-    command = 'cd ../.. && make east_ocr_pipeline'
+    command = 'cd ../.. && make east binarisation crop2box tesseract calmari text2file'
     if filename:
-        command = 'cd ../.. && make east_ocr_pipeline 1>&2 > vitaflow/annotate_server/static/data/logs/{}.log &'.format(
+        # https://www.cyberciti.biz/faq/redirecting-stderr-to-stdout/
+        command = command + ' &>vitaflow/annotate_server/static/data/logs/{}.log &'.format(
             filename)
         print('Running East Pipeline, Logs are at vitaflow/annotate_server/static/data/logs/{}.log &'.format(filename))
     os.system(command)
