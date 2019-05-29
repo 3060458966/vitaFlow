@@ -3,7 +3,7 @@
 #export DEMO_DATA_PATH=/opt/data/vitaflow_demo
 # trial run keep the above demo_data_path
 
-export DEMO_DATA_PATH=$PWD
+export DEMO_DATA_PATH=$PWD'/'
 echo $DEMO_DATA_PATH
 echo $DEMO_DATA_PATH/standoff2conll/annotations/
 #
