@@ -8,8 +8,14 @@ python pb_predict\
 import argparse
 import os
 
-from grpc_predict import read_image, get_text_segmentation_pb
-from icdar_data import get_images
+try:
+    from grpc_predict import read_image, get_text_segmentation_pb
+    from icdar_data import get_images
+except:
+    from vitaflow.playground.east.grpc_predict import read_image, get_text_segmentation_pb
+    from vitaflow.playground.east.icdar_data import get_images
+
+
 from tensorflow.contrib import predictor
 
 
@@ -32,7 +38,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--images_dir', help='input images', type=str)
     parser.add_argument('--output_dir', help='out dir for images', type=str)
-    parser.add_argument('--model', help='model name', type=str)
+    parser.add_argument('--model', help='model exported path', type=str)
 
     args = parser.parse_args()
     run(input_dir=args.images_dir, output_dir=args.output_dir, model_dir=args.model)

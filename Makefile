@@ -80,6 +80,14 @@ text2file:
 
 east_ocr_pipeline:	data_cleanup east binarisation crop2box tesseract calmari text2file ### EAST OCR Pipeline - Run complete pipeline
 
+basic_airflow:
+	echo "export AIRFLOW_HOME=~/airflow or appropriate"
+	echo "using AIRFLOW_HOME=${AIRFLOW_HOME}"
+	rsync -av  vitaflow ${AIRFLOW_HOME}/dags/
+	sed -i'.orig' 's/load_examples = True/load_examples = False/g' ${AIRFLOW_HOME}/airflow.cfg
+	echo "On shell 1: airflow webserver"
+	echo "On shell 2: airflow scheduler"
+
 ###################################################################
 ########################################################## DOCKER #
 ###################################################################

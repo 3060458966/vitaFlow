@@ -5,8 +5,13 @@ import time
 import cv2
 import numpy as np
 from grpc.beta import implementations
-from icdar_data import get_images
-from prediction import resize_image, sort_poly, detect
+try:
+    from icdar_data import get_images
+    from prediction import resize_image, sort_poly, detect
+except:
+    from vitaflow.playground.east.icdar_data import get_images
+    from vitaflow.playground.east.prediction import resize_image, sort_poly, detect
+
 from tensorflow.contrib.util import make_tensor_proto
 from tensorflow_serving.apis import predict_pb2
 from tensorflow_serving.apis import prediction_service_pb2_grpc

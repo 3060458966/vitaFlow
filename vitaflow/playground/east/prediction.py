@@ -3,7 +3,11 @@
 import time
 
 import cv2
-import locality_aware_nms as nms_locality
+try:
+    import locality_aware_nms as nms_locality
+except:
+    import vitaflow.playground.east.locality_aware_nms as nms_locality
+
 import numpy as np
 from tqdm import tqdm
 

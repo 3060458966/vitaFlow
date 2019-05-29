@@ -1,0 +1,3 @@
+east_flow_predictions.input_dir="/opt/github/vitaFlow/vitaflow/annotate_server/static/data/preprocess"
+east_flow_predictions.output_dir="/opt/github/vitaFlowvitaflow/annotate_server/static/data/east"
+east_flow_predictions.model_dir="/opt/github/vitaFlow/vitaflow/annotate_server/static/data/east_models/east/EASTModel/exported/1558013588"
