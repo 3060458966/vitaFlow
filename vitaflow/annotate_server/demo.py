@@ -5,10 +5,6 @@ from flask import Flask, flash, render_template, request, redirect
 from flask_cors import CORS
 from werkzeug import secure_filename
 
-import image_manager
-
-image_manager.GetNewImage.refresh()
-
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.secret_key = os.urandom(24)
 # TODO: remove below line
@@ -30,29 +26,6 @@ def allowed_filename(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
-# @app.route('/', methods=['GET', 'POST'])
-# @app.route('/upload_file/', methods=['GET', 'POST'])
-# def page_upload_file():
-#     print('--' * 15)
-#     if request.method == 'POST':
-#         submitted_file = request.files['file']
-#         print('--' * 15)
-#         if submitted_file and allowed_filename(submitted_file.filename):
-#             filename = secure_filename(submitted_file.filename)
-#             print('Saving File at {}'.format(os.path.join(app.config['UPLOAD_FOLDER'], filename)))
-#             submitted_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-#             return redirect(url_for('page_upload_file', filename=filename))
-#
-#     return '''
-#     <!doctype html>
-#     <title>Upload new File</title>
-#     <h1>Upload new File</h1>
-#     <form action="" method=post enctype=multipart/form-data>
-#       <p><input type=file name=file>
-#          <input type=submit value=Upload>
-#     </form>
-#     '''
-
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/upload_file/', methods=['GET', 'POST'])
 def page_upload_form(filename=None):
@@ -60,8 +33,6 @@ def page_upload_form(filename=None):
         if filename:
             print('printing {}'.format(filename))
         return render_template('demo.html')
-    # @app.route('/upload_file/', methods=['POST'])
-    # def page_upload_file():
     if request.method == 'POST':
         # check if the post request has the file part
         print('POST')
@@ -76,7 +47,7 @@ def page_upload_form(filename=None):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             flash('File(s) successfully uploaded')
-            # Run pipeline
+            # Run pipeline - daemon job
             run_pipeline()
             # return redirect('/upload_file', filename=file.filename)
             return redirect('/upload_file/')
@@ -90,7 +61,8 @@ def show_uploaded_images():
         html_data += '<li><a href="/{}">{}</a>     <a href="/uploads/{}">ProcessingDetails</a>      </li>   '.format(
             url, filename, filename)
     html_data = "<html><body><ul>{}<ul></body></html>".format(html_data)
-    return html_data
+    from flask import Markup
+    return render_template('demo_result.html', html_data=Markup(html_data), data=None)
 
 
 @app.route('/uploads/<filename>')
@@ -122,7 +94,7 @@ def show_uploaded_image_details(filename):
         'tesseract': text_data_tesseract,
         'calamari': text_data_calamari
     }
-    return render_template('demo_result.html', image_data=image_data, data=data)
+    return render_template('demo_result.html', html_data=None, data=data)
 
 
 @app.route('/uploads/')

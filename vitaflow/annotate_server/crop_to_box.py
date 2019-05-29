@@ -66,9 +66,7 @@ def crop_to_box(gt_text_file_loc, source_image_loc, cropped_dir):
 
 def main(source_image_loc, dest_image_loc):
     source_loc_dir = os.path.dirname(source_image_loc)
-
     dest_loc_dir = os.path.dirname(dest_image_loc)
-
     gt_text_base = os.path.basename(source_image_loc).split(".")[0]
     gt_text_name = gt_text_base + ".txt"
 
@@ -81,7 +79,6 @@ def main(source_image_loc, dest_image_loc):
         print("Skipping the run as {} has not east predictions".format(gt_text_file_loc))
     else:
         gt_image_base = os.path.basename(source_image_loc).split(".")[0]
-
         crop_to_box(gt_text_file_loc, source_image_loc, cropped_dir)
 
 

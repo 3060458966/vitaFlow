@@ -13,6 +13,12 @@
 <body>
 <img src="/static/images/logo.png">
 <div class="container">
+    <a href="/">Home</a>
+    <a href="/uploads">Summary</a>
+
+</div>
+<hr>
+<div class="container">
 
     <p>
         {% with messages = get_flashed_messages() %}
@@ -27,6 +33,16 @@
     </p>
 </div>
 
+{% if html_data %}
+<div>
+    <b>Uploaded files:</b>
+    <div class="container">
+        {{html_data}}
+    </div>
+</div>
+{% endif %}
+
+{% if data %}
 <div>
     <div class="container">
         <div class="row">
@@ -47,7 +63,7 @@
         </div>
     </div>
 </div>
-
+{% endif %}
 
 </body>
 </html>
