@@ -5,17 +5,13 @@ from flask import Flask, flash, render_template, request, redirect
 from flask_cors import CORS
 from werkzeug import secure_filename
 
-import image_manager
-
-image_manager.GetNewImage.refresh()
-
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.secret_key = os.urandom(24)
 # TODO: remove below line
 print('Print: {}'.format(app.secret_key))
 
 # UPLOAD_FOLDER = "static/data/uploads/"
-UPLOAD_FOLDER = "static/data/images/"
+UPLOAD_FOLDER = "static/data/preprocess/"
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.mkdir(UPLOAD_FOLDER)
@@ -30,29 +26,6 @@ def allowed_filename(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
-# @app.route('/', methods=['GET', 'POST'])
-# @app.route('/upload_file/', methods=['GET', 'POST'])
-# def page_upload_file():
-#     print('--' * 15)
-#     if request.method == 'POST':
-#         submitted_file = request.files['file']
-#         print('--' * 15)
-#         if submitted_file and allowed_filename(submitted_file.filename):
-#             filename = secure_filename(submitted_file.filename)
-#             print('Saving File at {}'.format(os.path.join(app.config['UPLOAD_FOLDER'], filename)))
-#             submitted_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-#             return redirect(url_for('page_upload_file', filename=filename))
-#
-#     return '''
-#     <!doctype html>
-#     <title>Upload new File</title>
-#     <h1>Upload new File</h1>
-#     <form action="" method=post enctype=multipart/form-data>
-#       <p><input type=file name=file>
-#          <input type=submit value=Upload>
-#     </form>
-#     '''
-
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/upload_file/', methods=['GET', 'POST'])
 def page_upload_form(filename=None):
@@ -60,8 +33,6 @@ def page_upload_form(filename=None):
         if filename:
             print('printing {}'.format(filename))
         return render_template('demo.html')
-    # @app.route('/upload_file/', methods=['POST'])
-    # def page_upload_file():
     if request.method == 'POST':
         # check if the post request has the file part
         print('POST')
@@ -74,12 +45,28 @@ def page_upload_form(filename=None):
             return redirect(request.url)
         if file and allowed_filename(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
             flash('File(s) successfully uploaded')
-            # Run pipeline
-            run_pipeline()
+            print('File(s) successfully uploaded {}'.format(file_path))
+            # Run pipeline - daemon job
+            run_pipeline(filename)
             # return redirect('/upload_file', filename=file.filename)
             return redirect('/upload_file/')
+
+
+@app.route('/logs/<filename>')
+def show_logs(filename):
+    from glob import glob
+    fmt = 'static/data/logs/*{}*'.format(filename)
+    files = glob(fmt)
+    if files:
+        data = open(files[0]).read()
+    else:
+        data = 'please check, no logs found!!'
+    return """<html><body>
+    <pre>{}</pre>
+    <body></html>""".format(data)
 
 
 def show_uploaded_images():
@@ -87,10 +74,15 @@ def show_uploaded_images():
     html_data = ''
     for url in glob(UPLOAD_FOLDER + '*.jpg'):
         filename = url.split('/')[-1]
-        html_data += '<li><a href="/{}">{}</a>     <a href="/uploads/{}">ProcessingDetails</a>      </li>   '.format(
-            url, filename, filename)
+        html_data += '<li>' \
+                     '<a href="/{}">{}</a> ' \
+                     '<a href="/uploads/{}">Output</a> ' \
+                     '<a href="/logs/{}">Logs</a>' \
+                     '</li>   '.format(
+            url, filename, filename, filename)
     html_data = "<html><body><ul>{}<ul></body></html>".format(html_data)
-    return html_data
+    from flask import Markup
+    return render_template('demo_result.html', html_data=Markup(html_data), data=None)
 
 
 @app.route('/uploads/<filename>')
@@ -122,7 +114,7 @@ def show_uploaded_image_details(filename):
         'tesseract': text_data_tesseract,
         'calamari': text_data_calamari
     }
-    return render_template('demo_result.html', image_data=image_data, data=data)
+    return render_template('demo_result.html', html_data=None, data=data)
 
 
 @app.route('/uploads/')
@@ -130,12 +122,16 @@ def page_show_uploads():
     return show_uploaded_images()
 
 
-def run_pipeline():
-    import subprocess
-    # command = ['make', '-f', '../../Makefile', 'help']
-    command = 'cd ../.. && make east_ocr_pipeline'.split(' ')
-    print(' '.join(command))
-    subprocess.check_call(command)
+def run_pipeline(filename=None):
+    print('Running East Pipeline')
+    import os
+    command = 'cd ../.. && make east binarisation crop2box tesseract calmari text2file'
+    if filename:
+        # https://www.cyberciti.biz/faq/redirecting-stderr-to-stdout/
+        command = command + ' &>vitaflow/annotate_server/static/data/logs/{}.log &'.format(
+            filename)
+        print('Running East Pipeline, Logs are at vitaflow/annotate_server/static/data/logs/{}.log &'.format(filename))
+    os.system(command)
 
 if __name__ == '__main__':
     app.run(debug=True)  # host='172.16.49.198'

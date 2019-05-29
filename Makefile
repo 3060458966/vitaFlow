@@ -49,10 +49,13 @@ ocr_pipeline: data_cleanup preprocess binarisation text2lineimages tesseract cal
 
 data_cleanup:		### OCR Pipeline - Clean all sub folder
 	@echo "Starting "
+	rm -rf vitaflow/annotate_server/static/data/preprocess/*
 	rm -rf vitaflow/annotate_server/static/data/east/*
 	rm -rf vitaflow/annotate_server/static/data/images/*
 	rm -rf vitaflow/annotate_server/static/data/binarisation/*
 	rm -rf vitaflow/annotate_server/static/data/text_images/*
+	rm -rf vitaflow/annotate_server/static/data/text_data/*
+	rm -rf vitaflow/annotate_server/static/data/logs/*
 
 
 show_input:		### OCR Pipeline - Run complete pipeline
@@ -60,7 +63,7 @@ show_input:		### OCR Pipeline - Run complete pipeline
 
 
 east:		### OCR Pipeline - Run complete pipeline
-	@echo "East Model "
+	@echo "Running East Pipeline "
 	mkdir -p vitaflow/annotate_server/static/data/east/
 	mkdir -p vitaflow/annotate_server/static/data/images/
 	python vitaflow/playground/east/pb_predict.py \
@@ -68,6 +71,8 @@ east:		### OCR Pipeline - Run complete pipeline
     --output_dir="vitaflow/annotate_server/static/data/east"\
     --model="vitaflow/annotate_server/static/data/east_models/east/EASTModel/exported/1558013588"
 	cp vitaflow/annotate_server/static/data/east/* vitaflow/annotate_server/static/data/images
+	@echo "--------------------------------------------------------------------------------------------------------------"
+	@echo "Running East Pipeline Completed !"
 
 
 crop2box:
