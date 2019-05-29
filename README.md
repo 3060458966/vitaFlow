@@ -222,8 +222,28 @@ docker cp {CONTAINER ID}:/app/vitaflow/annotate_server/static/data/ .
 
 This will copy the entire data folder from the container to the host machine which can be checked by the user for outputs/predictions. 
 
-# OCR Demo
-Refer [here](vitaflow/playground/east/README.md) for EAST based TExt extraction from receipts.
+# OCR Demo Server
+For running demo, we assume user is either using docker or installed the following requirements
+
+* Pip requirements
+* Image Magic(Unix/Mac)
+* Tesseract
+* Unix Utility Tools - convert, make (Please ensure they are available from shell path) 
+
+From VitaFlow/vitaflow/annotation_server, run following
+
+```bash
+python demo.py
+```
+
+Home Page UI
+![](docs/images/vitaflow_annotation_tool_demo_start.png)
+
+From `Vitaflow/vitaflow/annotation_server`
+
+Sample out of a Image
+![](docs/images/vitaflow_annotation_tool_demo_end.png)
+
 
 # License
 

@@ -101,13 +101,6 @@ __6. Text Annotation__
 
 WIP
 
-## Demo Server
-From `Vitaflow/vitaflow/annotation_server`
-
-```bash
-python demo.py
-```
-
 
 # Customisation
 
