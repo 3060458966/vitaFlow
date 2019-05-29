@@ -11,7 +11,7 @@ app.secret_key = os.urandom(24)
 print('Print: {}'.format(app.secret_key))
 
 # UPLOAD_FOLDER = "static/data/uploads/"
-UPLOAD_FOLDER = "static/data/images/"
+UPLOAD_FOLDER = "static/data/preprocess/"
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.mkdir(UPLOAD_FOLDER)
@@ -45,12 +45,29 @@ def page_upload_form(filename=None):
             return redirect(request.url)
         if file and allowed_filename(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
             flash('File(s) successfully uploaded')
+            print('File(s) successfully uploaded {}'.format(file_path))
             # Run pipeline - daemon job
-            run_pipeline()
+            run_pipeline(filename)
             # return redirect('/upload_file', filename=file.filename)
             return redirect('/upload_file/')
+
+
+@app.route('/logs/<filename>')
+def show_logs(filename):
+    from glob import glob
+    fmt = 'static/data/logs/*{}*'.format(filename)
+    files = glob(fmt)
+    print(fmt, files)
+    if files:
+        data = open(files[0]).read()
+    else:
+        data = 'please check, no logs found!!'
+    return """<html><body>
+    <pre>{}</pre>
+    <body></html>""".format(data)
 
 
 def show_uploaded_images():
@@ -58,8 +75,10 @@ def show_uploaded_images():
     html_data = ''
     for url in glob(UPLOAD_FOLDER + '*.jpg'):
         filename = url.split('/')[-1]
-        html_data += '<li><a href="/{}">{}</a>     <a href="/uploads/{}">ProcessingDetails</a>      </li>   '.format(
-            url, filename, filename)
+        html_data += '<li><a href="/{}">{}</a>' \
+                     ' <a href="/uploads/{}">ProcessingDetails</a>' \
+                     ' <a href="/logs/{}">Logs</a>      </li>   '.format(
+            url, filename, filename, filename)
     html_data = "<html><body><ul>{}<ul></body></html>".format(html_data)
     from flask import Markup
     return render_template('demo_result.html', html_data=Markup(html_data), data=None)
@@ -102,12 +121,15 @@ def page_show_uploads():
     return show_uploaded_images()
 
 
-def run_pipeline():
-    import subprocess
-    # command = ['make', '-f', '../../Makefile', 'help']
-    command = 'cd ../.. && make east_ocr_pipeline'.split(' ')
-    print(' '.join(command))
-    subprocess.check_call(command)
+def run_pipeline(filename=None):
+    print('Running East Pipeline')
+    import os
+    command = 'cd ../.. && make east_ocr_pipeline'
+    if filename:
+        command = 'cd ../.. && make east_ocr_pipeline 1>&2 > vitaflow/annotate_server/static/data/logs/{}.log &'.format(
+            filename)
+        print('Running East Pipeline, Logs are at vitaflow/annotate_server/static/data/logs/{}.log &'.format(filename))
+    os.system(command)
 
 if __name__ == '__main__':
     app.run(debug=True)  # host='172.16.49.198'
