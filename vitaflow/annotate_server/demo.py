@@ -47,8 +47,8 @@ def page_upload_form(filename=None):
             filename = secure_filename(file.filename)
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
-            flash('File(s) successfully uploaded')
-            print('File(s) successfully uploaded {}'.format(file_path))
+            flash('File successfully uploaded!! Processing will start soon, please check "Sumary" page for updates')
+            print('File successfully uploaded {}'.format(file_path))
             # Run pipeline - daemon job
             run_pipeline(filename)
             # return redirect('/upload_file', filename=file.filename)
@@ -74,12 +74,11 @@ def show_uploaded_images():
     html_data = ''
     for url in glob(UPLOAD_FOLDER + '*.jpg'):
         filename = url.split('/')[-1]
-        html_data += '<li>' \
-                     '<a href="/{}">{}</a> ' \
-                     '<a href="/uploads/{}">Output</a> ' \
-                     '<a href="/logs/{}">Logs</a>' \
-                     '</li>   '.format(
-            url, filename, filename, filename)
+        html_data += '<li> <b>{}</b><ul>' \
+                     '<li> Input Image: <a href="/{}">{}</a> </li>' \
+                     '<li> Outpage: <a href="/uploads/{}">Link</a> </li>' \
+                     '<li> Logs: <a href="/logs/{}">Link</a> </li>' \
+                     '</ul></li>   '.format(filename, url, filename, filename, filename)
     html_data = "<html><body><ul>{}<ul></body></html>".format(html_data)
     from flask import Markup
     return render_template('demo_result.html', html_data=Markup(html_data), data=None)

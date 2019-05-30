@@ -2,7 +2,8 @@
 
 # Setting Version
 APP_VERSION=0.1
-IMAGE_VERSION=0.1123
+# IMAGE_VERSION=0.1123
+IMAGE_VERSION=0.20190529
 
 
 help:		### Help Command

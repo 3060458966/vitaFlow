@@ -3,7 +3,7 @@ import vitaflow.playground.clientx
 
 experiment_name="clientx_dataset"
 get_experiment_root_directory.value="/home/gaurishk/Projects/vitaFlow/vitaflow/playground/clientx"
-batch_size = 32
+batch_size = 4
 #Experiments
 Experiments.batch_size=%batch_size
 Experiments.num_epochs=150
@@ -43,6 +43,7 @@ CSVSeqToSeqIterator.validation_data_path = "val"
 CSVSeqToSeqIterator.test_data_path = "test"
 CSVSeqToSeqIterator.text_col = "0"
 CSVSeqToSeqIterator.entity_col = "1"
+CSVSeqToSeqIterator.prediction_col = "prediction"
 CSVSeqToSeqIterator.batch_size = %batch_size
 # potential error point depending on the dataset
 CSVSeqToSeqIterator.in_seperator ="\t"
@@ -58,12 +59,12 @@ BiLSTMCrf.learning_rate=0.001
 BiLSTMCrf.experiment_name= "clientx_dataset"
 BiLSTMCrf.use_char_embd= True
 BiLSTMCrf.learning_rate= 0.001
-BiLSTMCrf.word_level_lstm_hidden_size= 8
-BiLSTMCrf.char_level_lstm_hidden_size= 4
-BiLSTMCrf.word_emd_size= 8
-BiLSTMCrf.char_emd_size= 4
-BiLSTMCrf.num_lstm_layers= 1
-BiLSTMCrf.keep_probability= 0.4
+BiLSTMCrf.word_level_lstm_hidden_size= 128
+BiLSTMCrf.char_level_lstm_hidden_size= 64
+BiLSTMCrf.word_emd_size= 128
+BiLSTMCrf.char_emd_size= 64
+BiLSTMCrf.num_lstm_layers=8 
+BiLSTMCrf.keep_probability= 0.6
 BiLSTMCrf.data_iterator = "vitaflow.iterators.text.csv_seq_to_seq_iterator.CSVSeqToSeqIterator"
 BiLSTMCrf.seperator ="~"
 

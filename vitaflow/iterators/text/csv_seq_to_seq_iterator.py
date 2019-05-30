@@ -33,7 +33,7 @@ from vitaflow.internal.nlp.spacy_helper import naive_vocab_creater, get_char_voc
 from vitaflow.iterators.text.vocabulary import SpecialTokens
 from vitaflow.utils.os_helper import check_n_makedirs
 from vitaflow.utils.print_helper import print_info
-
+from vitaflow.metrices.text.naive_metrics import get_naive_metrics
 
 @gin.configurable
 class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
@@ -51,6 +51,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
                  dataset=None,
                  text_col=0,
                  entity_col=3,
+                 prediction_col="prediction",
                  in_seperator="~",
                  out_seperator="~",
                  quotechar="^",
@@ -80,6 +81,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         self._number_test_of_samples = number_test_of_samples
         self._text_col = text_col
         self._entity_col = entity_col
+        self._prediction_col = prediction_col
         self._batch_size = batch_size
         self._in_seperator = in_seperator
         self._out_seperator = out_seperator
@@ -184,8 +186,8 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
                 df_file = os.path.join(self.TRAIN_FILES_IN_PATH, df_file)
 
                 if df_file.endswith(".csv"):
-                    df = pd.read_csv(df_file, sep=self._in_seperator, quoting=csv.QUOTE_NONE).fillna(
-                        SpecialTokens.UNK_WORD)
+                    df = pd.read_csv(df_file, sep=self._in_seperator,quoting= csv.QUOTE_NONE )#.fillna(SpecialTokens.UNK_WORD)
+                    df.dropna(axis=0, how='any', thresh=None, subset=None, inplace=True)
                 else:
                     raise RuntimeError
                 # print(df["0,1,2,3"])
@@ -337,7 +339,8 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             df_file = os.path.join(df_files_path, df_file)
 
             if df_file.endswith(".csv"):  # TODO start and stop tags
-                df = pd.read_csv(df_file, sep=self._in_seperator, quoting=csv.QUOTE_NONE).fillna(SpecialTokens.UNK_WORD)
+                df = pd.read_csv(df_file, sep=self._in_seperator, quoting=csv.QUOTE_NONE)
+                df.dropna(axis=0, how='any', thresh=None, subset=None, inplace=True)#.fillna(SpecialTokens.UNK_WORD)
             elif df_file.endswith(".json"):
                 df = pd.read_json(df_file).filla(SpecialTokens.UNK_WORD)
 
@@ -555,6 +558,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         for each_prediction, file in zip(predictions, self._test_files_path):
 
             df = pd.read_csv(file, sep=self._in_seperator, quoting=csv.QUOTE_NONE)
+            df.dropna(axis=0, how='any', thresh=None, subset=None, inplace=True)
 
             predicted_id = []
             confidence = []
@@ -583,7 +587,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
 
             results.append({
                 "tokens": df[self._text_col].astype(str).values.tolist(),
-                "predicted_id": predicted_id,
+                self._prediction_col: predicted_id,
                 "confidence": confidence,
                 "pred_1": pred_1,
                 "pred_1_confidence": pred_1_confidence,
@@ -594,7 +598,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
 
             })
 
-            df["predicted_id"] = [j for i, j in
+            df[self._prediction_col] = [j for i, j in
                                   zip(df[self._text_col].astype(str).values.tolist(), predicted_id)]
             df["confidence"]= confidence[:len(df)]
             df["pred_1"]= pred_1[:len(df)]
@@ -668,6 +672,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         for each_prediction, file in zip(predictions, self._test_files_path):
 
             df = pd.read_csv(file, sep=self._in_seperator, quoting=csv.QUOTE_NONE)
+            df.dropna(axis=0, how='any', thresh=None, subset=None, inplace=True)
 
             predicted_id = []
             confidence = []
@@ -696,7 +701,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
 
             results.append({
                 "tokens": df[self._text_col].astype(str).values.tolist(),
-                "predicted_id": predicted_id,
+                self._prediction_col: predicted_id,
                 "confidence": confidence,
                 "pred_1": pred_1,
                 "pred_1_confidence": pred_1_confidence,
@@ -707,7 +712,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
 
             })
 
-            df["predicted_id"] = [j for i, j in
+            df[self._prediction_col] = [j for i, j in
                                   zip(df[self._text_col].astype(str).values.tolist(), predicted_id)]
 
             df["confidence"] = confidence[:len(df)]
@@ -726,26 +731,26 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             enter = False
             print(file)
             for index, row in df.iterrows():
-                #         print(row["0"],row["predicted_id"])
+                print(row[self._text_col],row[self._prediction_col])
                 # check if the first row
-                if row["predicted_id"] != "O":
+                if row[self._prediction_col] != "O":
                     if index == 0 or not enter:
-                        text = row["0"]
-                        prev_tag = row["predicted_id"]
+                        text = row[self._text_col]
+                        prev_tag = row[self._prediction_col]
                         enter = True
 
                     else:
                         # second index onwards
-                        if is_new_tag(prev_tag, row["predicted_id"]):
+                        if is_new_tag(prev_tag, row[self._prediction_col]):
                             doc_text = doc_text + text + "~" + strip_iob(prev_tag) + "\n"
-                            text = row["0"]
+                            text = row[self._text_col]
 
                         else:
-                            text = text + " " + row["0"]
-                        prev_tag = row["predicted_id"]
+                            text = text + " " + row[self._text_col]
+                        prev_tag = row[self._prediction_col]
                 else:
-                    doc_text = doc_text + text + "~" + strip_iob(row["predicted_id"]) + "\n"
-                    prev_tag = row["predicted_id"]
+                    doc_text = doc_text + text + "~" + strip_iob(row[self._prediction_col]) + "\n"
+                    prev_tag = row[self._prediction_col]
 
             doc_text = doc_text + text + "~" + strip_iob(prev_tag) + "\n"
             print(doc_text)
@@ -753,12 +758,17 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
             post_out_dir = os.path.join(self.OUT_DIR, "postprocessed")
             check_n_makedirs(post_out_dir)
 
-            with open(os.path.join(post_out_dir, os.path.basename(file)), "w") as post_file:
-                post_file.write("Item~Tag\n")
-                post_file.write(doc_text)
+            # with open(os.path.join(post_out_dir, os.path.basename(file)), "w") as post_file:
+            #     post_file.write("Item~Tag\n")
+            #     post_file.write(doc_text)
 
         # for loop ends
-
+        # Compute accuracy metric for the all the predictions
+        get_naive_metrics(predicted_csvs_path=out_dir,
+                          ner_tag_vocab_file=self.ENTITY_VOCAB_FILE,
+                          entity_col_name=self._entity_col,
+                          prediction_col_name=self._prediction_col,
+                          out_dir=out_dir)
     # function ends
 
     def predict_sentence(self, executor: Executor, sentence):
