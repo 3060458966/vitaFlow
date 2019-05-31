@@ -20,7 +20,7 @@ def crop_and_save(cords, image, dest, fname):
     (x1, x2, y1, y2) = cords
     cropped_image = image[y1:y2, x1:x2]
     dest_file = os.path.join(dest, fname)
-    plt.imsave(dest_file, cropped_image, cmap='Greys_r')  # '
+    plt.imsave(dest_file, cropped_image, cmap='Greys_r')
     print('Saved file to {}'.format(dest_file))
 
 
@@ -54,7 +54,7 @@ def crop_to_box(gt_text_file_loc, source_image_loc, cropped_dir):
             try:
                 jpgfile = plt.imread(source_image_loc)
                 # naming convention for the file
-                image_name = str(count)
+                image_name = str(count) + '.png'
                 x1, y1, _, _, x2, y2, _, _ = gt_txt_line
                 # call fun with cords and images named convention for the cropped image
                 crop_and_save((int(x1), int(x2), int(y1), int(y2)), jpgfile, cropped_dir,
