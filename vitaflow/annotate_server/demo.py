@@ -127,7 +127,7 @@ def run_pipeline(filename=None):
     command = 'cd ../.. && make east binarisation crop2box tesseract calmari text2file'
     if filename:
         # https://www.cyberciti.biz/faq/redirecting-stderr-to-stdout/
-        command = command + ' &>vitaflow/annotate_server/static/data/logs/{}.log &'.format(
+        command = command + ' > vitaflow/annotate_server/static/data/logs/{}.log &'.format(
             filename)
         print('Running East Pipeline, Logs are at vitaflow/annotate_server/static/data/logs/{}.log &'.format(filename))
     os.system(command)

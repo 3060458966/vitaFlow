@@ -11,3 +11,8 @@ scipy
 sklearn_crfsuite
 tqdm
 xmltodict
+
+# east
+shapely
+flask_cors
+tensorflow-serving-api
