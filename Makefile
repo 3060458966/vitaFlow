@@ -125,3 +125,9 @@ ps:
 im:
 	# help - https://docs.docker.com/engine/reference/commandline/build/#options
 	docker images
+
+demo:
+	cd vitaflow/annotate_server
+	python demo.py
+	cd ../..
+
