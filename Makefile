@@ -104,7 +104,10 @@ build: ## building docker image
 
 run: # run the VitaFlow Docker
 	@echo "Running vitaflow/vitaflow-app - RUN"
-	docker run -d --name vitaflow vitaflow:${IMAGE_VERSION} /bin/bash
+	docker run -it --name vitaflow -p 5000:5000 -p 8888:8888 vitaflow:${IMAGE_VERSION} /bin/bash
+	@echo "Remove close docker image"
+	docker rm vitaflow
+
 
 rm: ## rm
 	docker rm -f vitaflow
