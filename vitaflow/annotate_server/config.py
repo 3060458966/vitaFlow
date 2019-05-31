@@ -45,13 +45,13 @@ TESSERACT_CONFIG = '-c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvw
 IMAGE_EXTS = ['.JPG', '.jpg', '.png']
 
 # Acceptable file extension
-PDF_EXTS =['.pdf']
+PDF_EXTS = ['.pdf']
 
 # Time inverval to re-check images
 OS_FILE_REFRESH_TIME_INVTERVAL = 2 * 60  # Shift to inotify
 
 # Acceptable txt file extension
-OCR_TEXT_EXTS = ['.pred.txt','.tesseract.txt']
+OCR_TEXT_EXTS = ['.pred.txt', '.tesseract.txt']
 
 # create missing dir
 for each_dir in [IMAGE_ROOT_DIR,
@@ -66,9 +66,8 @@ for each_dir in [IMAGE_ROOT_DIR,
     check_n_create(each_dir)
 
 # Output of
-PDF2TEXT_DIR="static/data/text"
+PDF2TEXT_DIR = "static/data/text"
 
-# TODO: Update following acc to ocr_calamari
 CALAMARI_MODELS = ['static/data/calamari_models/model_00117200.ckpt',
                    'static/data/calamari_models/model_00132600.ckpt']
 
