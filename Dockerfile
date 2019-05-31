@@ -9,6 +9,7 @@ COPY . /app
 RUN pip install -r vitaflow/annotate_server/requirements.txt
 
 # Testing
-# make east_ocr_pipeline
+make east_ocr_pipeline
 # Cleanup - testing residues
-# make data_cleanup
+make data_cleanup
+

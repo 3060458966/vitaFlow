@@ -16,3 +16,4 @@ xmltodict
 shapely
 flask_cors
 tensorflow-serving-api
+gin-config

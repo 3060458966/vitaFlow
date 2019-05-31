@@ -2,7 +2,6 @@
 
 # Setting Version
 APP_VERSION=0.1
-# IMAGE_VERSION=0.1123
 IMAGE_VERSION=0.20190531
 
 
@@ -49,7 +48,7 @@ ocr_pipeline: data_cleanup preprocess binarisation text2lineimages tesseract cal
 
 
 data_cleanup:		### OCR Pipeline - Clean all sub folder
-	@echo "Starting "
+	@echo "Starting Data Cleanup"
 	rm -rf vitaflow/annotate_server/static/data/preprocess/*
 	rm -rf vitaflow/annotate_server/static/data/east/*
 	rm -rf vitaflow/annotate_server/static/data/images/*
@@ -72,8 +71,6 @@ east:		### OCR Pipeline - Run complete pipeline
     --output_dir="vitaflow/annotate_server/static/data/east"\
     --model="vitaflow/annotate_server/static/data/east_models/east/EASTModel/exported/1558013588"
 	cp vitaflow/annotate_server/static/data/east/* vitaflow/annotate_server/static/data/images
-	@echo "--------------------------------------------------------------------------------------------------------------"
-	@echo "Running East Pipeline Completed !"
 
 
 crop2box:
@@ -84,7 +81,14 @@ text2file:
 	python vitaflow/annotate_server/text_file_stitch.py
 
 
-east_ocr_pipeline:	data_cleanup east binarisation crop2box tesseract calmari text2file ### EAST OCR Pipeline - Run complete pipeline
+east_ocr_pipeline: east binarisation crop2box tesseract calmari text2file ### EAST OCR Pipeline - Run complete pipeline
+	@echo "--------------------------------------------------------------------------------------------------------------"
+	@echo "Running East Pipeline Completed !"
+
+demo:
+	cd vitaflow/annotate_server/
+	cd vitaflow/annotate_server/
+	cd ../..
 
 ###################################################################
 ########################################################## DOCKER #
@@ -107,7 +111,6 @@ run: # run the VitaFlow Docker
 	docker run -it --name vitaflow -p 5000:5000 -p 8888:8888 vitaflow:${IMAGE_VERSION} /bin/bash
 	@echo "Remove close docker image"
 	docker rm vitaflow
-
 
 rm: ## rm
 	docker rm -f vitaflow
