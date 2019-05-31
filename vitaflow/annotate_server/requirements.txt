@@ -1,6 +1,6 @@
 Flask
 Pillow
-calamari_ocr
+calamari-ocr==0.3.1
 matplotlib
 numpy
 opencv-contrib-python
