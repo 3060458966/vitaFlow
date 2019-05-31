@@ -46,3 +46,8 @@ pyspark
 recommonmark
 sphinx_rtd_theme
 gin-config
+
+# east
+shapely
+flask_cors
+tensorflow-serving-api
