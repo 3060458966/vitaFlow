@@ -69,10 +69,7 @@ for each_dir in [IMAGE_ROOT_DIR,
 PDF2TEXT_DIR="static/data/text"
 
 # TODO: Update following acc to ocr_calamari
-CALAMARI_MODELS = ['static/data/calamari_models/model_00037200.ckpt',
-                   'static/data/calamari_models/model_00045600.ckpt',
-                   'static/data/calamari_models/model_00114400.ckpt',
-                   'static/data/calamari_models/model_00123200.ckpt',
-                   'static/data/calamari_models/model_00131400.ckpt']
+CALAMARI_MODELS = ['static/data/calamari_models/model_00117200.ckpt',
+                   'static/data/calamari_models/model_00132600.ckpt']
 
 CALAMARI_MODELS = [os.path.join(ROOT_DIR, _) for _ in CALAMARI_MODELS]
