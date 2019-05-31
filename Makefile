@@ -85,11 +85,6 @@ east_ocr_pipeline: east binarisation crop2box tesseract calmari text2file ### EA
 	@echo "--------------------------------------------------------------------------------------------------------------"
 	@echo "Running East Pipeline Completed !"
 
-demo:
-	cd vitaflow/annotate_server/
-	cd vitaflow/annotate_server/
-	cd ../..
-
 ###################################################################
 ########################################################## DOCKER #
 ###################################################################
