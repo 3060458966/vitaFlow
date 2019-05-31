@@ -1,8 +1,7 @@
 import os
 import subprocess
 
-import config
-from bin.plugin import PluginAppModel
+from vitaflow.pipeline.interfaces.plugin import ImagePluginAppModel
 
 _command_convert = ['convert',
                     '-auto-level',
@@ -67,36 +66,48 @@ def blur(image_loc, dest_image_loc):
     pass
 
 
-def main(image_loc, dest_image_loc=None):
-    # print('binarisation src {} dest {} '.format(image_loc, dest_image_loc))
-    # TODO: experiment & optimize below
-    if dest_image_loc is None:
-        filename = os.path.basename(image_loc)
-        # TODO: Need to remove config usage from here
-        dest_image_loc = os.path.join(config.ROOT_DIR, config.BINARIZE_ROOT_DIR, filename)
+class ImageBinarisePreprocessor(ImagePluginAppModel):
+    def __init__(self,
+                 root_dir=None,
+                 source_folder=None,
+                 destination_folder=None):
+        ImagePluginAppModel.__init__(self)
 
-    if os.path.isfile(dest_image_loc):
-        print('Binarisation found existing file {}'.format(dest_image_loc))
-        return
-    try:
-        binarisation(image_loc, dest_image_loc)
-        print('Binarisation generated file {}'.format(dest_image_loc))
-    except Exception as e:
-        print(e)
-        print('Binarisation - Failed - Generated file {}'.format(dest_image_loc))
+    # def _validate_inputs(self):
+    #     if not self._inputs_validated:
+    #         raise ValueError('Input Validations is inComplete')
 
+    def _handle_data(self, in_file_data):
+        """Each plugin module should implement this to handle image array data"""
+        raise NotImplementedError
 
-class imageBinarisePlugin(PluginAppModel):
-    def plugin_inputs(self):
-        # Custom location according to need
-        self.source_folder = config.IMAGE_ROOT_DIR
-        self.destination_folder = config.BINARIZE_ROOT_DIR
-        # Transformation function for converting source_image to destination_image
-        self.operator_func = main
+    def _handle_file(self, in_file_path, out_file_path):
+        if os.path.isfile(out_file_path):
+            print('Binarisation found existing file {}'.format(out_file_path))
+            return
+        try:
+            binarisation(in_file_path, out_file_path)
+            print('Binarisation generated file {}'.format(out_file_path))
+        except Exception as e:
+            print(e)
+            print('Binarisation - Failed - Generated file {}'.format(out_file_path))
 
+    def _handle_files(self, source_dir, destination_dir):
+        """Each plugin module should implement this to handle all the files in the given directory"""
+
+        print('binarisation src {} dest {} '.format(source_dir, destination_dir))
+        if not os.path.exists(destination_dir):
+            os.makedirs(destination_dir)
+
+        in_files = self.get_all_source_files(source_dir=source_dir)
+        print(in_files)
+        for img_file in in_files:
+            filename = os.path.basename(img_file)
+            in_file_path = img_file
+            out_file_path = os.path.join(destination_dir, filename)
+            self._handle_file(in_file_path=in_file_path, out_file_path=out_file_path)
 
 if __name__ == '__main__':
-    t = imageBinarisePlugin()
-    t.plugin_inputs()
+    t = ImageBinarisePreprocessor()
     print('--' * 55)
-    t.bulk_run()
+    t.process_files(source_dir="/opt/tmp/vitaFlow/east/", destination_dir="/opt/tmp/vitaFlow/east_binarized/")

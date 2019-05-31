@@ -15,8 +15,8 @@ import cv2
 import pytesseract
 
 import config
-from bin.plugin import TextExtPluginModel
-from bin.utils import trim_file_ext
+from vitaflow.pipeline.interfaces.plugin import TextExtImagePluginModel
+from vitaflow.pipeline.interfaces.utils import trim_file_ext
 
 os.environ['OMP_THREAD_LIMIT'] = '1'
 
@@ -55,7 +55,7 @@ def main_parallel(image_list):
             )
 
 
-class OcrTessaract(TextExtPluginModel):
+class OcrTessaract(TextExtImagePluginModel):
     def plugin_inputs(self):
         # Custom location according to need
         self.source_folder = config.TEXT_IMAGES

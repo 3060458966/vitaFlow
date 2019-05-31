@@ -120,10 +120,10 @@ class DiscretizationTest(tf.test.TestCase):
     means_new, _, _ = discretization.get_vq_codebook(bottleneck_size,
                                                      hidden_size)
     with self.test_session() as sess:
-      tf.global_variables_initializer().run()
-      sess.run(assign_op)
-      self.assertTrue(np.all(sess.run(means_new) == 0))
-      self.assertTrue(np.all(sess.run(ema_count) == 0))
+      tf.global_variables_initializer().process()
+      sess.process(assign_op)
+      self.assertTrue(np.all(sess.process(means_new) == 0))
+      self.assertTrue(np.all(sess.process(ema_count) == 0))
 
   @tf.contrib.eager.run_test_in_graph_and_eager_modes()
   def testVQNearestNeighbors(self):
@@ -185,10 +185,10 @@ class DiscretizationTest(tf.test.TestCase):
           x, hidden_size, z_size, 32, means=means, num_blocks=1,
           ema_means=ema_means, ema_count=ema_count, name="test")
       with self.test_session() as sess:
-        sess.run(tf.global_variables_initializer())
-        x_means_dense_eval, x_means_hot_eval = sess.run(
+        sess.process(tf.global_variables_initializer())
+        x_means_dense_eval, x_means_hot_eval = sess.process(
             [x_means_dense, x_means_hot])
-        means_eval = sess.run(means)
+        means_eval = sess.process(means)
       self.assertEqual(x_means_dense_eval.shape, (100, 1, hidden_size))
       self.assertEqual(x_means_hot_eval.shape, (100, 1))
       self.assertTrue(np.all(means_eval == np.zeros(
@@ -221,10 +221,10 @@ class DiscretizationTest(tf.test.TestCase):
           x, hidden_size, z_size, 32, means=means, num_blocks=1, cond=cond,
           ema_means=ema_means, ema_count=ema_count, name="test2")
       with self.test_session() as sess:
-        sess.run(tf.global_variables_initializer())
-        x_means_dense_eval, x_means_hot_eval = sess.run(
+        sess.process(tf.global_variables_initializer())
+        x_means_dense_eval, x_means_hot_eval = sess.process(
             [x_means_dense, x_means_hot])
-        means_eval = sess.run(means)
+        means_eval = sess.process(means)
       self.assertEqual(x_means_dense_eval.shape, (100, 1, hidden_size))
       self.assertEqual(x_means_hot_eval.shape, (100, 1))
       self.assertAllClose(means_eval, np.zeros((1, 1, 2**z_size,

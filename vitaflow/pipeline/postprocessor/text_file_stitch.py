@@ -12,7 +12,7 @@ import os
 
 import glob
 import config
-from bin.plugin import StitchTextExtPluginModel
+from vitaflow.pipeline.interfaces.plugin import StitchTextExtImagePluginModel
 from tqdm import tqdm
 
 os.environ['OMP_THREAD_LIMIT'] = '1'
@@ -60,7 +60,7 @@ def main_parallel(text_list):
                     main(each)
 
 
-class TextFileStitch(StitchTextExtPluginModel):
+class TextFileStitch(StitchTextExtImagePluginModel):
     def plugin_inputs(self):
         # Custom location according to need
         self.source_folder = config.TEXT_IMAGES

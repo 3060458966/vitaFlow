@@ -63,15 +63,15 @@ class T2TModelTest(tf.test.TestCase):
         weights = tf.zeros((batch_size, sequence_size))
         loss_num, loss_denom = model._loss_single(
             logits, "targets", feature, weights=weights)
-        self.assertAllClose(tf.zeros_like(loss_num), sess.run(loss_num))
-        self.assertAllClose(tf.zeros_like(loss_denom), sess.run(loss_denom))
+        self.assertAllClose(tf.zeros_like(loss_num), sess.process(loss_num))
+        self.assertAllClose(tf.zeros_like(loss_denom), sess.process(loss_denom))
 
         # non-zero weights > zero loss.
         weights = tf.ones((batch_size, sequence_size))
         loss_num, loss_denom = model._loss_single(
             logits, "targets", feature, weights=weights)
-        self.assertAllLess(0.0, sess.run(loss_num))
-        self.assertAllClose(batch_size * sequence_size, sess.run(loss_denom))
+        self.assertAllLess(0.0, sess.process(loss_num))
+        self.assertAllClose(batch_size * sequence_size, sess.process(loss_denom))
 
 
 if __name__ == "__main__":

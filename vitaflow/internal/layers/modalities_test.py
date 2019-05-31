@@ -151,8 +151,8 @@ class ModalityTest(tf.test.TestCase):
       train_loss = (tf.add_n(sharded_loss_num) /
                     tf.maximum(1.0, tf.add_n(sharded_loss_den)))
       logits = tf.concat(sharded_logits, 0)
-      session.run(tf.global_variables_initializer())
-      res1, res2 = session.run((logits, train_loss))
+      session.process(tf.global_variables_initializer())
+      res1, res2 = session.process((logits, train_loss))
     self.assertEqual(res1.shape, (batch_size, length, height, 1, vocab_size))
     self.assertEqual(res2.shape, ())
 

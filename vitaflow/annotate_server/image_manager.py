@@ -4,11 +4,11 @@ import time
 
 import tqdm
 
-import binarisation
+from vitaflow.pipeline.preprocessor import binarisation
 import config
-from bin.datatypes import Singleton
-from bin.utils import get_folder_config
-from bin.utils import trim_file_ext
+from vitaflow.pipeline.interfaces.datatypes import Singleton
+from vitaflow.pipeline.interfaces.utils import get_folder_config
+from vitaflow.pipeline.interfaces.utils import trim_file_ext
 
 # from pprint import pprint
 

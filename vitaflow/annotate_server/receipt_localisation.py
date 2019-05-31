@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import config
-from bin.plugin import PluginAppModel
-from bin.utils import trim_file_ext
+from vitaflow.pipeline.interfaces.plugin import ImagePluginAppModel
+from vitaflow.pipeline.interfaces.utils import trim_file_ext
 
 
 def get_slope(x2, x3, y2, y3):
@@ -188,7 +188,7 @@ def rotate_image_with_east(img_filename, save_file=None):
         plt.imshow(warped)
 
 
-class receiptLocalisationPlugin(PluginAppModel):
+class receiptLocalisationImagePlugin(ImagePluginAppModel):
 
     def plugin_inputs(self):
         # Custom location according to need
@@ -238,7 +238,7 @@ class receiptLocalisationPlugin(PluginAppModel):
 
 
 if __name__ == '__main__':
-    t = receiptLocalisationPlugin()
+    t = receiptLocalisationImagePlugin()
     t.plugin_inputs()
     print('--' * 55)
     t.bulk_run()

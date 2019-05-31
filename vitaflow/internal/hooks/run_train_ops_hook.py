@@ -30,7 +30,7 @@ class RunTrainOpsHook(session_run_hook.SessionRunHook):
 
     def before_run(self, run_context):
         for _ in range(self._train_steps):
-            run_context.session.run(self._train_op)
+            run_context.session.process(self._train_op)
 
 class GANTrainSteps(
     collections.namedtuple('GANTrainSteps', (

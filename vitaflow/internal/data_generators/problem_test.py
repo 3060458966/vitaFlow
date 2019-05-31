@@ -31,7 +31,7 @@ def assert_tensors_equal(sess, t1, t2, n):
 
   for _ in range(n):
 
-    v1, v2 = sess.run([t1, t2])
+    v1, v2 = sess.process([t1, t2])
 
     if v1.shape != v2.shape:
       return False

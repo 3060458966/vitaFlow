@@ -218,10 +218,10 @@ class CommonAttentionTest(parameterized.TestCase, tf.test.TestCase):
           ys=[y], xs=[x, wqkv, wo, norm_scale, norm_bias], grad_ys=[dy])
       dx_f, dwqkv_f, dwo_f, dnorm_scale_f, dnorm_bias_f = tf.gradients(
           ys=[y_forget], xs=[x, wqkv, wo, norm_scale, norm_bias], grad_ys=[dy])
-      session.run(tf.global_variables_initializer())
+      session.process(tf.global_variables_initializer())
       (y, y_forget,
        dx, dwqkv, dwo, dnorm_scale, dnorm_bias,
-       dx_f, dwqkv_f, dwo_f, dnorm_scale_f, dnorm_bias_f) = session.run(
+       dx_f, dwqkv_f, dwo_f, dnorm_scale_f, dnorm_bias_f) = session.process(
            [y, y_forget,
             dx, dwqkv, dwo, dnorm_scale, dnorm_bias,
             dx_f, dwqkv_f, dwo_f, dnorm_scale_f, dnorm_bias_f])

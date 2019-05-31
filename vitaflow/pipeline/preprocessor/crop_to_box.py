@@ -13,7 +13,7 @@ import os
 import matplotlib.pyplot as plt
 
 import config
-from bin.plugin import PluginAppModel
+from vitaflow.pipeline.interfaces.plugin import ImagePluginAppModel
 
 
 def crop_and_save(cords, image, dest, fname):
@@ -82,7 +82,7 @@ def main(source_image_loc, dest_image_loc):
         crop_to_box(gt_text_file_loc, source_image_loc, cropped_dir)
 
 
-class cropToBoxPlugin(PluginAppModel):
+class cropToBoxImagePlugin(ImagePluginAppModel):
     def plugin_inputs(self):
         # Custom location according to need
         self.source_folder = config.BINARIZE_ROOT_DIR
@@ -92,7 +92,7 @@ class cropToBoxPlugin(PluginAppModel):
 
 
 if __name__ == '__main__':
-    t = cropToBoxPlugin()
+    t = cropToBoxImagePlugin()
     t.plugin_inputs()
     print('--' * 55)
     t.bulk_run()

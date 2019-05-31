@@ -73,5 +73,5 @@ def brat_app(environ, start_response):
 
 if __name__ == '__main__':
     from sys import exit
-    WSGIServer(brat_app).run()
+    WSGIServer(brat_app).process()
     exit(0)

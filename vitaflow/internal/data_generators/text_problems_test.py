@@ -159,10 +159,10 @@ class TextProblems(tf.test.TestCase):
     examples = []
     exhausted = False
     with self.test_session() as sess:
-      examples.append(sess.run(features))
-      examples.append(sess.run(features))
+      examples.append(sess.process(features))
+      examples.append(sess.process(features))
       try:
-        sess.run(features)
+        sess.process(features)
       except tf.errors.OutOfRangeError:
         exhausted = True
 

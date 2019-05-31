@@ -54,12 +54,12 @@ class ImageGridHook(session_run_hook.SessionRunHook):
         if self._path is None:
             self._path = os.path.join(os.path.expanduser("~"), "vitaFlow/runtime/GAN")
 
-        global_step = run_context.session.run(self._global_Step)
+        global_step = run_context.session.process(self._global_Step)
 
         print_info("global_step {}".format(global_step))
 
         if global_step % self._store_interval_steps == 0: #store every n steps
-            samples = run_context.session.run(self._z_image)
+            samples = run_context.session.process(self._z_image)
             channel = self._z_image.get_shape()[-1]
 
             if channel == 1:
@@ -73,5 +73,5 @@ class ImageGridHook(session_run_hook.SessionRunHook):
             images_grid.save(os.path.join(self._path, 'step_{}.png'.format(global_step)))
 
         if global_step % self._log_interval_steps == 0:
-            dloss, gloss = run_context.session.run([self._d_loss, self._g_loss])
+            dloss, gloss = run_context.session.process([self._d_loss, self._g_loss])
             print_info("\nDiscriminator Loss: {:.4f}... Generator Loss: {:.4f}".format(dloss, gloss))

@@ -1,6 +1,6 @@
 import os
 
-from bin.utils import check_n_create
+from vitaflow.pipeline.interfaces.utils import check_n_create
 
 ROOT_DIR = os.path.dirname(__file__)
 

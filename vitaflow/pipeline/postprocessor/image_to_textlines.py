@@ -12,8 +12,8 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-from bin.plugin import PluginAppModel
-from bin.utils import trim_file_ext
+from vitaflow.pipeline.interfaces.plugin import ImagePluginAppModel
+from vitaflow.pipeline.interfaces.utils import trim_file_ext
 import config
 
 
@@ -172,7 +172,7 @@ def main(image_filename, image_dir=None):
 #     # im2tl.quick_run()
 
 
-class imageToTextLinesImages(PluginAppModel):
+class imageToTextLinesImages(ImagePluginAppModel):
 
     def plugin_inputs(self):
         # Custom location according to need
@@ -181,13 +181,13 @@ class imageToTextLinesImages(PluginAppModel):
         # Transformation function for converting source_image to destination_image
         self.operator_func = main
 
-    def run(self):
+    def process(self):
         """Execute of Code logic"""
         source, dest = self._inputs
         dest = trim_file_ext(self._inputs[1])
         print('New Dest {}'.format(dest))
         self._inputs = (source, dest)
-        super().run()
+        super().process()
 
 
 # Global Settings

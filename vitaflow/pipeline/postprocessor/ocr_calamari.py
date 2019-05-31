@@ -6,7 +6,7 @@ from calamari_ocr.ocr.datasets import DataSetType
 from calamari_ocr.scripts.predict import run as calamari_ocr_run
 
 import config
-from bin.plugin import TextExtPluginModel
+from vitaflow.pipeline.interfaces.plugin import TextExtImagePluginModel
 
 # TODO:
 # - convert to gray scale images
@@ -52,7 +52,7 @@ def main_parallel(source_files):
     calamari_ocr_run(args)
 
 
-class OCR_Calamari(TextExtPluginModel):
+class OCR_Calamari(TextExtImagePluginModel):
     def plugin_inputs(self):
         # Custom location according to need
         self.source_folder = config.TEXT_IMAGES

@@ -10,7 +10,7 @@ from PIL import Image
 from scipy.ndimage.filters import rank_filter
 
 import config
-from bin.plugin import PluginAppModel
+from vitaflow.pipeline.interfaces.plugin import ImagePluginAppModel
 
 
 class Page(object):
@@ -335,7 +335,7 @@ def main(fname, out_name=None):
 #             print(p.map(main, all_src_images))
 
 
-class docToTextReceiptLocalisation(PluginAppModel):
+class docToTextReceiptLocalisation(ImagePluginAppModel):
 
     def plugin_inputs(self):
         # Custom location according to need

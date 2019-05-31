@@ -21,7 +21,7 @@ except:
 
 
 input_dir="/opt/github/vitaFlow/vitaflow/annotate_server/static/data/preprocess"
-output_dir="/opt/github/vitaFlow/vitaflow/annotate_server/static/data/east"
+output_dir="/opt/tmp/vitaFlow/east/"
 model_dir="/opt/github/vitaFlow/vitaflow/annotate_server/static/data/east_models/east/EASTModel/exported/1558013588"
 
 # @gin.configurable

@@ -63,7 +63,7 @@ class CommonLayersTest(parameterized.TestCase, tf.test.TestCase):
     with self.test_session() as session:
       x = tf.constant(x, dtype=tf.float32)
       y = common_layers.shakeshake([x, x, x, x, x])
-      inp, res = session.run([x, y])
+      inp, res = session.process([x, y])
     self.assertAllClose(res, inp)
 
   @tf.contrib.eager.run_test_in_graph_and_eager_modes()
@@ -192,8 +192,8 @@ class CommonLayersTest(parameterized.TestCase, tf.test.TestCase):
     x = np.random.rand(5, 7, 3, 11)
     with self.test_session() as session:
       y = common_layers.sru(tf.constant(x, dtype=tf.float32))
-      session.run(tf.global_variables_initializer())
-      res = session.run(y)
+      session.process(tf.global_variables_initializer())
+      res = session.process(y)
     self.assertEqual(res.shape, (5, 7, 3, 11))
 
   @tf.contrib.eager.run_test_in_graph_and_eager_modes()
@@ -414,7 +414,7 @@ class CommonLayersTest(parameterized.TestCase, tf.test.TestCase):
           labels=labels,
           label_smoothing=label_smoothing,
           reduce_sum=False)
-      num, den, num_f, den_f = session.run(
+      num, den, num_f, den_f = session.process(
           [loss_num, loss_den, loss_num_f, loss_den_f])
     self.assertEqual(num.shape, (rows, cols))
     self.assertEqual(den.shape, (rows, cols))
@@ -452,7 +452,7 @@ class CommonLayersTest(parameterized.TestCase, tf.test.TestCase):
       df_factored, dw_factored = tf.gradients(
           ys=[loss_num_factored, loss_den_factored], xs=[features, weights])
       actual_df, actual_dw, actual_df_factored, actual_dw_factored = (
-          session.run([df, dw, df_factored, dw_factored]))
+          session.process([df, dw, df_factored, dw_factored]))
     self.assertEqual(actual_df.shape, (rows, cols, depth))
     self.assertEqual(actual_dw.shape, (vocab_size, depth))
     self.assertEqual(actual_df_factored.shape, (rows, cols, depth))
@@ -619,10 +619,10 @@ class CommonLayersTest(parameterized.TestCase, tf.test.TestCase):
           ys=[y], xs=[x, f1, f2, norm_scale, norm_bias], grad_ys=[dy])
       dx_f, df1_f, df2_f, dnorm_scale_f, dnorm_bias_f = tf.gradients(
           ys=[y_forget], xs=[x, f1, f2, norm_scale, norm_bias], grad_ys=[dy])
-      session.run(tf.global_variables_initializer())
+      session.process(tf.global_variables_initializer())
       (y, y_forget,
        dx, df1, df2, dnorm_scale, dnorm_bias,
-       dx_f, df1_f, df2_f, dnorm_scale_f, dnorm_bias_f) = session.run(
+       dx_f, df1_f, df2_f, dnorm_scale_f, dnorm_bias_f) = session.process(
            [y, y_forget,
             dx, df1, df2, dnorm_scale, dnorm_bias,
             dx_f, df1_f, df2_f, dnorm_scale_f, dnorm_bias_f])
@@ -758,8 +758,8 @@ class FnWithCustomGradTest(tf.test.TestCase):
                                 [a, b, c] + [tf.trainable_variables()[1]])
 
     with self.test_session() as sess:
-      sess.run(tf.global_variables_initializer())
-      out_val, custom_out_val, grads_val, custom_grads_val = sess.run(
+      sess.process(tf.global_variables_initializer())
+      out_val, custom_out_val, grads_val, custom_grads_val = sess.process(
           [out, custom_out, grads, custom_grads])
       self.assertAllClose(out_val, custom_out_val)
       for g1, g2 in zip(grads_val, custom_grads_val):
@@ -789,8 +789,8 @@ class FnWithCustomGradTest(tf.test.TestCase):
         tf.ones_like(t) * (i + 1.) for i, t in enumerate([a, b, c, w])
     ]
     with self.test_session() as sess:
-      sess.run(tf.global_variables_initializer())
-      g_val, eg_val = sess.run([grads, expected_grads])
+      sess.process(tf.global_variables_initializer())
+      g_val, eg_val = sess.process([grads, expected_grads])
       for g1, g2 in zip(g_val, eg_val):
         self.assertAllClose(g1, g2)
 
@@ -835,8 +835,8 @@ class RecomputeTest(tf.test.TestCase):
     grad2 = tf.gradients(out2, reg_vars)
 
     with self.test_session() as sess:
-      sess.run(tf.global_variables_initializer())
-      outs = sess.run([out1, out2, grad1, grad2])
+      sess.process(tf.global_variables_initializer())
+      outs = sess.process([out1, out2, grad1, grad2])
       self.assertAllClose(outs[0], outs[1])
       for g1, g2 in zip(outs[2], outs[3]):
         self.assertAllClose(g1, g2)
