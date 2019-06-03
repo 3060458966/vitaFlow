@@ -26,22 +26,22 @@ preprocess:		### OCR Pipeline - Pre-processing
 
 binarisation:		### OCR Pipeline - Pre-processing
 	@echo "Starting Document Binarisation - textcleaner"
-	python vitaflow/annotate_server/binarisation.py
+	python vitaflow/pipeline/preprocessor/binarisation.py
 
 
 text2lineimages:		### OCR Pipeline - Pre-processing
 	@echo "Starting Document to text line image converter"
-	python vitaflow/annotate_server/image_to_textlines.py
+	python vitaflow/pipeline/postprocessor/text_file_stitch.py
 
 
 tesseract:		### OCR Pipeline - OCR with Tessaract
 	@echo "Starting OCR using Tesseract"
-	python vitaflow/annotate_server/ocr.py
+	python vitaflow/pipeline/postprocessor/ocr_tesseract.py
 
 
 calmari:		### OCR Pipeline - OCR with Calamari OCR
 	@echo "Starting OCR using Calamari"
-	python vitaflow/annotate_server/ocr_calamari.py
+	python vitaflow/pipeline/postprocessor/ocr_calamari.py
 
 
 ocr_pipeline: data_cleanup preprocess binarisation text2lineimages tesseract calmari		### OCR Pipeline - Run complete pipeline
@@ -71,11 +71,11 @@ east:		### OCR Pipeline - Run complete pipeline
 
 
 crop2box:
-	python vitaflow/annotate_server/crop_to_box.py
+	python vitaflow/pipeline/preprocessor/crop_to_box.py
 
 
 text2file:
-	python vitaflow/annotate_server/text_file_stitch.py
+	python vitaflow/pipeline/postprocessor/text_file_stitch.py
 
 
 east_ocr_pipeline:	data_cleanup east binarisation crop2box tesseract calmari text2file ### EAST OCR Pipeline - Run complete pipeline

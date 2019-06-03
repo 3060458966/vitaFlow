@@ -32,7 +32,7 @@ def create_dirs():
                      BINARIZE_ROOT_DIR,
                      TEXT_OCR_DATA_DIR,
                      TEXT_OUT_DIR]:
-        each_dir = os.path.join(ROOT_DIR, each_dir)
+        each_dir = os.path.join(each_dir)
         print(each_dir)
         check_n_create(each_dir)
 
