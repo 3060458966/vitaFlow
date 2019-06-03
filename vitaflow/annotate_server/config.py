@@ -18,7 +18,7 @@ BINARIZE_ROOT_DIR = "static/data/binarisation"
 ANNOTATIONS_DIR = "static/data/annotations"
 
 # EAST IMAGES
-EAST_DIR = "static/data/east"
+EAST_DIR = "static/data/east_airflow_demo"
 
 # DOC2TEXT IMAGES
 DOC2TEXT_DIR = "static/data/preprocess"

@@ -52,10 +52,10 @@ data_cleanup:		### OCR Pipeline - Clean all sub folder
 	@echo "Starting "
 	rm -rf vitaflow/annotate_server/static/data/preprocess/*
 	rm -rf vitaflow/annotate_server/static/data/east/*
-	rm -rf vitaflow/annotate_server/static/data/images/*
 	rm -rf vitaflow/annotate_server/static/data/binarisation/*
-	rm -rf vitaflow/annotate_server/static/data/text_images/*
+	rm -rf vitaflow/annotate_server/static/data/cropped_images/*
 	rm -rf vitaflow/annotate_server/static/data/text_data/*
+	rm -rf vitaflow/annotate_server/static/data/text_out/*
 	rm -rf vitaflow/annotate_server/static/data/logs/*
 
 
@@ -65,13 +65,7 @@ show_input:		### OCR Pipeline - Run complete pipeline
 
 east:		### OCR Pipeline - Run complete pipeline
 	@echo "Running East Pipeline "
-	mkdir -p vitaflow/annotate_server/static/data/east/
-	mkdir -p vitaflow/annotate_server/static/data/images/
-	python vitaflow/playground/east/pb_predict.py \
-    --images_dir="vitaflow/annotate_server/static/data/preprocess"\
-    --output_dir="vitaflow/annotate_server/static/data/east"\
-    --model="vitaflow/annotate_server/static/data/east_models/east/EASTModel/exported/1558013588"
-	cp vitaflow/annotate_server/static/data/east/* vitaflow/annotate_server/static/data/images
+	python vitaflow/pipeline/models/east_model.py
 	@echo "--------------------------------------------------------------------------------------------------------------"
 	@echo "Running East Pipeline Completed !"
 
@@ -86,7 +80,7 @@ text2file:
 
 east_ocr_pipeline:	data_cleanup east binarisation crop2box tesseract calmari text2file ### EAST OCR Pipeline - Run complete pipeline
 
-basic_airflow:
+airflow:
 	echo "export AIRFLOW_HOME=~/airflow or appropriate"
 	echo "using AIRFLOW_HOME=${AIRFLOW_HOME}"
 	rsync -av  vitaflow ${AIRFLOW_HOME}/dags/

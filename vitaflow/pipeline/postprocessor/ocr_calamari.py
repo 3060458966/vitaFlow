@@ -2,11 +2,15 @@
 Demo sample example of how to include calamari_ocr into python code
 '''
 
+import os
+
 from calamari_ocr.ocr.datasets import DataSetType
 from calamari_ocr.scripts.predict import run as calamari_ocr_run
 
-import config
-from vitaflow.pipeline.interfaces.plugin import TextExtImagePluginModel
+# import config
+from vitaflow.pipeline.interfaces.plugin import OCRPluginInterface
+
+from vitaflow import demo_config
 
 # TODO:
 # - convert to gray scale images
@@ -14,19 +18,13 @@ from vitaflow.pipeline.interfaces.plugin import TextExtImagePluginModel
 
 
 # Add your files here
-calamari_models = [
-# 'vitaflow/annotate_server/static/data/calamari_models/model_00037200.ckpt',
-#                    'vitaflow/annotate_server/static/data/calamari_models/model_00045600.ckpt',
-#                    'vitaflow/annotate_server/static/data/calamari_models/model_00114400.ckpt',
-#                    'vitaflow/annotate_server/static/data/calamari_models/model_00123200.ckpt',
-#                    'vitaflow/annotate_server/static/data/calamari_models/model_00131400.ckpt',
-                   'vitaflow/annotate_server/static/data/calamari_models/model_00117200.ckpt',
+calamari_models = ['vitaflow/annotate_server/static/data/calamari_models/model_00117200.ckpt',
                    'vitaflow/annotate_server/static/data/calamari_models/model_00132600.ckpt']
 
 calamari_input_images = []  # glob(os.path.join(config.ROOT_DIR, config.TEXT_IMAGES) + '/*/*')  # Add your files here
 
 
-class args:
+class CalamariArgs:
     batch_size = 1
     checkpoint = calamari_models
     dataset = DataSetType.FILE
@@ -42,27 +40,40 @@ class args:
     voter = 'confidence_voter_default_ctc'
 
 
-def main(source_file, destination_file=None):
-    args.files = [source_file]
-    calamari_ocr_run(args)
+class CalamariOcrPlugin(OCRPluginInterface):
 
+    def __init__(self,
+                 num_workers=4):
+        OCRPluginInterface.__init__(self, num_workers=num_workers)
 
-def main_parallel(source_files):
-    args.files = source_files
-    calamari_ocr_run(args)
+    def _handle_file(self, in_file_path, out_file_path):
+        destination_dir = out_file_path.split("/")[-2]
+        CalamariArgs.files = [in_file_path]
+        CalamariArgs.output_dir = destination_dir
+        calamari_ocr_run(CalamariArgs)
 
+    def _handle_files(self, source_dir, destination_dir):
+        """Plugin module should implement this to handle all the files in the given directory"""
 
-class OCR_Calamari(TextExtImagePluginModel):
-    def plugin_inputs(self):
-        # Custom location according to need
-        self.source_folder = config.TEXT_IMAGES
-        self.destination_folder = config.TEXT_IMAGES
-        # Transformation function for converting source_image to destination_image
-        self.operator_func = main
-        self.parallel_operator_func = main_parallel
+        if not os.path.exists(destination_dir):
+            os.makedirs(destination_dir)
+
+        for dir in os.listdir(source_dir):
+
+            in_files = self.get_all_input_files(source_dir=os.path.join(source_dir, dir))
+
+            if in_files:
+                output_dir = os.path.join(destination_dir, dir)
+
+                if not os.path.exists(output_dir):
+                    os.makedirs(output_dir)
+
+                CalamariArgs.files = in_files
+                CalamariArgs.output_dir = output_dir
+                calamari_ocr_run(CalamariArgs)
 
 
 if __name__ == '__main__':
-    tt = OCR_Calamari()
-    tt.plugin_inputs()
-    tt.bulk_run()
+    calamari = CalamariOcrPlugin()
+    calamari.process_files(source_dir=demo_config.CROPPER_ROOT_DIR,
+                           destination_dir=demo_config.TEXT_OCR_DATA_DIR)

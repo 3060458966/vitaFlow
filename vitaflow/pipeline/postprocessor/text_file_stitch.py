@@ -11,67 +11,66 @@ import concurrent.futures
 import os
 
 import glob
-import config
-from vitaflow.pipeline.interfaces.plugin import StitchTextExtImagePluginModel
+# import config
+from vitaflow.pipeline.interfaces.plugin import TextCombiner
+from vitaflow.pipeline.postprocessor.ocr_tesseract import TessaractOcrPlugin
+from vitaflow.pipeline.postprocessor.ocr_calamari import CalamariOcrPlugin
 from tqdm import tqdm
+from vitaflow import demo_config
 
 os.environ['OMP_THREAD_LIMIT'] = '1'
 
+class TextFile(TextCombiner):
 
-def main(source_file):
-    source_file_folder = os.path.dirname(source_file)
-    ext = os.path.splitext(os.path.basename(source_file).split(os.extsep)[1])[0]
-    new_file_name = source_file_folder.split('/')[-1] + ".{}.txt".format(ext)
-    destination_file = os.path.join(config.ROOT_DIR, config.TEXT_DIR, new_file_name)  # TODO fix path
-    if os.path.isfile(destination_file):
-        #  read the file and append values
-        with open(destination_file, "a") as fd:
-            fd.write(open(source_file, "r").read())
-            fd.write("\n")
-    else:
-        # create a new file with headers
-        with open(destination_file, "w") as fd:
-            fd.write(open(source_file, "r").read())
-            fd.write("\n")
-    return destination_file
+    def _handle_file(self, in_file_path, out_file_path):
 
+        print(in_file_path)
+        print(out_file_path)
 
-def main_parallel(text_list):
-    completed_jobs = []
-    # filter out the extensions based on the folders
-    folders = glob.glob(text_list + os.sep + "*")
+        list_of_in_txt_files = in_file_path
 
-    # create a folder in output directory with name as input folder
-    for folder_path in tqdm(folders, desc="text_post_processing"):
-        for ext in config.OCR_TEXT_EXTS:
-            files = glob.glob(folder_path + "/*{}".format(ext))
-            files = sorted(files,
-                           key=lambda x: int(os.path.splitext(os.path.basename(x).split(os.extsep)[0])[0]))
-            # pprint(files)
-            try:
-                with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-                    for text_file_path, out_file in zip(files, executor.map(main, files)):
-                        completed_jobs.append(
-                            (text_file_path.split("\\")[-1], ',', out_file, ', processed')
-                        )
-            except:
-                # TODO: improvise - single threaded
-                for each in files:
-                    main(each)
+        for each_in_text_prediction in tqdm(list_of_in_txt_files):
+            if os.path.isfile(out_file_path):
+                #  read the file and append values
+                with open(out_file_path, "a") as fd:
+                    fd.write(open(each_in_text_prediction, "r").read())
+                    fd.write("\n")
+            else:
+                # create a new file with headers
+                with open(out_file_path, "w") as fd:
+                    fd.write(open(each_in_text_prediction, "r").read())
+                    fd.write("\n")
 
+    def _handle_files(self, source_dir, destination_dir):
+        """Plugin module should implement this to handle all the files in the given directory"""
 
-class TextFileStitch(StitchTextExtImagePluginModel):
-    def plugin_inputs(self):
-        # Custom location according to need
-        self.source_folder = config.TEXT_IMAGES
-        self.destination_folder = config.TEXT_DIR
-        # Transformation function for converting source_image to destination_image
-        self.operator_func = main
-        self.parallel_operator_func = main_parallel
+        if not os.path.exists(destination_dir):
+            os.makedirs(destination_dir)
+
+        predicted_outputs = {}
+
+        tesseract = TessaractOcrPlugin.__name__
+        calamari = CalamariOcrPlugin.__name__
+
+        for each_dir in os.listdir(source_dir):
+            in_files = self.get_all_input_files(source_dir=os.path.join(source_dir, each_dir),
+                                                input_files_types=[".txt"])
+            #sort based on file number
+            in_files = sorted(in_files,
+                   key=lambda x: int(os.path.splitext(os.path.basename(x).split(os.extsep)[0])[0]))
+
+            predicted_outputs[tesseract] = [file for file in in_files if tesseract in file]
+            # TODO use calamari args; calamari latest version support renaming the output file names
+            predicted_outputs[calamari] = [file for file in in_files if tesseract not in file]
+
+            self._handle_file(in_file_path=predicted_outputs[tesseract],
+                              out_file_path=os.path.join(destination_dir, each_dir) + "_" + tesseract + ".txt")
+
+            self._handle_file(in_file_path=predicted_outputs[calamari],
+                              out_file_path=os.path.join(destination_dir, each_dir) + "_" + calamari + ".txt")
 
 
 if __name__ == '__main__':
-    tt = TextFileStitch()
-    tt.plugin_inputs()
+    tt = TextFile()
     print('--' * 55)
-    tt.bulk_run()
+    tt.process_files(source_dir=demo_config.TEXT_OCR_DATA_DIR, destination_dir=demo_config.TEXT_OUT_DIR)

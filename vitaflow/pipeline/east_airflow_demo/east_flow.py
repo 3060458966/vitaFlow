@@ -10,34 +10,14 @@ import argparse
 import os
 import gin
 
-from tensorflow.contrib import predictor
 
-try:
-    from grpc_predict import read_image, get_text_segmentation_pb
-    from icdar_data import get_images
-except:
-    from vitaflow.playground.east.grpc_predict import read_image, get_text_segmentation_pb
-    from vitaflow.playground.east.icdar_data import get_images
 
+
+from vitaflow.pipeline.airflow.preprocessor import ImageBinarisePreprocessorOperator
 
 input_dir="/opt/github/vitaFlow/vitaflow/annotate_server/static/data/preprocess"
-output_dir="/opt/tmp/vitaFlow/east/"
-model_dir="/opt/github/vitaFlow/vitaflow/annotate_server/static/data/east_models/east/EASTModel/exported/1558013588"
-
-# @gin.configurable
-def east_flow_predictions(input_dir=input_dir, output_dir=output_dir, model_dir=model_dir):
-    images_dir = input_dir
-    images = get_images(images_dir)
-    predict_fn = predictor.from_saved_model(model_dir)
-    for image_file_path in images:
-        im, img_resized, ratio_h, ratio_w = read_image(image_file_path)
-        result = predict_fn({'images': img_resized})
-        get_text_segmentation_pb(img_mat=im,
-                                 result=result,
-                                 output_dir=output_dir,
-                                 file_name=os.path.basename(image_file_path),
-                                 ratio_h=ratio_h,
-                                 ratio_w=ratio_w)
+output_dir="/opt/tmp/vitaFlow/east_airflow_demo/"
+model_dir="/opt/github/vitaFlow/vitaflow/annotate_server/static/data/east_models/east_airflow_demo/EASTModel/exported/1558013588"
 
 
 default_args = {
@@ -49,9 +29,9 @@ default_args = {
     'retry_delay': timedelta(seconds=30)
 }
 
-task_name = 'east_flow'
+task_name = 'east_flow1'
 # try:
-#     gin.parse_config_file('vitaflow/pipeline/east/east_flow_config.gin')
+#     gin.parse_config_file('vitaflow/pipeline/east_airflow_demo/east_flow_config.gin')
 # except:
 #     gin.parse_config_file('east_flow_config.gin')
 
@@ -75,8 +55,15 @@ start = DummyOperator(task_id='start', dag=dag)
 
 prediction_task = PythonOperator(task_id='east_predictions',
                                  python_callable=east_flow_predictions)
-
+binarization = ImageBinarisePreprocessorOperator(task_id="binarization",
+                                                 source_folder=output_dir,
+                                                 destination_folder="/opt/tmp/vitaFlow/east_binarized/")
 end = DummyOperator(task_id='end', dag=dag)
 
+#===========================================================================================
+
 start.set_downstream(prediction_task)
-prediction_task.set_downstream(end)
+
+prediction_task.set_downstream(binarization)
+
+binarization.set_downstream(end)

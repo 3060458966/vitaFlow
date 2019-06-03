@@ -11,7 +11,7 @@
 # # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # # See the License for the specific language governing permissions and
 # # limitations under the License.
-# """Chicago east example using TFX."""
+# """Chicago east_airflow_demo example using TFX."""
 #
 # from __future__ import absolute_import
 # from __future__ import division
@@ -52,19 +52,19 @@
 # from tfx.utils.dsl_utils import tfrecord_input
 # from tfx.components.example_gen.import_example_gen.component import ImportExampleGen
 #
-# # This example assumes that the east data is stored in ~/east/data and the
-# # east utility function is in ~/east.  Feel free to customize this as needed.
+# # This example assumes that the east_airflow_demo data is stored in ~/east_airflow_demo/data and the
+# # east_airflow_demo utility function is in ~/east_airflow_demo.  Feel free to customize this as needed.
 # _east_root = os.path.join(os.environ['HOME'], 'airflow')
 # #_data_root = os.path.join(_east_root, 'data/east_data')
-# _data_root = os.path.join(_east_root, 'data/east')
+# _data_root = os.path.join(_east_root, 'data/east_airflow_demo')
 # # Python module file to inject customized logic into the TFX components. The
 # # Transform and Trainer both require user-defined functions to run successfully.
 # _east_module_file = os.path.join(_east_root, 'dags/tfx_east/east_utils.py')
 # # Path which can be listened to by the model server.  Pusher will output the
 # # trained model here.
-# _serving_model_dir = os.path.join(_east_root, 'saved_models/east')
+# _serving_model_dir = os.path.join(_east_root, 'saved_models/east_airflow_demo')
 #
-# # Directory and data locations.  This example assumes all of the chicago east
+# # Directory and data locations.  This example assumes all of the chicago east_airflow_demo
 # # example code and metadata library is relative to $HOME, but you can store
 # # these files anywhere on your local filesystem.
 # _tfx_root = os.path.join(_east_root, 'tfx')
@@ -86,13 +86,13 @@
 #
 #
 # @PipelineDecorator(
-#     pipeline_name='east',
+#     pipeline_name='east_airflow_demo',
 #     enable_cache=True,
 #     metadata_db_root=_metadata_db_root,
 #     additional_pipeline_args={'logger_args': logger_overrides},
 #     pipeline_root=_pipeline_root)
 # def _create_pipeline():
-#     """Implements the chicago east pipeline with TFX."""
+#     """Implements the chicago east_airflow_demo pipeline with TFX."""
 #     print_info("Creating pipeline")
 #     examples = tfrecord_input(_data_root)
 #     example_gen = ImportExampleGen(input_base=examples)

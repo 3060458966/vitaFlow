@@ -1,7 +1,8 @@
 import os
 import subprocess
 
-from vitaflow.pipeline.interfaces.plugin import ImagePluginAppModel
+from vitaflow.pipeline.interfaces.plugin import ImagePluginInterface
+from vitaflow import demo_config
 
 _command_convert = ['convert',
                     '-auto-level',
@@ -66,16 +67,9 @@ def blur(image_loc, dest_image_loc):
     pass
 
 
-class ImageBinarisePreprocessor(ImagePluginAppModel):
-    def __init__(self,
-                 root_dir=None,
-                 source_folder=None,
-                 destination_folder=None):
-        ImagePluginAppModel.__init__(self)
-
-    # def _validate_inputs(self):
-    #     if not self._inputs_validated:
-    #         raise ValueError('Input Validations is inComplete')
+class ImageBinarisePreprocessor(ImagePluginInterface):
+    def __init__(self):
+        ImagePluginInterface.__init__(self)
 
     def _handle_data(self, in_file_data):
         """Each plugin module should implement this to handle image array data"""
@@ -92,22 +86,8 @@ class ImageBinarisePreprocessor(ImagePluginAppModel):
             print(e)
             print('Binarisation - Failed - Generated file {}'.format(out_file_path))
 
-    def _handle_files(self, source_dir, destination_dir):
-        """Each plugin module should implement this to handle all the files in the given directory"""
-
-        print('binarisation src {} dest {} '.format(source_dir, destination_dir))
-        if not os.path.exists(destination_dir):
-            os.makedirs(destination_dir)
-
-        in_files = self.get_all_source_files(source_dir=source_dir)
-        print(in_files)
-        for img_file in in_files:
-            filename = os.path.basename(img_file)
-            in_file_path = img_file
-            out_file_path = os.path.join(destination_dir, filename)
-            self._handle_file(in_file_path=in_file_path, out_file_path=out_file_path)
 
 if __name__ == '__main__':
     t = ImageBinarisePreprocessor()
     print('--' * 55)
-    t.process_files(source_dir="/opt/tmp/vitaFlow/east/", destination_dir="/opt/tmp/vitaFlow/east_binarized/")
+    t.process_files(source_dir=demo_config.EAST_OUT_DIR, destination_dir=demo_config.BINARIZE_ROOT_DIR)

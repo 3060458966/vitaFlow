@@ -1,6 +1,7 @@
 import os
 from abc import ABC
 from glob import glob
+import concurrent.futures
 
 from vitaflow.annotate_server.common import verify_isimagefile, verify_isfile
 
@@ -13,8 +14,8 @@ except ImportError:
     import config
 
 
-def find_files_with_ext(search_folder, exts=None):
-    all_files = glob(search_folder + '/*', recursive=True)
+def find_files_with_ext(search_folder, exts=['.JPG', '.jpg', '.png']):
+    all_files = glob(search_folder + '**/**', recursive=True)
     bag = []
     if exts:
         for _ext in exts:
@@ -24,41 +25,44 @@ def find_files_with_ext(search_folder, exts=None):
     return bag
 
 
-class ImagePluginAppModel(ABC):
+class ImagePluginInterface(ABC):
     """Simple image processing plugin application
 
     Must implement `run` method for using."""
 
-    def __init__(self,
-                 input_file_types=['.JPG', '.jpg', '.png']):
-        self._input_files_types = input_file_types
+    def __init__(self):
         self.source_dir = None
         self.destination_folder = None
-
-    def _image_search(self, path):
-        """Inputs should be collected as a list of tuples.
-        """
-        return find_files_with_ext(path, self._input_files_types)
 
     @property
     def is_in_memory(self):
         """Tells whether this plugin module can be used to chain for in memory processing """
         return False
 
-    def get_all_source_files(self, source_dir):
+    @staticmethod
+    def get_all_input_files(source_dir, input_files_types=['.JPG', '.jpg', '.png']):
         """Get the list of images files from the source directory"""
-        return self._image_search(source_dir)
+        return find_files_with_ext(source_dir, input_files_types)
 
     def _handle_data(self, in_file_data):
-        """Each plugin module should implement this to handle image array data"""
+        """Plugin module should implement this to handle image array data"""
         raise NotImplementedError
 
     def _handle_file(self, in_file_path, out_file_path):
         raise NotImplementedError
 
     def _handle_files(self, source_dir, destination_dir):
-        """Each plugin module should implement this to handle all the files in the given directory"""
-        raise NotImplementedError
+        """Plugin module should implement this to handle all the files in the given directory"""
+
+        if not os.path.exists(destination_dir):
+            os.makedirs(destination_dir)
+
+        in_files = self.get_all_input_files(source_dir=source_dir)
+        for img_file in in_files:
+            filename = os.path.basename(img_file)
+            in_file_path = img_file
+            out_file_path = os.path.join(destination_dir, filename)
+            self._handle_file(in_file_path=in_file_path, out_file_path=out_file_path)
 
     def process_data(self, in_file_data):
         """Process the incoming image array data"""
@@ -77,28 +81,48 @@ class ImagePluginAppModel(ABC):
         self._handle_files(source_dir=source_dir, destination_dir=destination_dir)
 
 
-class TextExtImagePluginModel(ImagePluginAppModel):
+class OCRPluginInterface(ImagePluginInterface):
     """OCR Abstract Class"""
 
-    def __init__(self):
-        super().__init__()
-        self.parallel_operator_func = None
+    def __init__(self,
+                 num_workers=4):
+        ImagePluginInterface.__init__(self)
+        self._num_workers = num_workers
 
-    def bulk_run(self):
-        if (not self.source_dir) or (not self.operator_func):
-            raise RuntimeError('self.source_folder or self.operator_func is not defined !!')
-        all_images = self._image_search(self.source_dir + '/*')
-        self.parallel_operator_func(all_images)
+    def _parallel(self, image_list, out_file_list):
+        completed_jobs = []
+        with concurrent.futures.ProcessPoolExecutor(max_workers=self._num_workers) as executor:
+            for img_path, out_file in zip(image_list, executor.map(self.process_file, image_list, out_file_list)):
+                completed_jobs.append(
+                    (img_path.split("\\")[-1], ',', out_file, ', processed')
+                )
+
+    def _handle_files(self, source_dir, destination_dir):
+        """Plugin module should implement this to handle all the files in the given directory"""
+
+        if not os.path.exists(destination_dir):
+            os.makedirs(destination_dir)
+
+        in_files = self.get_all_input_files(source_dir=source_dir)
+        out_files = []
+
+        for img_file in in_files:
+            filename = os.path.basename(img_file)
+            dir_name = os.path.dirname(img_file).split("/")[-1]
+            out_file_dir = os.path.join(destination_dir, dir_name)
+
+            if not os.path.exists(out_file_dir):
+                os.makedirs(out_file_dir)
+
+            out_file_path = os.path.join(out_file_dir, filename + "_" + self.__class__.__name__ + "_.txt")
+            out_files.append(out_file_path)
+
+        self._parallel(image_list=in_files, out_file_list=out_files)
 
 
-class StitchTextExtImagePluginModel(ImagePluginAppModel):
+class TextCombiner(ImagePluginInterface):
     """Abstract Class"""
 
     def __init__(self):
-        super().__init__()
-        self.parallel_operator_func = None
+        ImagePluginInterface.__init__(self)
 
-    def bulk_run(self):
-        if (not self.source_dir) or (not self.operator_func):
-            raise RuntimeError('self.source_folder or self.operator_func is not defined !!')
-        self.parallel_operator_func(os.path.join(self.root_folder, self.source_dir))

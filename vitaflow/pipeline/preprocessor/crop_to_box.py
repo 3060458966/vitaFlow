@@ -3,7 +3,7 @@ Receipt Localisation using East
 
 Added East data processing code for receipt localisation
 
-Using images & east generated text files in East folder,
+Using images & east_airflow_demo generated text files in East folder,
 image files are processed and save to Images folder.
 
 """
@@ -12,8 +12,8 @@ import os
 
 import matplotlib.pyplot as plt
 
-import config
-from vitaflow.pipeline.interfaces.plugin import ImagePluginAppModel
+from vitaflow.pipeline.interfaces.plugin import ImagePluginInterface
+from vitaflow import demo_config
 
 
 def crop_and_save(cords, image, dest, fname):
@@ -64,35 +64,32 @@ def crop_to_box(gt_text_file_loc, source_image_loc, cropped_dir):
                 print("error", fnf_error)
 
 
-def main(source_image_loc, dest_image_loc):
-    source_loc_dir = os.path.dirname(source_image_loc)
-    dest_loc_dir = os.path.dirname(dest_image_loc)
-    gt_text_base = os.path.basename(source_image_loc).split(".")[0]
-    gt_text_name = gt_text_base + ".txt"
+class EastCropperImagePlugin(ImagePluginInterface):
+    def __init__(self, east_out_dir):
+        ImagePluginInterface.__init__(self)
+        self._east_out_dir = east_out_dir
 
-    cropped_dir = os.path.join(dest_loc_dir, gt_text_base)
-    if not os.path.isdir(cropped_dir):
-        os.mkdir(os.path.join(cropped_dir))
-    # TODO: Need to remove config usage from here
-    gt_text_file_loc = os.path.join(config.ROOT_DIR, config.EAST_DIR, gt_text_name)
-    if not os.path.isfile(gt_text_file_loc):
-        print("Skipping the run as {} has not east predictions".format(gt_text_file_loc))
-    else:
-        gt_image_base = os.path.basename(source_image_loc).split(".")[0]
-        crop_to_box(gt_text_file_loc, source_image_loc, cropped_dir)
+    def _handle_data(self, in_file_data):
+        """Each plugin module should implement this to handle image array data"""
+        raise NotImplementedError
 
+    def _handle_file(self, in_file_path, out_file_path):
+        source_loc_dir = os.path.dirname(in_file_path)
+        dest_loc_dir = os.path.dirname(out_file_path.split(".")[0] + "/")
+        gt_text_base = os.path.basename(in_file_path).split(".")[0]
+        gt_text_name = gt_text_base + ".txt"
+        if not os.path.isdir(dest_loc_dir):
+            os.mkdir(os.path.join(dest_loc_dir))
 
-class cropToBoxImagePlugin(ImagePluginAppModel):
-    def plugin_inputs(self):
-        # Custom location according to need
-        self.source_folder = config.BINARIZE_ROOT_DIR
-        self.destination_folder = config.TEXT_IMAGES
-        # Transformation function for converting source_image to destination_image
-        self.operator_func = main
+        gt_text_file_loc = os.path.join(self._east_out_dir, gt_text_name)
+
+        if not os.path.isfile(gt_text_file_loc):
+            print("Skipping the run as {} has not east_airflow_demo predictions".format(gt_text_file_loc))
+        else:
+            crop_to_box(gt_text_file_loc, in_file_path, dest_loc_dir)
 
 
 if __name__ == '__main__':
-    t = cropToBoxImagePlugin()
-    t.plugin_inputs()
+    t = EastCropperImagePlugin(east_out_dir=demo_config.EAST_OUT_DIR)
     print('--' * 55)
-    t.bulk_run()
+    t.process_files(source_dir=demo_config.BINARIZE_ROOT_DIR, destination_dir=demo_config.CROPPER_ROOT_DIR)

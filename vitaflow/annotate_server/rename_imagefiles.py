@@ -4,7 +4,7 @@ import time
 import tqdm
 
 import config
-from vitaflow.pipeline.interfaces.plugin import ImagePluginAppModel
+from vitaflow.pipeline.interfaces.plugin import ImagePluginInterface
 
 
 def rename_images(images_path):
@@ -61,7 +61,7 @@ def main(source_file, destination_file=None):
 #     rename_images(config.IMAGE_ROOT_DIR)
 
 
-class fileNamesProcessingImagePlugin(ImagePluginAppModel):
+class fileNamesProcessingImagePlugin(ImagePluginInterface):
 
     def plugin_inputs(self):
         # Custom location according to need

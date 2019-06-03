@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Python source file include east pipeline functions and necesasry utils.
+"""Python source file include east_airflow_demo pipeline functions and necesasry utils.
 
 For a TFX pipeline to successfully run, a preprocessing_fn and a
 _build_estimator function needs to be provided.  This file contains both.
@@ -103,7 +103,7 @@ def preprocessing_fn(inputs):
 # Step 4 END --------------------------
 
 def _build_estimator(config):
-    """Build an estimator for predicting the tipping behavior of east riders."""
+    """Build an estimator for predicting the tipping behavior of east_airflow_demo riders."""
 
     _model = EASTModel()
     return tf.estimator.Estimator(
@@ -274,12 +274,12 @@ def trainer_fn(hparams, schema):
     serving_receiver_fn = lambda: _example_serving_receiver_fn(  # pylint: disable=g-long-lambda
         hparams.transform_output, schema)
 
-    exporter = tf.estimator.FinalExporter('east', serving_receiver_fn)
+    exporter = tf.estimator.FinalExporter('east_airflow_demo', serving_receiver_fn)
     eval_spec = tf.estimator.EvalSpec(
         eval_input_fn,
         steps=hparams.eval_steps,
         exporters=[exporter],
-        name='east-eval')
+        name='east_airflow_demo-eval')
 
     run_config = tf.estimator.RunConfig(
         save_checkpoints_steps=999, keep_checkpoint_max=1)

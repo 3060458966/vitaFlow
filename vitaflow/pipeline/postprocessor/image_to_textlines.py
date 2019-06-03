@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-from vitaflow.pipeline.interfaces.plugin import ImagePluginAppModel
+from vitaflow.pipeline.interfaces.plugin import ImagePluginInterface
 from vitaflow.pipeline.interfaces.utils import trim_file_ext
 import config
 
@@ -172,7 +172,7 @@ def main(image_filename, image_dir=None):
 #     # im2tl.quick_run()
 
 
-class imageToTextLinesImages(ImagePluginAppModel):
+class imageToTextLinesImages(ImagePluginInterface):
 
     def plugin_inputs(self):
         # Custom location according to need

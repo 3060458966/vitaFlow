@@ -1,11 +1,3 @@
-'''
-python pb_predict\
- --images_dir="/home/gaurishk/Desktop/preprocess/test"\
- --output_dir="/home/gaurishk/Desktop/preprocess/"\
- --model="/home/gaurishk/Projects/vitaFlow/vitaflow/annotate_server/static/data/east_models/east_airflow_demo/EASTModel/exported/1558013588"
-'''
-
-import argparse
 import os
 
 try:
@@ -15,11 +7,15 @@ except:
     from vitaflow.playground.east.grpc_predict import read_image, get_text_segmentation_pb
     from vitaflow.playground.east.icdar_data import get_images
 
-
 from tensorflow.contrib import predictor
+from vitaflow import demo_config
+
+from vitaflow.demo_config import create_dirs
 
 
-def run(input_dir, output_dir, model_dir):
+def east_flow_predictions(input_dir=demo_config.IMAGE_ROOT_DIR,
+                          output_dir=demo_config.EAST_OUT_DIR,
+                          model_dir=demo_config.EAST_MODEL_DIR):
     images_dir = input_dir
     images = get_images(images_dir)
     predict_fn = predictor.from_saved_model(model_dir)
@@ -35,10 +31,5 @@ def run(input_dir, output_dir, model_dir):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--images_dir', help='input images', type=str)
-    parser.add_argument('--output_dir', help='out dir for images', type=str)
-    parser.add_argument('--model', help='model exported path', type=str)
-
-    args = parser.parse_args()
-    run(input_dir=args.images_dir, output_dir=args.output_dir, model_dir=args.model)
+    create_dirs()
+    east_flow_predictions()

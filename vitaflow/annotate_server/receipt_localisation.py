@@ -3,7 +3,7 @@ Receipt Localisation using East
 
 Added East data processing code for receipt localisation
 
-Using images & east generated text files in East folder,
+Using images & east_airflow_demo generated text files in East folder,
 image files are processed and save to Images folder.
 
 """
@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import config
-from vitaflow.pipeline.interfaces.plugin import ImagePluginAppModel
+from vitaflow.pipeline.interfaces.plugin import ImagePluginInterface
 from vitaflow.pipeline.interfaces.utils import trim_file_ext
 
 
@@ -188,7 +188,7 @@ def rotate_image_with_east(img_filename, save_file=None):
         plt.imshow(warped)
 
 
-class receiptLocalisationImagePlugin(ImagePluginAppModel):
+class receiptLocalisationImagePlugin(ImagePluginInterface):
 
     def plugin_inputs(self):
         # Custom location according to need
