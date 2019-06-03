@@ -99,11 +99,11 @@ def show_uploaded_image_details(filename):
     text_data_images = sorted([_ for _ in text_data if '.png' in _],
                               key=lambda fn: int(fn.rsplit('/')[-1].split('.')[0]))
     # Tesseract Text
-    f_name = os.path.join(config.TEXT_DIR, filename.split('.')[0] + '.tesseract.txt')
+    f_name = os.path.join(config.TEXT_OUT, filename.split('.')[0] + '_TessaractOcrPlugin.txt')
     print(f_name)
     text_data_tesseract = open(f_name).read() if os.path.isfile(f_name) else ""
     # Calamari Text
-    f_name = os.path.join(config.TEXT_DIR, filename.split('.')[0] + '.pred.txt')
+    f_name = os.path.join(config.TEXT_OUT, filename.split('.')[0] + '_CalamariOcrPlugin.txt')
     text_data_calamari = open(f_name).read() if os.path.isfile(f_name) else ""
     print(bin_data)
     data = {
@@ -124,10 +124,10 @@ def page_show_uploads():
 def run_pipeline(filename=None):
     print('Running East Pipeline')
     import os
-    command = 'cd ../.. && make east_airflow_demo binarisation crop2box tesseract calmari text2file'
+    command = 'cd ../.. && make east_ui binarisation crop2box tesseract calmari text2file'
     if filename:
         # https://www.cyberciti.biz/faq/redirecting-stderr-to-stdout/
-        command = command + ' &>vitaflow/annotate_server/static/data/logs/{}.log &'.format(
+        command = command + ' >vitaflow/annotate_server/static/data/logs/{}.log &'.format(
             filename)
         print('Running East Pipeline, Logs are at vitaflow/annotate_server/static/data/logs/{}.log &'.format(filename))
     os.system(command)

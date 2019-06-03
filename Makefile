@@ -69,6 +69,11 @@ east:		### OCR Pipeline - Run complete pipeline
 	@echo "--------------------------------------------------------------------------------------------------------------"
 	@echo "Running East Pipeline Completed !"
 
+east_ui:		### OCR Pipeline - Run complete pipeline
+	@echo "Running East Pipeline "
+	python vitaflow/pipeline/models/east_model.py --images_dir=vitaflow/annotate_server/static/data/preprocess/
+	@echo "--------------------------------------------------------------------------------------------------------------"
+	@echo "Running East Pipeline Completed !"
 
 crop2box:
 	python vitaflow/pipeline/preprocessor/crop_to_box.py

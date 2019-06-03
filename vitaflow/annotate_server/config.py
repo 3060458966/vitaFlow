@@ -1,4 +1,6 @@
 import os
+import sys
+sys.path.append("../../")
 
 from vitaflow.pipeline.interfaces.utils import check_n_create
 
@@ -26,8 +28,11 @@ DOC2TEXT_DIR = "static/data/preprocess"
 # To store text images
 TEXT_IMAGES = "static/data/text_images"
 
-# To store annotation txt files
+# To store intermediate ocr txt files
 TEXT_DIR = "static/data/text_data"
+
+# Final text out put data
+TEXT_OUT = "static/data/text_out"
 
 # Testing Purposes
 DUMMY_DIR = "static/data/DUMMY"

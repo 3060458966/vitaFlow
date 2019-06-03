@@ -23,6 +23,7 @@ TEXT_OCR_DATA_DIR = "vitaflow/annotate_server/static/data/text_data"
 
 TEXT_OUT_DIR = "vitaflow/annotate_server/static/data/text_out"
 
+LOGS_DIR = "vitaflow/annotate_server/static/data/logs/"
 
 def create_dirs():
     # create missing dir
@@ -31,7 +32,8 @@ def create_dirs():
                      CROPPER_ROOT_DIR,
                      BINARIZE_ROOT_DIR,
                      TEXT_OCR_DATA_DIR,
-                     TEXT_OUT_DIR]:
+                     TEXT_OUT_DIR,
+                     LOGS_DIR]:
         each_dir = os.path.join(each_dir)
         print(each_dir)
         check_n_create(each_dir)

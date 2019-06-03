@@ -1,4 +1,6 @@
 import os
+import argparse
+
 
 try:
     from grpc_predict import read_image, get_text_segmentation_pb
@@ -16,6 +18,7 @@ from vitaflow.demo_config import create_dirs
 def east_flow_predictions(input_dir=demo_config.IMAGE_ROOT_DIR,
                           output_dir=demo_config.EAST_OUT_DIR,
                           model_dir=demo_config.EAST_MODEL_DIR):
+    print(">>>>>>>>>>>>>>>>>>>>>", input_dir)
     images_dir = input_dir
     images = get_images(images_dir)
     predict_fn = predictor.from_saved_model(model_dir)
@@ -31,5 +34,8 @@ def east_flow_predictions(input_dir=demo_config.IMAGE_ROOT_DIR,
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--images_dir', default=demo_config.IMAGE_ROOT_DIR, help='input images', type=str)
     create_dirs()
-    east_flow_predictions()
+    args = parser.parse_args()
+    east_flow_predictions(input_dir=args.images_dir)
