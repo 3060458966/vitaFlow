@@ -1,7 +1,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/imaginea/vitaflow/blob/master/LICENSE)
 
 
-# VitaFlow - VideoImageTextAudioFlow
+# [VitaFlow - VideoImageTextAudioFlow](what_is_vitaflow.md)
  ![](vitaflow-logo.png)
 
 ## Environment Setup
@@ -64,6 +64,7 @@ Sample out of a Image:
 - TODO
 
 ### Docker
+- TODO 
 
 ---------------------------------------------------------------------------------------------------------
 
@@ -72,10 +73,9 @@ How to tune EAST model and Calamari model for better OCR.
 
 ## Training
 
-### EAST
-- TODO
+### [EAST](vitaflow/playground/east/README.md)
 
 ### Calamari
 - TODO
 
-# Disclaimer : VitaFlow is in it's infant stage! Review and feedbacks are welcomed!
+# Disclaimer : VitaFlow is in it's infant stage! Feel free to review/suggestion/feedbacks!
