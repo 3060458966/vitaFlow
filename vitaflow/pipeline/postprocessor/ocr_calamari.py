@@ -38,6 +38,7 @@ class CalamariArgs:
     text_files = None
     verbose = False
     voter = 'confidence_voter_default_ctc'
+    extension = None
 
 
 class CalamariOcrPlugin(OCRPluginInterface):

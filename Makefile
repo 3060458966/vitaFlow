@@ -50,6 +50,7 @@ ocr_pipeline: data_cleanup preprocess binarisation text2lineimages tesseract cal
 
 data_cleanup:		### OCR Pipeline - Clean all sub folder
 	@echo "Starting "
+	rm -rf data/text_out/*
 	rm -rf vitaflow/annotate_server/static/data/preprocess/*
 	rm -rf vitaflow/annotate_server/static/data/east/*
 	rm -rf vitaflow/annotate_server/static/data/binarisation/*
@@ -81,17 +82,23 @@ crop2box:
 
 text2file:
 	python vitaflow/pipeline/postprocessor/text_file_stitch.py
+	cp -r vitaflow/annotate_server/static/data/text_out data/
 
+east_ocr_pipeline: data_cleanup east binarisation crop2box tesseract calmari text2file ### EAST OCR Pipeline - Run complete pipeline
 
-east_ocr_pipeline:	data_cleanup east binarisation crop2box tesseract calmari text2file ### EAST OCR Pipeline - Run complete pipeline
 
 airflow:
-	echo "export AIRFLOW_HOME=~/airflow or appropriate"
-	echo "using AIRFLOW_HOME=${AIRFLOW_HOME}"
+	find . -name "*.pyc" -exec rm -f {} \;
+	echo "=====> export AIRFLOW_HOME=~/airflow or appropriate path "
+	echo "=====> using AIRFLOW_HOME=${AIRFLOW_HOME}"
+	mkdir -p  /tmp/vitaflow/receipts/
+	cp -r data/receipts/ /tmp/vitaflow/receipts/
 	rsync -av  vitaflow ${AIRFLOW_HOME}/dags/
 	sed -i'.orig' 's/load_examples = True/load_examples = False/g' ${AIRFLOW_HOME}/airflow.cfg
-	echo "On shell 1: airflow webserver"
-	echo "On shell 2: airflow scheduler"
+	echo "=====> export AIRFLOW_HOME=~/airflow or appropriate path "
+	echo "=====> On shell 1 >>> airflow webserver"
+	echo "=====> export AIRFLOW_HOME=~/airflow or appropriate path "
+	echo "=====> On shell 2 >>> airflow scheduler"
 
 ###################################################################
 ########################################################## DOCKER #

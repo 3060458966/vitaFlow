@@ -18,7 +18,7 @@ class ImageBinariseOperator(BaseOperator):
                  source_folder,
                  destination_folder,
                  *args, **kwargs):
-        super(ImageBinariseOperator, self).__init__(*args, **kwargs)
+        BaseOperator.__init__(self, *args, **kwargs)
         self.source_folder = source_folder
         self.destination_folder = destination_folder
 
@@ -29,22 +29,24 @@ class ImageBinariseOperator(BaseOperator):
 
 
 class EastCropperImageOperator(BaseOperator):
-    template_fields = ('source_folder', 'destination_folder')
+    template_fields = ('source_folder', 'destination_folder', 'east_out_dir')
     ui_color = '#A6E6A6'
 
     @apply_defaults
     def __init__(self,
                  source_folder,
                  destination_folder,
+                 east_out_dir,
                  *args, **kwargs):
-        super(ImageBinariseOperator, self).__init__(*args, **kwargs)
+        BaseOperator.__init__(self, *args, **kwargs)
         self.source_folder = source_folder
         self.destination_folder = destination_folder
+        self.east_out_dir = east_out_dir
 
     def execute(self, context):
-        cropper = EastCropperImagePlugin()
+        cropper = EastCropperImagePlugin(east_out_dir=self.east_out_dir)
         cropper.process_files(source_dir=self.source_folder,
-                                   destination_dir=self.destination_folder)
+                              destination_dir=self.destination_folder)
 
 
 class TessaractOcrOperator(BaseOperator):
@@ -56,7 +58,7 @@ class TessaractOcrOperator(BaseOperator):
                  source_folder,
                  destination_folder,
                  *args, **kwargs):
-        super(TessaractOcrOperator, self).__init__(*args, **kwargs)
+        BaseOperator.__init__(self, *args, **kwargs)
         self.source_folder = source_folder
         self.destination_folder = destination_folder
 
@@ -75,26 +77,7 @@ class CalamariOcrOperator(BaseOperator):
                  source_folder,
                  destination_folder,
                  *args, **kwargs):
-        super(CalamariOcrOperator, self).__init__(*args, **kwargs)
-        self.source_folder = source_folder
-        self.destination_folder = destination_folder
-
-    def execute(self, context):
-        ocr = CalamariOcrPlugin()
-        ocr.process_files(source_dir=self.source_folder,
-                          destination_dir=self.destination_folder)
-
-
-class CalamariOcrOperator(BaseOperator):
-    template_fields = ('source_folder', 'destination_folder')
-    ui_color = '#A6E6A6'
-
-    @apply_defaults
-    def __init__(self,
-                 source_folder,
-                 destination_folder,
-                 *args, **kwargs):
-        super(CalamariOcrOperator, self).__init__(*args, **kwargs)
+        BaseOperator.__init__(self, *args, **kwargs)
         self.source_folder = source_folder
         self.destination_folder = destination_folder
 
@@ -113,7 +96,7 @@ class TextCombinerOperator(BaseOperator):
                  source_folder,
                  destination_folder,
                  *args, **kwargs):
-        super(TextCombinerOperator, self).__init__(*args, **kwargs)
+        BaseOperator.__init__(self, *args, **kwargs)
         self.source_folder = source_folder
         self.destination_folder = destination_folder
 

@@ -1,48 +1,28 @@
-    # TODO add version number
-#DL libraries
-tensorflow >= 1.11.0
-tensorflow-gpu >= 1.11.0
-tensorflow-probability >= 0.3.0
-tensorflow-probability-gpu >= 0.3.0
+#arrange in alphabetic order
+apache-airflow[mysql, postgres, celery, rabbitmq]
+calamari_ocr==0.3.3
+flask
+flask_cors
+gin-config
+matplotlib
+numpy
+pandas
+py4j==0.10.7
+pytesseract
+psycopg2
+requests
+sklearn
+shapely
+tensorflow
+tensorflow-gpu
 tensorflow-serving-api
 tensorflow-hub
-tensorflow-model-server
-# Standard Framework
-# prefer do manually
-# cython3 --install-option="--no-cython-compile"
-pandas
-numpy
-sklearn
 tqdm
 overrides
-flask
-requests
-#misc
-xmltodict
-# image libraries
-wand
-pillow
 opencv-python
-# OCR liibs
-pytesseract
-pyocr
-# Code Quality
-flake8
-# Deep Learning framework
-# prefer do manually
-# .[tensorflow-cpu] --install-option='-e'
-# NLP
-spacy
-# Audio Libs
-# pyAudioAnalysis
-# eyed3
-# pydub
-# madmom
-librosa
-soundfile
-# Distributed Framework
-pyspark
-# sphinx doc
-recommonmark
-sphinx_rtd_theme
-gin-config
+
+
+
+
+
+
