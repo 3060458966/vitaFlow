@@ -13,7 +13,7 @@ import gin
 
 
 
-from vitaflow.pipeline.airflow.preprocessor import ImageBinarisePreprocessorOperator
+from vitaflow.pipeline.airflow.operators import ImageBinarisePreprocessor
 
 input_dir="/opt/github/vitaFlow/vitaflow/annotate_server/static/data/preprocess"
 output_dir="/opt/tmp/vitaFlow/east_airflow_demo/"
@@ -55,7 +55,7 @@ start = DummyOperator(task_id='start', dag=dag)
 
 prediction_task = PythonOperator(task_id='east_predictions',
                                  python_callable=east_flow_predictions)
-binarization = ImageBinarisePreprocessorOperator(task_id="binarization",
+binarization = ImageBinarisePreprocessor(task_id="binarization",
                                                  source_folder=output_dir,
                                                  destination_folder="/opt/tmp/vitaFlow/east_binarized/")
 end = DummyOperator(task_id='end', dag=dag)
