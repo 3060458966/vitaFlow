@@ -68,6 +68,8 @@ Sample out of a Image:
 
 **Airflow**
 
+![](docs/images/east_airflow.png)
+
 ```
    export AIRFLOW_HOME=~/airflow # set airflow config dir (default : ~/airflow)
    mkdir $AIRFLOW_HOME
