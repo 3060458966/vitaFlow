@@ -129,6 +129,35 @@ Sample out of a Image:
   
 ```
 
+```
+#following make command will copy the entire vitaflow python code base to $AIRFLOW_HOME/dags folder
+export AIRFLOW_HOME=~/airflow
+make airflow
+```
+
+On a new shell:
+```
+export AIRFLOW_HOME=~/airflow
+airflow webserver
+```
+
+On a new shell:
+```
+export AIRFLOW_HOME=~/airflow
+airflow scheduler
+```
+
+Airflow UI @ http://0.0.0.0:8080/admin/
+ - Turn on the `east_flow` DAG
+ - Click `east_flow` DAG
+ - On the UI click `Trigger DAG`
+ 
+Data:
+- Check (vitaflow/pipeline/east_airflow_demo/east_flow.py)[vitaflow/pipeline/east_airflow_demo/east_flow.py] for data folder configuration detatils
+- I general for Airflow **/tmp/vitaflow/** is used
+
+**Note:** It is jus a POC to use the pipeline as part of Airflow. Stay tuned for improvements.
+
 ### Docker
 - TODO 
 
