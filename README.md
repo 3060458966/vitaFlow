@@ -153,17 +153,19 @@ Airflow UI @ http://0.0.0.0:8080/admin/
  - On the UI click `Trigger DAG`
  
 Data:
-- Check (vitaflow/pipeline/east_airflow_demo/east_flow.py)[vitaflow/pipeline/east_airflow_demo/east_flow.py] for data folder configuration detatils
-- I general for Airflow **/tmp/vitaflow/** is used
+- Check [vitaflow/pipeline/east_airflow_demo/east_flow.py](vitaflow/pipeline/east_airflow_demo/east_flow.py) for data folder configuration detatils
+- In general for Airflow **/tmp/vitaflow/** is used
 
 **Note:** It is jus a POC to use the pipeline as part of Airflow. Stay tuned for improvements.
 
 ### Docker
+
 - TODO 
 
 ---------------------------------------------------------------------------------------------------------
 
 ## Developers
+
 How to tune EAST model and Calamari model for better OCR.
 
 ## Training
@@ -171,6 +173,7 @@ How to tune EAST model and Calamari model for better OCR.
 ### [EAST](vitaflow/playground/east/README.md)
 
 ### Calamari
+
 - TODO
 
-# Disclaimer : VitaFlow is in it's infant stage! Feel free to review/suggestion/feedbacks!
+##### Disclaimer : VitaFlow is in it's infant stage! Feel free to review/suggestion/feedbacks!
