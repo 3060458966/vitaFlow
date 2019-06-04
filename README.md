@@ -1,22 +1,28 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/imaginea/vitaflow/blob/master/LICENSE)
 
 
-# [VitaFlow - VideoImageTextAudioFlow](what_is_vitaflow.md)
+# VitaFlow - VideoImageTextAudioFlow
  ![](vitaflow-logo.png)
+
+## [Introduction](what_is_vitaflow.md)
 
 ## Environment Setup
 
 **Python Setup**
 
 ```
-conda create -n vf python=3.5
-conda activate vf
-export SLUGIFY_USES_TEXT_UNIDECODE=yes
-pip install -r requirements.txt
+   git clone https://github.com/Imaginea/vitaFlow/
+   cd vitaFlow/
+   conda create -n vf python=3.5
+   conda activate vf
+   export SLUGIFY_USES_TEXT_UNIDECODE=yes
+   pip install -r requirements.txt
 ```
 
-**Ubuntu Setup**
+**Ubuntu Specific Installation**
 - https://www.tensorflow.org/tfx/serving/setup
+- `sudo apt-get -y install postgresql postgresql-contrib libpq-dev postgresql-client postgresql-client-common`
+
 
 ---------------------------------------------------------------------------------------------------------
 
@@ -40,14 +46,14 @@ The pipeline components includes:
   - X51008142068_**TessaractOcrPlugin**.txt : **Ouput using PyTesseract**
   
 ```
-make east_ocr_pipeline
+   make east_ocr_pipeline
 ```
 
 **Web UI**
 ```
-cd path/to/vitaflow/
-cd vitaflow/annotate_server/
-python ./demo.py
+   cd path/to/vitaflow/
+   cd vitaflow/annotate_server/
+   python ./demo.py
 ```
 Access the Web UI @ http://127.0.0.1:5000/
 
@@ -61,7 +67,65 @@ Sample out of a Image:
 
 
 **Airflow**
-- TODO
+
+```
+   export AIRFLOW_HOME=~/airflow # set airflow config dir (default : ~/airflow)
+   mkdir $AIRFLOW_HOME
+
+   airflow version # init cnf files
+   airflow initdb # init sqlite file
+
+   sed -i'.orig' 's/dag_dir_list_interval = 300/dag_dir_list_interval = 1/g' $AIRFLOW_HOME/airflow.cfg
+   sed -i'.orig' 's/job_heartbeat_sec = 5/job_heartbeat_sec = 1/g' $AIRFLOW_HOME/airflow.cfg
+   sed -i'.orig' 's/scheduler_heartbeat_sec = 5/scheduler_heartbeat_sec = 1/g' $AIRFLOW_HOME/airflow.cfg
+   sed -i'.orig' 's/dag_default_view = tree/dag_default_view = graph/g' $AIRFLOW_HOME/airflow.cfg
+   sed -i'.orig' 's/load_examples = True/load_examples = False/g' $AIRFLOW_HOME/airflow.cfg
+    
+    #create Posgresql user and DB for Airflow metadata store
+    sudo -u postgres psql
+    CREATE ROLE airflow WITH
+      LOGIN
+      SUPERUSER
+      INHERIT
+      CREATEDB
+      CREATEROLE
+      REPLICATION;
+      
+    CREATE ROLE airflow;
+    CREATE DATABASE airflow;
+    GRANT ALL PRIVILEGES on database airflow to airflow;
+    ALTER ROLE airflow SUPERUSER;
+    ALTER ROLE airflow CREATEDB;
+    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public to airflow;
+    \password airflow
+    ALTER ROLE "airflow" WITH LOGIN;
+    
+    \c airflow
+    \conninfo 
+    \q
+    
+    
+    sudo vim /etc/postgresql/10/main/pg_hba.conf
+    # IPv4 local connections:
+    host    all             all             0.0.0.0/0               md5
+    
+    sudo vim /etc/postgresql/10/main/postgresql.conf
+    listen_addresses = '*'
+    
+    sudo service postgresql restart
+    
+    vim $AIRFLOW_HOME/airflow.cfg
+    # update below 4 parameters
+    executor = LocalExecutor
+    sql_alchemy_conn = postgresql+psycopg2://airflow:airflow@localhost:5432/airflow
+    
+    broker_url = postgresql+psycopg2://airflow:airflow@localhost:5432/airflow
+    celery_result_backend = postgresql+psycopg2://airflow:airflow@localhost:5432/airflow
+    
+    airflow resetdb --yes
+    airflow initdb
+  
+```
 
 ### Docker
 - TODO 
