@@ -12,8 +12,8 @@ def split_data(in_directory, out_directory):
     data = os.listdir(in_directory)
 
     # Split the files into train test and val
-    train_val, test = train_test_split(data, test_size = 0.2,random_state=42)
-    train, val = train_test_split(train_val, test_size = 0.1,random_state=42)
+    train_val, test = train_test_split(data, test_size = 0.10,random_state=42)
+    train, val = train_test_split(train_val, test_size = 0.10,random_state=42)
 
     #move the files into train folder
     for i in train:
