@@ -84,7 +84,7 @@ class Textbound(object):
     @classmethod
     def from_str(cls, string, discont_rule=None):
         try:
-            id_, type_offsets, text = string.split('\t')
+            id_, type_offsets, text = string.split('\t',2)
             type_, offsets = type_offsets.split(' ', 1)
             offsets = cls._parse_offsets(offsets)
             was_discontinuous = False
