@@ -86,7 +86,7 @@ def _collect_data(directory, input_ext, transcription_ext):
   return data_files
 
 
-@registry.register_problem()
+@registry.register_dataset()
 class Librispeech(speech_recognition.SpeechRecognitionProblem):
   """Problem spec for Librispeech using clean and noisy data."""
 
@@ -180,7 +180,7 @@ class Librispeech(speech_recognition.SpeechRecognitionProblem):
           self.generator(data_dir, tmp_dir, self.DEV_DATASETS), dev_paths)
 
 
-@registry.register_problem()
+@registry.register_dataset()
 class LibrispeechTrainFullTestClean(Librispeech):
   """Problem to train on full 960h, but evaluate on clean data only."""
 
@@ -228,7 +228,7 @@ class LibrispeechTrainFullTestClean(Librispeech):
     return "%s-%s%s*" % (path, suffix, shard_str)
 
 
-@registry.register_problem()
+@registry.register_dataset()
 class LibrispeechCleanSmall(Librispeech):
   """Problem spec for Librispeech using 100h clean train and clean eval data."""
 
@@ -238,7 +238,7 @@ class LibrispeechCleanSmall(Librispeech):
   TEST_DATASETS = _LIBRISPEECH_TEST_DATASETS[:1]
 
 
-@registry.register_problem()
+@registry.register_dataset()
 class LibrispeechClean(Librispeech):
   """Problem spec for Librispeech using 460h clean train and clean eval data."""
 
@@ -248,7 +248,7 @@ class LibrispeechClean(Librispeech):
   TEST_DATASETS = _LIBRISPEECH_TEST_DATASETS[:1]
 
 
-@registry.register_problem()
+@registry.register_dataset()
 class LibrispeechNoisy(Librispeech):
   """Problem spec for Librispeech using 400h noisy train and noisy eval data."""
 

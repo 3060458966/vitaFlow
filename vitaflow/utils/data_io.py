@@ -1,18 +1,77 @@
 import os
 import sys
+import argparse
 import tarfile
 import zipfile
-import collections
 import requests
-import numpy as np
 import tensorflow as tf
-
 
 from six.moves import urllib
 
+def _download(url, filename, path):
+    def _progress(count, block_size, total_size):
+        percent = float(count * block_size) / float(total_size) * 100.
+        # pylint: disable=cell-var-from-loop
+        sys.stdout.write('\r>> Downloading %s %.1f%%' %
+                         (filename, percent))
+        sys.stdout.flush()
+
+    filepath = os.path.join(path, filename)
+    filepath, _ = urllib.request.urlretrieve(url, filepath, _progress)
+    print(filepath)
+    statinfo = os.stat(filepath)
+    print('Successfully downloaded {} {} bytes.'.format(
+        filename, statinfo.st_size))
+
+    return filepath
+
+
+def _extract_google_drive_file_id(url):
+    # id is between `/d/` and '/'
+    #     url_suffix = url[url.find('/d/')+3:]
+    #     file_id = url_suffix[:url_suffix.find('/')]
+    #     print(file_id)
+    file_id = url.split("=")[-1]
+    return file_id
+
+
+def _download_from_google_drive(url, filename, path):
+    """Adapted from `https://github.com/saurabhshri/gdrive-downloader`
+    """
+    print(url)
+
+    def _get_confirm_token(response):
+        for key, value in response.cookies.items():
+            if key.startswith('download_warning'):
+                return value
+        return None
+
+    file_id = _extract_google_drive_file_id(url)
+
+    gurl = "https://docs.google.com/uc?export=download"
+    sess = requests.Session()
+    response = sess.get(gurl, params={'id': file_id}, stream=True)
+    print(response)
+    token = _get_confirm_token(response)
+
+    if token:
+        params = {'id': file_id, 'confirm': token}
+        response = sess.get(gurl, params=params, stream=True)
+
+    filepath = os.path.join(path, filename)
+    CHUNK_SIZE = 32768
+    with tf.gfile.GFile(filepath, "wb") as f:
+        for chunk in response.iter_content(CHUNK_SIZE):
+            if chunk:
+                f.write(chunk)
+
+    print('Successfully downloaded {}.'.format(filename))
+
+    return filepath
 
 def maybe_create_dir(directory):
     if not os.path.exists(directory):
+        print("Creating {}".format(directory))
         os.makedirs(directory)
         return True
     return False
@@ -79,63 +138,32 @@ def maybe_download(urls, path, filenames=None, extract=False):
     return result
 
 
-def _download(url, filename, path):
-    def _progress(count, block_size, total_size):
-        percent = float(count * block_size) / float(total_size) * 100.
-        # pylint: disable=cell-var-from-loop
-        sys.stdout.write('\r>> Downloading %s %.1f%%' %
-                         (filename, percent))
-        sys.stdout.flush()
+def main():
 
-    filepath = os.path.join(path, filename)
-    filepath, _ = urllib.request.urlretrieve(url, filepath, _progress)
-    print(filepath)
-    statinfo = os.stat(filepath)
-    print('Successfully downloaded {} {} bytes.'.format(
-        filename, statinfo.st_size))
+    parser = argparse.ArgumentParser(description='vitaFlow downloader')
+    parser.add_argument('--urls',
+                        required=True,
+                        help=' A (list of) urls to download files')
+    parser.add_argument('--path',
+                        required=True,
+                        help='The destination path to save the files.')
+    parser.add_argument('--filenames',
+                        required=False,
+                        type=list,
+                        default=None,
+                        help=' A (list of) strings of the file names. If given, \
+                                must have the same length with :attr:`urls`. If `None`, \
+                                filenames are extracted from :attr:`urls`.')
+    parser.add_argument('--extract',
+                        required=False,
+                        default=False,
+                        help='extrWhether to extract compressed files.act')
 
-    return filepath
+    args = parser.parse_args()
+
+    maybe_download(urls=args.urls, path=args.path, filenames=args.filenames, extract=args.extract)
 
 
-def _extract_google_drive_file_id(url):
-    # id is between `/d/` and '/'
-    #     url_suffix = url[url.find('/d/')+3:]
-    #     file_id = url_suffix[:url_suffix.find('/')]
-    #     print(file_id)
-    file_id = url.split("=")[-1]
-    return file_id
+if __name__ == "__main__":
+    main()
 
-
-def _download_from_google_drive(url, filename, path):
-    """Adapted from `https://github.com/saurabhshri/gdrive-downloader`
-    """
-    print(url)
-
-    def _get_confirm_token(response):
-        for key, value in response.cookies.items():
-            if key.startswith('download_warning'):
-                return value
-        return None
-
-    file_id = _extract_google_drive_file_id(url)
-
-    gurl = "https://docs.google.com/uc?export=download"
-    sess = requests.Session()
-    response = sess.get(gurl, params={'id': file_id}, stream=True)
-    print(response)
-    token = _get_confirm_token(response)
-
-    if token:
-        params = {'id': file_id, 'confirm': token}
-        response = sess.get(gurl, params=params, stream=True)
-
-    filepath = os.path.join(path, filename)
-    CHUNK_SIZE = 32768
-    with tf.gfile.GFile(filepath, "wb") as f:
-        for chunk in response.iter_content(CHUNK_SIZE):
-            if chunk:
-                f.write(chunk)
-
-    print('Successfully downloaded {}.'.format(filename))
-
-    return filepath

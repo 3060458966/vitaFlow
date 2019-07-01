@@ -4,10 +4,10 @@ import librosa
 import numpy as np
 
 from tqdm import tqdm
-from vitaflow.internal import IPreprocessor, HParams
+from vitaflow.internal import DatasetInterface, HParams
 
 
-class TEDLiumDataset(IPreprocessor):
+class TEDLiumDataset(DatasetInterface):
     """
     Download the dataset from https://projets-lium.univ-lemans.fr/wp-content/uploads/corpus/TED-LIUM/TEDLIUM_release1.tar.gz
     And unzip as shown below
@@ -46,7 +46,7 @@ class TEDLiumDataset(IPreprocessor):
                                 file_1.wav ...
     """
     def __init__(self, hparams=None):
-        IPreprocessor.__init__(self, hparams=hparams)
+        DatasetInterface.__init__(self, hparams=hparams)
         self._hparams = HParams(hparams, self.default_hparams())
 
         self.extract_speech_clips()
@@ -93,7 +93,7 @@ class TEDLiumDataset(IPreprocessor):
 
         :return: A dictionary of hyperparameters with default values
         """
-        hparams = IPreprocessor.default_hparams()
+        hparams = DatasetInterface.default_hparams()
 
         hparams.update({
             "experiment_name": "TEDLiumDataset",

@@ -15,8 +15,6 @@
 A model class that uses BiLSTM word and char level embeddings
 """
 
-import os
-
 import tensorflow as tf
 from overrides import overrides
 from tensorflow.contrib import lookup
@@ -24,7 +22,7 @@ from tensorflow.contrib.learn import ModeKeys
 
 import gin
 from vitaflow.internal.features.feature_types import ITextFeature
-from vitaflow.internal.models.model_base import ModelBase
+from vitaflow.models.internals.model_base import ModelBase
 from vitaflow.iterators.text.csv_seq_to_seq_iterator import CSVSeqToSeqIterator
 from vitaflow.iterators.text.vocabulary import SpecialTokens
 from vitaflow.utils.print_helper import *

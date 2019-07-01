@@ -19,7 +19,7 @@
 Registries are instances of `Registry`.
 
 See `Registries` for a centralized list of object registries
-(models, problems, hyperparameter sets, etc.).
+(models, datasets, data iterators).
 
 New functions and classes can be registered using `.register`. The can be
 accessed/queried similar to dictionaries, keyed by default by `snake_case`
@@ -33,44 +33,16 @@ class MyModel(VfModel):
   ...
 
 'my_model' in Registries.models  # True
+
 for k in Registries.models:
   print(k)  # prints 'my_model'
 model = Registries.models['my_model'](constructor_arg)
 ```
-
-#### Legacy Support
-
-Define a new model by subclassing VfModel and register it:
-
-```
-@register_model
-class MyModel(VfModel):
-  ...
-```
-
-Access by snake-cased name: `model("my_model")`. If you're using
-`vf_trainer.py`, you can pass on the command-line: `--model=my_model`.
-
-See all the models registered: `list_models()`.
-
-For hyperparameter sets:
-  * Register: `register_hparams`
-  * List: `list_hparams`
-  * Retrieve by name: `hparams`
-  * Command-line flag in `vf_trainer.py`: `--hparams_set=name`
-
-For hyperparameter ranges:
-  * Register: `register_ranged_hparams`
-  * List: `list_ranged_hparams`
-  * Retrieve by name: `ranged_hparams`
-  * Command-line flag in `vf_trainer.py`: `--hparams_range=name`
 """
 
 import collections
 
 from vitaflow.utils import misc_utils
-import tensorflow as tf
-
 from tensorflow.python.util import tf_inspect as inspect  # pylint: disable=g-direct-tensorflow-import
 
 def default_name(class_or_fn):
@@ -90,6 +62,101 @@ def default_name(class_or_fn):
 
 default_object_name = lambda obj: default_name(type(obj))
 
+
+def _on_model_set(k, v):
+    v.REGISTERED_NAME = k
+
+
+def _nargs_validator(nargs, message):
+    """Makes validator for function to ensure it takes nargs args."""
+    if message is None:
+        message = "Registered function must take exactly %d arguments" % nargs
+
+    def f(key, value):
+        del key
+        spec = inspect.getfullargspec(value)
+        if (len(spec.args) != nargs or spec.varargs is not None or
+                spec.varkw is not None):
+            raise ValueError(message)
+
+    return f
+
+
+DatasetSpec = collections.namedtuple("DatasetSpec",
+                                     ["base_name", "was_reversed", "was_copy"])
+
+
+def parse_dataset_name(name):
+    """Determines if dataset_name specifies a copy and/or reversal.
+
+    Args:
+      name: str, dataset name, possibly with suffixes.
+
+    Returns:
+      datasetSpec: namedtuple with ["base_name", "was_reversed", "was_copy"]
+
+    Raises:
+      ValueError if name contains multiple suffixes of the same type
+        ('_rev' or '_copy'). One of each is ok.
+    """
+    # Recursively strip tags until we reach a base name.
+    if name.endswith("_rev"):
+        base, was_reversed, was_copy = parse_dataset_name(name[:-4])
+        if was_reversed:
+            # duplicate rev
+            raise ValueError(
+                "Invalid dataset name %s: multiple '_rev' instances" % name)
+        return DatasetSpec(base, True, was_copy)
+    elif name.endswith("_copy"):
+        base, was_reversed, was_copy = parse_dataset_name(name[:-5])
+        if was_copy:
+            raise ValueError(
+                "Invalid dataset_name %s: multiple '_copy' instances" % name)
+        return DatasetSpec(base, was_reversed, True)
+    else:
+        return DatasetSpec(name, False, False)
+
+
+def get_dataset_name(base_name, was_reversed=False, was_copy=False):
+    """Construct a dataset name from base and reversed/copy options.
+
+    Inverse of `parse_dataset_name`.
+
+    Args:
+      base_name: base dataset name. Should not end in "_rev" or "_copy"
+      was_reversed: if the dataset is to be reversed
+      was_copy: if the dataset is to be copied
+
+    Returns:
+      string name consistent with use with `parse_dataset_name`.
+
+    Raises:
+      ValueError if `base_name` ends with "_rev" or "_copy"
+    """
+    if any(base_name.endswith(suffix) for suffix in ("_rev", "_copy")):
+        raise ValueError("`base_name` cannot end in '_rev' or '_copy'")
+    name = base_name
+    if was_copy:
+        name = "%s_copy" % name
+    if was_reversed:
+        name = "%s_rev" % name
+    return name
+
+
+def _dataset_name_validator(k, v):
+    del v
+    if parse_dataset_name(k).base_name != k:
+        raise KeyError(
+            "Invalid dataset name: cannot end in %s or %s" % ("_rev", "_copy"))
+
+
+def _on_dataset_set(k, v):
+    v.name = k
+
+
+def _call_value(k, v):
+    del k
+    return v()
 
 class Registry(object):
     """Dict-like class for managing function registrations.
@@ -143,7 +210,7 @@ class Registry(object):
             when a key is not provided
           validator (optional): if given, this is run before setting a given (key,
             value) pair. Accepts (key, value) and should raise if there is a
-            problem. Overwriting existing keys is not allowed and is checked
+            dataset. Overwriting existing keys is not allowed and is checked
             separately. Values are also checked to be callable separately.
           on_set (optional): callback function accepting (key, value) pair which is
             run after an item is successfully set.
@@ -279,109 +346,7 @@ class Registry(object):
         return self[key] if key in self else default
 
 
-def _on_model_set(k, v):
-    v.REGISTERED_NAME = k
-
-
-def _nargs_validator(nargs, message):
-    """Makes validator for function to ensure it takes nargs args."""
-    if message is None:
-        message = "Registered function must take exactly %d arguments" % nargs
-
-    def f(key, value):
-        del key
-        spec = inspect.getfullargspec(value)
-        if (len(spec.args) != nargs or spec.varargs is not None or
-                spec.varkw is not None):
-            raise ValueError(message)
-
-    return f
-
-
-ProblemSpec = collections.namedtuple("ProblemSpec",
-                                     ["base_name", "was_reversed", "was_copy"])
-
-
-def parse_problem_name(name):
-    """Determines if problem_name specifies a copy and/or reversal.
-
-    Args:
-      name: str, problem name, possibly with suffixes.
-
-    Returns:
-      ProblemSpec: namedtuple with ["base_name", "was_reversed", "was_copy"]
-
-    Raises:
-      ValueError if name contains multiple suffixes of the same type
-        ('_rev' or '_copy'). One of each is ok.
-    """
-    # Recursively strip tags until we reach a base name.
-    if name.endswith("_rev"):
-        base, was_reversed, was_copy = parse_problem_name(name[:-4])
-        if was_reversed:
-            # duplicate rev
-            raise ValueError(
-                "Invalid problem name %s: multiple '_rev' instances" % name)
-        return ProblemSpec(base, True, was_copy)
-    elif name.endswith("_copy"):
-        base, was_reversed, was_copy = parse_problem_name(name[:-5])
-        if was_copy:
-            raise ValueError(
-                "Invalid problem_name %s: multiple '_copy' instances" % name)
-        return ProblemSpec(base, was_reversed, True)
-    else:
-        return ProblemSpec(name, False, False)
-
-
-def get_problem_name(base_name, was_reversed=False, was_copy=False):
-    """Construct a problem name from base and reversed/copy options.
-
-    Inverse of `parse_problem_name`.
-
-    Args:
-      base_name: base problem name. Should not end in "_rev" or "_copy"
-      was_reversed: if the problem is to be reversed
-      was_copy: if the problem is to be copied
-
-    Returns:
-      string name consistent with use with `parse_problem_name`.
-
-    Raises:
-      ValueError if `base_name` ends with "_rev" or "_copy"
-    """
-    if any(base_name.endswith(suffix) for suffix in ("_rev", "_copy")):
-        raise ValueError("`base_name` cannot end in '_rev' or '_copy'")
-    name = base_name
-    if was_copy:
-        name = "%s_copy" % name
-    if was_reversed:
-        name = "%s_rev" % name
-    return name
-
-
-def _problem_name_validator(k, v):
-    del v
-    if parse_problem_name(k).base_name != k:
-        raise KeyError(
-            "Invalid problem name: cannot end in %s or %s" % ("_rev", "_copy"))
-
-
-def _on_problem_set(k, v):
-    v.name = k
-
-
-def _call_value(k, v):
-    del k
-    return v()
-
-
-def _hparams_value_transformer(key, value):
-    out = value()
-    if out is None:
-        raise TypeError("HParams %s is None. Make sure the registered function "
-                        "returns the HParams object" % key)
-    return out
-
+############################################################################################################
 
 class Registries(object):
     """Object holding `Registry` objects."""
@@ -391,162 +356,55 @@ class Registries(object):
 
     models = Registry("models", on_set=_on_model_set)
 
-    optimizers = Registry(
-        "optimizers",
-        validator=_nargs_validator(
-            2, "Registered optimizer functions must take exactly two arguments: "
-               "learning_rate (float) and hparams (HParams)."))
+    datasets = Registry("datasets", validator=_dataset_name_validator, on_set=_on_dataset_set)
 
-    hparams = Registry("hparams", value_transformer=_hparams_value_transformer)
-
-    ranged_hparams = Registry(
-        "ranged_hparams",
-        validator=_nargs_validator(
-            1, "Registered ranged_hparams functions must take a single argument, "
-               "the RangedHParams object."))
-
-    problems = Registry(
-        "problems", validator=_problem_name_validator, on_set=_on_problem_set)
-
-    attacks = Registry("attacks", value_transformer=_call_value)
-
-    attack_params = Registry("attack_params", value_transformer=_call_value)
-
-    pruning_params = Registry("pruning_params", value_transformer=_call_value)
-
-    pruning_strategies = Registry("pruning_strategies")
-
-    mtf_layers = Registry(
-        "mtf_layers",
-        validator=_nargs_validator(
-            2, "Registered layer functions must take exaction two arguments: "
-               "hparams (HParams) and prefix (str)."))
-
-    env_problems = Registry("env_problems", on_set=_on_problem_set)
+    data_iterators = Registry("data_iterators", on_set=_on_dataset_set)
 
 
-# consistent version of old API
-model = Registries.models.__getitem__
 list_models = lambda: sorted(Registries.models)
 register_model = Registries.models.register
 
+list_data_iterators = lambda: sorted(Registries.data_iterators)
+register_data_iterator = Registries.data_iterators.register
 
-def optimizer(name):
-    """Get pre-registered optimizer keyed by name.
-
-    `name` should be snake case, though SGD -> sgd, RMSProp -> rms_prop and
-    UpperCamelCase -> snake_case conversions included for legacy support.
-
-    Args:
-      name: name of optimizer used in registration. This should be a snake case
-        identifier, though others supported for legacy reasons.
-
-    Returns:
-      optimizer
-    """
-    warn_msg = ("Please update `registry.optimizer` callsite "
-                "(likely due to a `HParams.optimizer` value)")
-    if name == "SGD":
-        name = "sgd"
-        tf.logging.warning("'SGD' optimizer now keyed by 'sgd'. %s" % warn_msg)
-    elif name == "RMSProp":
-        name = "rms_prop"
-        tf.logging.warning(
-            "'RMSProp' optimizer now keyed by 'rms_prop'. %s" % warn_msg)
-    else:
-        snake_name = misc_utils.camelcase_to_snakecase(name)
-        if name != snake_name:
-            tf.logging.warning(
-                "optimizer names now keyed by snake_case names. %s" % warn_msg)
-            name = snake_name
-    return Registries.optimizers[name]
+list_base_datasets = lambda: sorted(Registries.datasets)
+register_dataset = Registries.datasets.register
 
 
-list_optimizers = lambda: sorted(Registries.optimizers)
-register_optimizer = Registries.optimizers.register
-
-hparams = Registries.hparams.__getitem__
-register_hparams = Registries.hparams.register
-
-list_env_problems = lambda: sorted(Registries.env_problems)
-register_env_problem = Registries.env_problems.register
-
-
-def list_hparams(prefix=None):
-    hp_names = sorted(Registries.hparams)
-    if prefix:
-        hp_names = [name for name in hp_names if name.startswith(prefix)]
-    return hp_names
-
-
-ranged_hparams = Registries.ranged_hparams.__getitem__
-list_ranged_hparams = lambda: sorted(Registries.ranged_hparams)
-register_ranged_hparams = Registries.ranged_hparams.register
-
-base_problem = Registries.problems.__getitem__
-list_base_problems = lambda: sorted(Registries.problems)
-register_base_problem = Registries.problems.register
-
-# Keeping for back-compatibility
-list_problems = list_base_problems
-register_problem = register_base_problem
-
-
-def problem(problem_name):
-    """Get possibly copied/reversed problem registered in `base_registry`.
+def dataset(dataset_name):
+    """Get  dataset registered in `base_registry`.
 
     Args:
-      problem_name: string problem name. See `parse_problem_name`.
+      dataset_name: string dataset name.
 
     Returns:
-      possibly reversed/copied version of base problem registered in the given
-      registry.
+      dataset registered in the given  registry.
     """
-    spec = parse_problem_name(problem_name)
-    return Registries.problems[spec.base_name](
-        was_copy=spec.was_copy, was_reversed=spec.was_reversed)
+    return Registries.datasets[dataset_name]
 
 
-def env_problem(env_problem_name, batch_size):
-    """Get and initialize the `EnvProblem` with the given name and batch size.
+def data_iterator(data_iterator_name):
+    """Get  dataset iterator registered in `base_registry`.
 
     Args:
-      env_problem_name: string name of the registered env problem.
-      batch_size: batch_size to initialize the env problem with.
+      data_iterator_name: string dataset iterator name.
 
     Returns:
-      an initialized EnvProblem with the given batch size.
+      dataset iterator registered in the given  registry.
     """
 
-    ep_cls = Registries.env_problems[env_problem_name]
-    ep = ep_cls()
-    ep.initialize(batch_size=batch_size)
-    return ep
+    return Registries.data_iterators[data_iterator_name]
 
+def model(model_name):
+    """Get  dataset registered in `base_registry`.
 
-attack = Registries.attacks.__getitem__
-list_attacks = lambda: sorted(Registries.attacks)
-register_attack = Registries.attacks.register
+    Args:
+      dataset_name: string dataset name.
 
-attack_params = Registries.attack_params.__getitem__
-list_attack_params = lambda: sorted(Registries.attack_params)
-register_attack_params = Registries.attack_params.register
-
-pruning_params = Registries.pruning_params.__getitem__
-list_pruning_params = lambda: sorted(Registries.pruning_params)
-register_pruning_params = Registries.pruning_params.register
-
-pruning_strategy = Registries.pruning_strategies.__getitem__
-list_pruning_strategies = lambda: sorted(Registries.pruning_strategies)
-register_pruning_strategy = Registries.pruning_strategies.register
-
-# deprecated functions - plurals inconsistent with rest
-# deprecation decorators added 2019-01-25
-attacks = tf.contrib.framework.deprecated(None, "Use registry.attack")(attack)
-pruning_strategies = tf.contrib.framework.deprecated(
-    None, "Use registry.pruning_strategy")(
-    pruning_strategy)
-
+    Returns:
+      dataset registered in the given  registry.
+    """
+    return Registries.models[model_name]
 
 def display_list_by_prefix(names_list, starting_spaces=0):
     """Creates a help string for names_list grouped by prefix."""
@@ -571,44 +429,16 @@ Registry contents:
   Models:
 %s
 
-  HParams:
+  Datasets:
 %s
 
-  RangedHParams:
-%s
-
-  Problems:
-%s
-
-  Optimizers:
-%s
-
-  Attacks:
-%s
-
-  Attack HParams:
-%s
-
-  Pruning HParams:
-%s
-
-  Pruning Strategies:
-%s
-
-  Env Problems:
+  Data Iterators:
 %s
 """
     lists = tuple(
         display_list_by_prefix(entries, starting_spaces=4) for entries in [  # pylint: disable=g-complex-comprehension
             list_models(),
-            list_hparams(),
-            list_ranged_hparams(),
-            list_base_problems(),
-            list_optimizers(),
-            list_attacks(),
-            list_attack_params(),
-            list_pruning_params(),
-            list_pruning_strategies(),
-            list_env_problems(),
+            list_base_datasets(),
+            list_data_iterators(),
         ])
     return help_str % lists

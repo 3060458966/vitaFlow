@@ -56,7 +56,7 @@ class AudioTimitProblem(problem.Problem):
     return example
 
 
-@registry.register_problem
+@registry.register_dataset
 class AudioTimitCharactersTune(AudioTimitProblem):
   """TIMIT to characters."""
 
@@ -74,7 +74,7 @@ class AudioTimitCharactersTune(AudioTimitProblem):
                      "targets": 256}
 
 
-@registry.register_problem
+@registry.register_dataset
 class AudioTimitTokens8kTune(AudioTimitProblem):
   """TIMIT to tokens."""
 
@@ -105,13 +105,13 @@ class AudioTimitTokens8kTune(AudioTimitProblem):
     hp.target_space_id = 3
 
 
-@registry.register_problem
+@registry.register_dataset
 class AudioTimitTokens8kTest(AudioTimitTokens8kTune):
   """TIMIT to tokens."""
   pass
 
 
-@registry.register_problem
+@registry.register_dataset
 class ParsingEnglishPtb8k(problem.Problem):
   """Parsing."""
 
@@ -142,7 +142,7 @@ class ParsingEnglishPtb8k(problem.Problem):
     hp.target_space_id = 15
 
 
-@registry.register_problem
+@registry.register_dataset
 class ParsingEnglishPtb16k(problem.Problem):
   """Parsing."""
 

@@ -3,11 +3,11 @@ import argparse
 
 
 try:
-    from grpc_predict import read_image, get_text_segmentation_pb
-    from icdar_data import get_images
+    from vitaflow.models.image.east.grpc_predict import read_image, get_text_segmentation_pb
+    from vitaflow.datasets.image.icdar.icdar_data import get_images
 except:
-    from vitaflow.playground.east.grpc_predict import read_image, get_text_segmentation_pb
-    from vitaflow.playground.east.icdar_data import get_images
+    from vitaflow.models.image.east.grpc_predict import read_image, get_text_segmentation_pb
+    from vitaflow.datasets.image.icdar.icdar_data import get_images
 
 from tensorflow.contrib import predictor
 from vitaflow import demo_config

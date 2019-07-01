@@ -89,16 +89,17 @@ east_ocr_pipeline: data_cleanup east binarisation crop2box tesseract calmari tex
 
 airflow:
 	find . -name "*.pyc" -exec rm -f {} \;
-	echo "=====> export AIRFLOW_HOME=~/airflow or appropriate path "
-	echo "=====> using AIRFLOW_HOME=${AIRFLOW_HOME}"
+	echo "export AIRFLOW_HOME=~/airflow or appropriate path"
+	echo "using AIRFLOW_HOME=${AIRFLOW_HOME}"
+	rm -rf /tmp/vitaflow/
 	mkdir -p  /tmp/vitaflow/receipts/
-	cp -r data/receipts/ /tmp/vitaflow/receipts/
+	cp -r data/receipts/* /tmp/vitaflow/receipts/
 	rsync -av  vitaflow ${AIRFLOW_HOME}/dags/
 	sed -i'.orig' 's/load_examples = True/load_examples = False/g' ${AIRFLOW_HOME}/airflow.cfg
-	echo "=====> export AIRFLOW_HOME=~/airflow or appropriate path "
-	echo "=====> On shell 1 >>> airflow webserver"
-	echo "=====> export AIRFLOW_HOME=~/airflow or appropriate path "
-	echo "=====> On shell 2 >>> airflow scheduler"
+	echo "export AIRFLOW_HOME=~/airflow or appropriate path"
+	echo "On shell 1 >>> airflow webserver"
+	echo "export AIRFLOW_HOME=~/airflow or appropriate path"
+	echo "On shell 2 >>> airflow scheduler"
 
 ###################################################################
 ########################################################## DOCKER #

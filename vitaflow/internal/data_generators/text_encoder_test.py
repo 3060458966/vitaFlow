@@ -14,7 +14,7 @@
 # limitations under the License.
 # Forked from https://github.com/tensorflow/tensor2tensor
 
-"""Tests for tensor2tensor.data_generators.text_encoder.
+"""Tests for tensor2tensor.datasets.text_encoder.
 Forked from https://github.com/tensorflow/tensor2tensor
 """
 

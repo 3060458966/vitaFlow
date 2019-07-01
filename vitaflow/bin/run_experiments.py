@@ -15,11 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Run Tensorflow Experiments for given dataset, iterator and model
+"""
+Run Tensorflow Experiments for given dataset, iterator and model
 
 run_experiments \
 	--mode=train \
-	--config=path/to/config.gin
+	--config=path/to/gin_config.gin
 """
 
 import importlib
@@ -33,13 +34,24 @@ import gin
 sys.path.append(os.path.abspath('.'))
 
 from vitaflow.engines.experiments import Experiments
+from vitaflow.datasets import datasets # pylint: disable=unused-import
+from vitaflow.iterators import iterators # pylint: disable=unused-import
+from vitaflow.models import models # pylint: disable=unused-import
 
+import vitaflow.utils.registry as registry
 flags = tf.flags
-flags.DEFINE_string("config", "Google gin config file", "The config to use.")
+flags.DEFINE_string("config_file", "Google gin config file", "path/to/gin_config.gin")
 flags.DEFINE_string("mode", "train", "train/retrain/predict/predict_instance")
-flags.DEFINE_string("test_file_path", "", "")
-
+flags.DEFINE_bool("registry_help", False,
+    "If True, logs the contents of the registry and exits.")
 FLAGS = flags.FLAGS
+
+
+def maybe_log_registry_and_exit():
+    if FLAGS.registry_help:
+        tf.logging.info(registry.help_string())
+        sys.exit(0)
+
 
 def main():
     print(' -' * 35)
@@ -51,5 +63,8 @@ def main():
 
 
 if __name__ == "__main__":
-    gin.parse_config_file(FLAGS.config)
+    # If we just have to print the registry, do that and exit early.
+    maybe_log_registry_and_exit()
+
+    gin.parse_config_file(FLAGS.config_file)
     main()

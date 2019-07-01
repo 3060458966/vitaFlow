@@ -6,8 +6,7 @@ from vitaflow.pipeline.preprocessor.crop_to_box import EastCropperImagePlugin
 
 from vitaflow.pipeline.postprocessor.ocr_tesseract import TessaractOcrPlugin
 from vitaflow.pipeline.postprocessor.ocr_calamari import CalamariOcrPlugin
-from vitaflow.pipeline.postprocessor.text_file_stitch import TextCombiner
-
+from vitaflow.pipeline.postprocessor.text_file_stitch import TextFile
 
 class ImageBinariseOperator(BaseOperator):
     template_fields = ('source_folder', 'destination_folder')
@@ -101,6 +100,6 @@ class TextCombinerOperator(BaseOperator):
         self.destination_folder = destination_folder
 
     def execute(self, context):
-        aggregator = TextCombiner()
+        aggregator = TextFile()
         aggregator.process_files(source_dir=self.source_folder,
                                  destination_dir=self.destination_folder)

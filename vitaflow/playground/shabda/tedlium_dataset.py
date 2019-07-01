@@ -21,12 +21,12 @@ from pyspark.sql import SparkSession
 
 from vitaflow.playground.shabda.utils import to_clips, _generate_tf_Records
 from vitaflow.utils.hyperparams import HParams
-from vitaflow.internal import IPreprocessor
+from vitaflow.internal import DatasetInterface
 from vitaflow.utils.print_helper import print_info
 # from vitaflow.core import IPreprocessor, HParams
 # from vitaflow.helpers.print_helper import print_info
 
-class TEDLiumDataset(IPreprocessor):
+class TEDLiumDataset(DatasetInterface):
     """
     Download the dataset from https://projets-lium.univ-lemans.fr/wp-content/uploads/corpus/TED-LIUM/TEDLIUM_release1.tar.gz
     And unzip as shown below
@@ -78,7 +78,7 @@ class TEDLiumDataset(IPreprocessor):
                                 1.tfrecord ...
     """
     def __init__(self, hparams=None):
-        IPreprocessor.__init__(self, hparams=hparams)
+        DatasetInterface.__init__(self, hparams=hparams)
         self._hparams = HParams(hparams, self.default_hparams())
 
         self._spark_master = self._hparams.spark_master
@@ -176,7 +176,7 @@ class TEDLiumDataset(IPreprocessor):
 
         :return: A dictionary of hyperparameters with default values
         """
-        hparams = IPreprocessor.default_hparams()
+        hparams = DatasetInterface.default_hparams()
 
         hparams.update({
             "experiment_name": "TEDLiumDataset",

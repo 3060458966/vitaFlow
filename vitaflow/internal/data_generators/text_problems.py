@@ -657,7 +657,7 @@ def text2text_generate_encoded(sample_generator,
     yield sample
 
 
-@registry.register_problem
+@registry.register_dataset
 class Text2textTmpdir(Text2TextProblem):
   """Allows training a Text2TextProblem without defining a subclass.
 
@@ -709,7 +709,7 @@ class Text2TextRemotedir(Text2textTmpdir):
     return self.SRC_REMOTE_DIR
 
 
-@registry.register_problem
+@registry.register_dataset
 class Text2textTmpdirTokens(Text2textTmpdir):
   """Allows training a token-based variant of Text2textTmpdir.
 

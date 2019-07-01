@@ -15,6 +15,4 @@
 Modules of vitaflow library core.
 """
 
-from vitaflow.internal.ipreprocessor import IPreprocessor
-from vitaflow.internal.iterator_base import IIteratorBase
 from vitaflow.internal.features.feature_types import ITextFeature

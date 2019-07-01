@@ -1,9 +1,12 @@
 #arrange in alphabetic order
-apache-airflow[mysql, postgres, celery, rabbitmq]
+apache-airflow[postgres, celery, rabbitmq]
 calamari_ocr==0.3.3
+django
+djangorestframework
 flask
 flask_cors
 gin-config
+grpcio
 matplotlib
 numpy
 pandas
@@ -11,8 +14,10 @@ py4j==0.10.7
 pytesseract
 psycopg2
 requests
+scipy
 sklearn
 shapely
+spacy
 tensorflow
 tensorflow-gpu
 tensorflow-serving-api

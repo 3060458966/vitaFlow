@@ -1,19 +1,14 @@
 """
 """
-import time
 import logging
 import gin
 import tensorflow as tf
-from tqdm import tqdm
 import os
-import numpy as np
-import cv2
-from east_model import EASTModel
+from vitaflow.models.image.east.east_model import EASTModel
+from vitaflow.datasets.image.icdar.icdar_data import ICDARTFDataset, get_images
+from vitaflow.iterators.image.icdar_iterator import CIDARIterator
 from executor import Executor
-from icdar_data import ICDARTFDataset, get_images
-from iterator import CIDARIterator
-from executor import Executor
-from prediction import *
+from vitaflow.models.image.east.prediction import *
 
 
 # get TF logger
@@ -146,7 +141,7 @@ def run(save_checkpoints_steps=10,
 
 
 if __name__ == "__main__":
-    gin.parse_config_file('config.gin')
+    gin.parse_config_file('east_config.gin')
     obj = ICDARTFDataset()
     obj.run()
     run()

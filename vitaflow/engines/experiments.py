@@ -25,10 +25,11 @@ import gin
 import tensorflow as tf
 from tqdm import tqdm
 
-from vitaflow.utils.hyperparams import HParams
+from vitaflow.iterators.iterators import get_data_iterator
 from vitaflow.utils.print_helper import *
 from vitaflow.engines.executor import Executor
-
+from vitaflow.datasets.datasets import get_dataset
+from vitaflow.models.models import get_model
 # get TF logger
 log = logging.getLogger('tensorflow')
 log.setLevel(logging.DEBUG)
@@ -48,6 +49,9 @@ class Experiments(object):
 
     def __init__(self,
                  num_epochs=5,
+                 dataset_name=None,
+                 iterator_name=None,
+                 model_name=None,
                  dataset_class_with_path=None,
                  iterator_class_with_path=None,
                  model_class_with_path=None,
@@ -66,6 +70,9 @@ class Experiments(object):
         self._model = None
 
         self.num_epochs = num_epochs
+        self._dataset_name = dataset_name
+        self._iterator_name = iterator_name
+        self._model_name = model_name
         self.dataset_class_with_path = dataset_class_with_path
         self.iterator_class_with_path = iterator_class_with_path
         self.model_class_with_path = model_class_with_path
@@ -86,19 +93,20 @@ class Experiments(object):
         """
         return getattr(import_module(package), name)
 
-    def get_dataset_reference(self, dataset_class_with_path):
+    def get_dataset_reference(self, dataset_name):
         """
         Uses the dataset name to get the reference from the dataset factory class
-        :param dataset_class_with_path:
+        :param dataset_name:
         :return:
-        Eg: vitaflow.data.text.conll.conll_2003_dataset.CoNLL2003Dataset
+        Eg: Get the name by running vitaflow/bin/run_experiments.py --registry_help
         """
 
-        print_debug("Dynamically importing dataset : " + dataset_class_with_path)
-        package, name = dataset_class_with_path.rsplit(".", 1)
-        # dataset = DatasetFactory.get(dataset_file_name=dataset_name)
-        dataset = self._get_class(package=package, name=name)
-        return dataset
+        print_debug("Dynamically importing dataset : " + dataset_name)
+        # package, name = dataset_name.rsplit(".", 1)
+        # # dataset = DatasetFactory.get(dataset_file_name=dataset_name)
+        # dataset = self._get_class(package=package, name=name)
+
+        return get_dataset(dataset_name)
     
     def get_iterator_reference(self, iterator_class_with_path):
         """
@@ -109,9 +117,9 @@ class Experiments(object):
 
         print_debug("Dynamically importing iterator : " + iterator_class_with_path)
         # iterator = DataIteratorFactory.get(iterator_name=iterator_name)
-        package, name = iterator_class_with_path.rsplit(".", 1)
-        iterator = self._get_class(package=package, name=name)
-        return iterator
+        # package, name = iterator_class_with_path.rsplit(".", 1)
+        # iterator = self._get_class(package=package, name=name)
+        return get_data_iterator(iterator_class_with_path)
 
     def get_model_reference(self, model_class_with_path):
         """
@@ -121,17 +129,17 @@ class Experiments(object):
         """
 
         print_debug("Dynamically importing model : " + model_class_with_path)
-        package, name = model_class_with_path.rsplit(".", 1)
-        model = self._get_class(package=package, name=name)
+        # package, name = model_class_with_path.rsplit(".", 1)
+        # model = self._get_class(package=package, name=name)
         # model = ModelsFactory.get(model_name=model_name)
-        return model
+        return get_model(model_class_with_path)
 
     def check_interoperability_n_import(self):
         # Using factory classes get the handle for the actual classes from string
         if self.plug_dataset:
-            self._dataset = self.get_dataset_reference(self.dataset_class_with_path)
-        self._data_iterator = self.get_iterator_reference(self.iterator_class_with_path)
-        self._model = self.get_model_reference(self.model_class_with_path)
+            self._dataset = self.get_dataset_reference(self._dataset_name)
+        self._data_iterator = self.get_iterator_reference(self._iterator_name)
+        self._model = self.get_model_reference(self._model_name)
 
         # if not self._data_iterator.dataset_type == self._dataset.dataset_type:
         #     print_info("Possible data iterators are: {}".
@@ -170,13 +178,12 @@ class Experiments(object):
             self._dataset = self._dataset()
         #TODO avoid loading train data while prediction
         self._data_iterator = self._data_iterator(dataset=self._dataset)
-        print_error(self._model)
         self._model = self._model(data_iterator=self._data_iterator)
 
     def test_iterator(self):
         iterator = self._data_iterator.train_input_fn().make_initializable_iterator()
         training_init_op = iterator.initializer
-        num_samples = self._data_iterator.num_train_samples
+        num_samples = self._data_iterator.num_train_examples
         next_element = iterator.get_next()
         batch_size = self.batch_size
 
@@ -209,7 +216,7 @@ class Experiments(object):
     
     def run(self, args):
         self.setup()
-        num_samples = self._data_iterator.num_train_samples
+        num_samples = self._data_iterator.num_train_examples
         print_info("Number of trianing samples : {}".format(num_samples))
         batch_size = self.batch_size
         num_epochs = self.num_epochs

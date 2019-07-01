@@ -20,7 +20,7 @@ import tensorflow as tf
 
 from vitaflow.playground.shabda.core.feature_types.shabda_wav_pair_feature import ShabdaWavPairFeature
 from vitaflow.utils.hyperparams import HParams
-from vitaflow.internal.models.model_base import ModelBase
+from vitaflow.models.internals.model_base import ModelBase
 from vitaflow.utils.print_helper import print_error
 # from vitaflow.core.hyperparams import HParams
 # from vitaflow.core.models.model_base import ModelBase

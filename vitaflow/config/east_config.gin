@@ -1,0 +1,33 @@
+import vitaflow.config.east_imports
+
+experiment_name="CoNLL2002"
+get_experiment_root_directory.value="/opt/tmp/vitaflow/"
+
+#Experiments
+Experiments.batch_size=8
+Experiments.num_epochs=5
+Experiments.dataset_name="icdartf_dataset"
+Experiments.iterator_name="cidar_iterator"
+Experiments.model_name="east_model"
+Experiments.save_checkpoints_steps=112
+Experiments.keep_checkpoint_max=5
+Experiments.save_summary_steps=5
+Experiments.log_step_count_steps=2
+Experiments.clear_model_data=False
+Experiments.plug_dataset=True
+Experiments.mode='train'
+
+# DataSet
+ICDARTFDataset.data_dir = "/opt/data/icdar/2019/"
+ICDARTFDataset.out_dir = "/opt/tmp/icdar/2019"
+
+# Iterator
+CIDARIterator.data_dir = "/opt/tmp/icdar/2019/"
+CIDARIterator.batch_size = 10
+CIDARIterator.prefetch_size = 1
+
+# Model
+EASTModel.model_root_directory = "/opt/tmp/icdar/2019/"
+EASTModel.learning_rate = 0.0001
+
+

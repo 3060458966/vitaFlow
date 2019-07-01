@@ -55,6 +55,7 @@ class TextFile(TextCombiner):
         for each_dir in os.listdir(source_dir):
             in_files = self.get_all_input_files(source_dir=os.path.join(source_dir, each_dir),
                                                 input_files_types=[".txt"])
+
             #sort based on file number
             in_files = sorted(in_files,
                    key=lambda x: int(os.path.splitext(os.path.basename(x).split(os.extsep)[0])[0]))

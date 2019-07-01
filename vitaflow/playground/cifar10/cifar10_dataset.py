@@ -21,7 +21,7 @@ import shutil
 import numpy as np
 import gin
 # from vitaflow.internal import HParams
-from vitaflow.internal import IPreprocessor
+from vitaflow.internal import DatasetInterface
 from vitaflow.utils.print_helper import print_info
 from vitaflow.utils.data_io import maybe_download
 import matplotlib.pyplot as plt
@@ -29,9 +29,9 @@ from sklearn.preprocessing import LabelBinarizer
 from vitaflow.utils import registry
 
 
-@registry.register_problem
+@registry.register_dataset
 @gin.configurable
-class Cifar10Dataset(IPreprocessor):
+class Cifar10Dataset(DatasetInterface):
     """
     Cifar10 Dataset Downloader and preprocessor
     Link: https://www.cs.toronto.edu/~kriz/cifar.html
@@ -55,13 +55,13 @@ class Cifar10Dataset(IPreprocessor):
         self._test_data_path = test_data_path
         self._over_write = over_write
         
-        IPreprocessor.__init__(self,
-                               experiment_name=experiment_name,
-                               preprocessed_data_path=preprocessed_data_path,
-                               experiment_root_directory=experiment_root_directory,
-                               train_data_path=train_data_path,
-                               validation_data_path=validation_data_path,
-                               test_data_path=test_data_path)
+        DatasetInterface.__init__(self,
+                                  experiment_name=experiment_name,
+                                  preprocessed_data_path=preprocessed_data_path,
+                                  experiment_root_directory=experiment_root_directory,
+                                  train_data_path=train_data_path,
+                                  validation_data_path=validation_data_path,
+                                  test_data_path=test_data_path)
 
         self._download_path = os.path.join(
             self._experiment_root_directory,

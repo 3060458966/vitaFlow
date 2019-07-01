@@ -1,4 +1,0 @@
-"""
-ExampleGen for TFX pipeline
-"""
-

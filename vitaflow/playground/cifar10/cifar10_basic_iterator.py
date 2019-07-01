@@ -28,7 +28,7 @@ import gin
 
 # from vitaflow.internal import HParams
 from vitaflow.internal.features import ImageFeature
-from vitaflow.internal import IPreprocessor
+from vitaflow.internal import DatasetInterface
 from vitaflow.internal import IIteratorBase
 from vitaflow.internal.models import ClassifierBase
 from vitaflow.utils.os_helper import check_n_makedirs, print_info, print_error
@@ -36,7 +36,7 @@ from vitaflow.engines import Executor
 
 
 @gin.configurable
-class Cifar10BasicIterator(IPreprocessor, IIteratorBase, ImageFeature):
+class Cifar10BasicIterator(DatasetInterface, IIteratorBase, ImageFeature):
     """
     References: https://github.com/Hvass-Labs/TensorFlow-Tutorials/blob/master/cifar10.py
     https://cntk.ai/pythondocs/CNTK_201A_CIFAR-10_DataLoader.html
@@ -55,13 +55,13 @@ class Cifar10BasicIterator(IPreprocessor, IIteratorBase, ImageFeature):
                  validation_data_path="val",
                  test_data_path="test"):
         ImageFeature.__init__(self)
-        IPreprocessor.__init__(self,
-                               experiment_name=experiment_name,
-                               preprocessed_data_path=preprocessed_data_path,
-                               experiment_root_directory=experiment_root_directory,
-                               train_data_path=train_data_path,
-                               validation_data_path=validation_data_path,
-                               test_data_path=test_data_path)
+        DatasetInterface.__init__(self,
+                                  experiment_name=experiment_name,
+                                  preprocessed_data_path=preprocessed_data_path,
+                                  experiment_root_directory=experiment_root_directory,
+                                  train_data_path=train_data_path,
+                                  validation_data_path=validation_data_path,
+                                  test_data_path=test_data_path)
         IIteratorBase.__init__(self,
                                experiment_root_directory=experiment_root_directory,
                                experiment_name=experiment_name,

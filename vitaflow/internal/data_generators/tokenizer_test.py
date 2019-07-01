@@ -14,7 +14,7 @@
 # limitations under the License.
 # Forked from https://github.com/tensorflow/tensor2tensor
 
-"""Tests for tensor2tensor.data_generators.tokenizer."""
+"""Tests for tensor2tensor.datasets.tokenizer."""
 
 import os
 import random

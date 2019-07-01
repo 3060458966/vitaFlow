@@ -27,7 +27,7 @@ from overrides import overrides
 from tqdm import tqdm
 
 from vitaflow.engines import Executor
-from vitaflow.internal import IIteratorBase
+from vitaflow.iterators.internal.iterator_base import IteratorInterface
 from vitaflow.internal.features import ITextFeature
 from vitaflow.internal.nlp.spacy_helper import naive_vocab_creater, get_char_vocab, vocab_to_tsv
 from vitaflow.iterators.text.vocabulary import SpecialTokens
@@ -36,7 +36,7 @@ from vitaflow.utils.print_helper import print_info
 from vitaflow.metrices.text.naive_metrics import get_naive_metrics
 
 @gin.configurable
-class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
+class CSVSeqToSeqIterator(IteratorInterface, ITextFeature):
     def __init__(self,
                  experiment_root_directory,
                  experiment_name,
@@ -61,12 +61,12 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         :param hparams:
         :param dataset:
         '''
-        IIteratorBase.__init__(self,
-                               experiment_root_directory=experiment_root_directory,
-                               experiment_name=experiment_name,
-                               batch_size=batch_size,
-                               prefetch_size=prefetch_size,
-                               dataset=dataset)
+        IteratorInterface.__init__(self,
+                                   experiment_root_directory=experiment_root_directory,
+                                   experiment_name=experiment_name,
+                                   batch_size=batch_size,
+                                   prefetch_size=prefetch_size,
+                                   dataset=dataset)
         ITextFeature.__init__(self)
 
         self._experiment_root_directory = experiment_root_directory
@@ -147,7 +147,7 @@ class CSVSeqToSeqIterator(IIteratorBase, ITextFeature):
         return self.NUM_TAGS
 
     @property
-    def num_train_samples(self):
+    def num_train_examples(self):
         """
         Number of training samples
         """

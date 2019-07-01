@@ -211,7 +211,7 @@ def add_problem_hparams(hparams, problem_name_or_instance):
     if isinstance(problem_name_or_instance, problem_lib.Problem):
         problem = problem_name_or_instance
     else:
-        problem = registry.problem(problem_name_or_instance)
+        problem = registry.dataset(problem_name_or_instance)
     p_hparams = problem.get_hparams(hparams)
     hparams.problem = problem
     hparams.problem_hparams = p_hparams

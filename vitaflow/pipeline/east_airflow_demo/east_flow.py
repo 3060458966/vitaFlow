@@ -29,7 +29,6 @@ def create_dirs():
                      TEXT_OUT_DIR,
                      LOGS_DIR]:
         each_dir = os.path.join(each_dir)
-        print(each_dir)
         check_n_create(each_dir)
 
 
@@ -42,7 +41,9 @@ default_args = {
     'retry_delay': timedelta(seconds=30)
 }
 
-task_name = 'east_flow1'
+task_name = 'east_flow'
+
+create_dirs()
 
 dag = DAG(task_name,
           start_date=datetime(2019, 4, 29),

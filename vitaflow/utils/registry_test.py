@@ -90,12 +90,12 @@ class RegistryClassTest(tf.test.TestCase):
 class EnvProblemRegistryTest(tf.test.TestCase):
 
   def setUp(self):
-    registry.Registries.env_problems._clear()
+    registry.Registries.env_datasets._clear()
 
   def testEnvProblem(self):
     # Register this class and expect to get it back.
 
-    @registry.register_env_problem
+    @registry.register_env_dataset
     class EnvProb(object):
 
       batch_size = None
@@ -105,7 +105,7 @@ class EnvProblemRegistryTest(tf.test.TestCase):
 
     # Get it with given batch_size.
     batch_size = 100
-    ep = registry.env_problem("env_prob", batch_size)
+    ep = registry.env_dataset("env_prob", batch_size)
 
     # name property is set.
     self.assertEqual("env_prob", ep.name)

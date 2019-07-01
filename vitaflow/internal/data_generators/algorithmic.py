@@ -89,7 +89,7 @@ class AlgorithmicProblem(problem.Problem):
     p.target_space_id = problem.SpaceID.DIGIT_1
 
 
-@registry.register_problem
+@registry.register_dataset
 class AlgorithmicIdentityBinary40(AlgorithmicProblem):
   """Problem spec for algorithmic binary identity task."""
 
@@ -119,7 +119,7 @@ class AlgorithmicIdentityBinary40(AlgorithmicProblem):
       yield {"inputs": inputs, "targets": inputs}
 
 
-@registry.register_problem
+@registry.register_dataset
 class AlgorithmicIdentityDecimal40(AlgorithmicIdentityBinary40):
   """Problem spec for algorithmic decimal identity task."""
 
@@ -128,7 +128,7 @@ class AlgorithmicIdentityDecimal40(AlgorithmicIdentityBinary40):
     return 10
 
 
-@registry.register_problem
+@registry.register_dataset
 class AlgorithmicShiftDecimal40(AlgorithmicProblem):
   """Problem spec for algorithmic decimal shift task."""
 
@@ -163,7 +163,7 @@ class AlgorithmicShiftDecimal40(AlgorithmicProblem):
     return 80
 
 
-@registry.register_problem
+@registry.register_dataset
 class AlgorithmicReverseBinary40(AlgorithmicProblem):
   """Problem spec for algorithmic binary reversing task."""
 
@@ -193,7 +193,7 @@ class AlgorithmicReverseBinary40(AlgorithmicProblem):
       yield {"inputs": inputs, "targets": list(reversed(inputs))}
 
 
-@registry.register_problem
+@registry.register_dataset
 class AlgorithmicReverseDecimal40(AlgorithmicReverseBinary40):
   """Problem spec for algorithmic decimal reversing task."""
 
@@ -271,7 +271,7 @@ def reverse_generator_nlplike(nbr_symbols,
     yield {"inputs": inputs, "targets": list(reversed(inputs))}
 
 
-@registry.register_problem
+@registry.register_dataset
 class AlgorithmicReverseNlplike8k(AlgorithmicProblem):
   """Problem spec for algorithmic nlp-like reversing task."""
 
@@ -292,7 +292,7 @@ class AlgorithmicReverseNlplike8k(AlgorithmicProblem):
     return 70
 
 
-@registry.register_problem
+@registry.register_dataset
 class AlgorithmicReverseNlplike32k(AlgorithmicReverseNlplike8k):
   """Problem spec for algorithmic nlp-like reversing task, 32k vocab."""
 
@@ -325,7 +325,7 @@ def random_number_lower_endian(length, base):
   return prefix + [np.random.randint(base - 1) + 1]  # Last digit is not 0.
 
 
-@registry.register_problem
+@registry.register_dataset
 class AlgorithmicAdditionBinary40(AlgorithmicProblem):
   """Problem spec for algorithmic binary addition task."""
 
@@ -366,7 +366,7 @@ class AlgorithmicAdditionBinary40(AlgorithmicProblem):
       yield {"inputs": inputs, "targets": targets}
 
 
-@registry.register_problem
+@registry.register_dataset
 class AlgorithmicAdditionDecimal40(AlgorithmicAdditionBinary40):
   """Problem spec for algorithmic decimal addition task."""
 
@@ -375,7 +375,7 @@ class AlgorithmicAdditionDecimal40(AlgorithmicAdditionBinary40):
     return 10
 
 
-@registry.register_problem
+@registry.register_dataset
 class AlgorithmicMultiplicationBinary40(AlgorithmicProblem):
   """Problem spec for algorithmic binary multiplication task."""
 
@@ -417,7 +417,7 @@ class AlgorithmicMultiplicationBinary40(AlgorithmicProblem):
       yield {"inputs": inputs, "targets": targets}
 
 
-@registry.register_problem
+@registry.register_dataset
 class AlgorithmicMultiplicationDecimal40(AlgorithmicMultiplicationBinary40):
   """Problem spec for algorithmic decimal multiplication task."""
 
@@ -426,7 +426,7 @@ class AlgorithmicMultiplicationDecimal40(AlgorithmicMultiplicationBinary40):
     return 10
 
 
-@registry.register_problem
+@registry.register_dataset
 class AlgorithmicReverseBinary40Test(AlgorithmicReverseBinary40):
   """Test Problem with tiny dataset."""
 
@@ -451,7 +451,7 @@ class AlgorithmicReverseBinary40Test(AlgorithmicReverseBinary40):
     return 1
 
 
-@registry.register_problem
+@registry.register_dataset
 class AlgorithmicSortProblem(AlgorithmicProblem):
   """Problem spec for sorting numbers."""
 
@@ -513,7 +513,7 @@ class AlgorithmicSortProblem(AlgorithmicProblem):
     return defaults + [metrics.Metrics.EDIT_DISTANCE]
 
 
-@registry.register_problem
+@registry.register_dataset
 class TinyAlgo(AlgorithmicIdentityBinary40):
   """A small algorthmic problem for testing."""
 

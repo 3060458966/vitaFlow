@@ -25,11 +25,11 @@ import shutil
 import gin
 
 from vitaflow.internal.dataset_types.dataset_types import ICSVSeq2SeqType1
-from vitaflow.internal.ipreprocessor import IPreprocessor
+from vitaflow.datasets.internal.datasetinterface import DatasetInterface
 from vitaflow.utils.print_helper import *
 
 @gin.configurable
-class CLIENTXDataset(IPreprocessor, ICSVSeq2SeqType1):
+class CLIENTXDataset(DatasetInterface, ICSVSeq2SeqType1):
     """
     Converts the given train, val, test folder to IOB format
 
@@ -57,14 +57,14 @@ class CLIENTXDataset(IPreprocessor, ICSVSeq2SeqType1):
         self._over_write = over_write
         self._temp_data = experiment_root_directory
 
-        IPreprocessor.__init__(self,
-                               experiment_name=experiment_name,
-                               experiment_root_directory=experiment_root_directory,
-                               train_data_path=train_data_path,
-                               validation_data_path=validation_data_path,
-                               test_data_path=test_data_path,
-                               preprocessed_data_path=preprocessed_data_path,
-                               )
+        DatasetInterface.__init__(self,
+                                  experiment_name=experiment_name,
+                                  experiment_root_directory=experiment_root_directory,
+                                  train_data_path=train_data_path,
+                                  validation_data_path=validation_data_path,
+                                  test_data_path=test_data_path,
+                                  preprocessed_data_path=preprocessed_data_path,
+                                  )
         self._prepare_data()
 
     def _create_target_directories(self):

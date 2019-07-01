@@ -24,7 +24,7 @@ import tensorflow as tf
 from tensorflow import TensorShape, Dimension
 
 # from vitaflow.internal import HParams
-from vitaflow.internal import IPreprocessor
+from vitaflow.internal import DatasetInterface
 from vitaflow.internal import IIteratorBase
 from vitaflow.internal.features import GANFeature
 from vitaflow.utils.os_helper import check_n_makedirs, print_info
