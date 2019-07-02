@@ -3,8 +3,12 @@ apache-airflow[postgres, celery, rabbitmq]
 calamari_ocr==0.3.3
 django
 djangorestframework
+drive-cli
 flask
 flask_cors
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
 gin-config
 grpcio
 matplotlib

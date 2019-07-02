@@ -8,6 +8,13 @@ import tensorflow as tf
 
 from six.moves import urllib
 
+import pickle
+import os.path
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+
+
 def _download(url, filename, path):
     def _progress(count, block_size, total_size):
         percent = float(count * block_size) / float(total_size) * 100.
@@ -149,8 +156,9 @@ def main():
                         help='The destination path to save the files.')
     parser.add_argument('--filenames',
                         required=False,
-                        type=list,
+                        type=str,
                         default=None,
+                        nargs="+",
                         help=' A (list of) strings of the file names. If given, \
                                 must have the same length with :attr:`urls`. If `None`, \
                                 filenames are extracted from :attr:`urls`.')

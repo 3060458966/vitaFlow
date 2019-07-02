@@ -88,7 +88,6 @@ class CIDARIterator:
 
         return {"images": image, "score_maps": score_map, "geo_maps": geo_map, "training_masks": training_masks}, training_masks
 
-    
     def _get_train_input_fn(self):
         """
         Inheriting class must implement this

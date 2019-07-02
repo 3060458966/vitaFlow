@@ -3,19 +3,8 @@
 **Refernce Git** : https://github.com/argman/EAST  
 **Paper** : https://arxiv.org/abs/1704.03155v2   
 **Dataset ICDAR** : [2019](http://rrc.cvc.uab.es/?ch=13)   
-- Use Google Drive Link: https://drive.google.com/drive/folders/1ShItNWXyiY1tFDM5W02bceHuJjyeeJl2 and 
-download the files
-
-```sh
-
-cd /opt/data/icdar/2019/
-tree .
-.
-├── 0325updated.task1train(626p)-20190701T072844Z-001.zip # unzip this to train foldr
-├── task1&2_test(361p)-20190701T072809Z-001.zip           # unzip this to test folder
-└── text.task1&2-test（361p)-20190701T072850Z-001.zip     # unzip this to test folder
-
-```
+- Use Google Drive Link: https://drive.google.com/drive/folders/1ShItNWXyiY1tFDM5W02bceHuJjyeeJl2 
+and download the files
 
 ## Text Localization:
 - All images are provided as JPEG or PNG files and the text files are UTF-8 files with CR/LF new line endings.
@@ -36,6 +25,14 @@ x1_3,y1_3,x2_3,y2_3,x3_3,y3_3,x4_3,y4_3, transcript_3
 ## Data Setup
 
 ```sh
+#Mannual way
+mkdir /opt/data/icdar/2019/
+tree .
+.
+├── 0325updated.task1train(626p)-20190701T072844Z-001.zip # unzip this to train foldr
+├── task1&2_test(361p)-20190701T072809Z-001.zip           # unzip this to test folder
+└── text.task1&2-test（361p)-20190701T072850Z-001.zip     # unzip this to test folder
+
 cd /opt/data/icdar/2019
 mkdir train
 mkdir test
@@ -49,10 +46,27 @@ rm -rf 0325updated.task1train\(626p\)/
 rm *\).txt
 rm *\).jpg
 mv `ls  | head -200` ../val/
+cd ..
 unzip task1\&2_test\(361p\)-20190701T072809Z-001.zip -d test
 unzip text.task1\&2-test（361p\)-20190701T072850Z-001.zip -d test
 cd ..
 ls
+
+#OR Through CLI
+
+mkdir -p /opt/data/icdar/
+mkdir train
+mkdir test
+mkdir val
+drive clone https://drive.google.com/drive/folders/1ShItNWXyiY1tFDM5W02bceHuJjyeeJl2
+cd SROIE2019/
+cp 0325updated.task1train\(626p\)/* train/
+cp task1\&2_test\(361p\)/* test/
+cp text.task1\&2-test（361p\)/* test/
+cd train/
+mv `ls  | head -200` ../val/
+cd ..
+mv train/ val/ test/ ../2019/ #make sure folders are not existing
 ```
 
 ## Configuration
