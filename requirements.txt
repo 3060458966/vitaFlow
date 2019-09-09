@@ -29,6 +29,7 @@ tensorflow-hub
 tqdm
 overrides
 opencv-python
+imutils
 
 
 

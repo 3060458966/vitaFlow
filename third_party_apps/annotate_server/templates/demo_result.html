@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<title>Python Flask File Upload Example</title>
+<head>
+    <title>VF Annotation Tool</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+<img src="/static/images/logo.png">
+<div class="container">
+    <a href="/">Home</a>
+    <a href="/uploads">Summary</a>
+
+</div>
+<hr>
+<div class="container">
+
+    <p>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+    <ul class=flashes>
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+    </p>
+</div>
+
+{% if html_data %}
+<div>
+    <b>Uploaded files:</b>
+    <div class="container">
+        {{html_data}}
+    </div>
+</div>
+{% endif %}
+
+{% if data %}
+<div>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-4">
+                <p>INPUT IMAGE:</p>
+                <p><img src="{{data.image_data}}" class="img-fluid"></p>
+            </div>
+            <div class="col-sm-4">
+                <p>TESSERACT:
+                    <br>
+                    <br>
+                <pre>{{data.tesseract}}</pre>
+                </p>
+            </div>
+            <div class="col-sm-4">
+                <p>CALAMARI:
+                    <br>
+                    <br>
+                <pre>{{data.calamari}}</pre>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+</body>
+</html>

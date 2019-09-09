@@ -2,8 +2,8 @@ import os
 from abc import ABC
 from glob import glob
 import concurrent.futures
+from vitaflow.pipeline.interfaces import utils
 
-from vitaflow.annotate_server.common import verify_isimagefile, verify_isfile
 
 try:
     from vitaflow.annotate_server import config
@@ -12,6 +12,16 @@ try:
     sys.path.append('..')
 except ImportError:
     import config
+
+
+
+def verify_isfile(full_path_file_name):
+    return os.path.isfile(full_path_file_name)
+
+
+def verify_isimagefile(full_path_file_name, exts=['.JPG', '.jpg', '.png']):
+    return utils.get_file_ext(full_path_file_name) in exts
+
 
 
 def find_files_with_ext(search_folder, exts=['.JPG', '.jpg', '.png']):

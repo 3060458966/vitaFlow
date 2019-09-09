@@ -1,0 +1,22 @@
+[
+	{
+      "name": "Merchant",
+      "icon": ""
+    },
+  {
+    "name": "Date",
+    "icon": ""
+    },
+	{
+      "name": "Line_Item",
+      "icon": ""
+    },
+	{
+      "name": "Total",
+      "icon": ""
+    },
+	{
+      "name": "Tax",
+      "icon": ""
+    }
+]

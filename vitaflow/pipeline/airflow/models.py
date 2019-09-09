@@ -1,7 +1,7 @@
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
-from vitaflow.pipeline.models.east_model import east_flow_predictions
+from vitaflow.pipeline.models.vf_east_model import east_flow_predictions
 
 
 class EastModelOperator(BaseOperator):
