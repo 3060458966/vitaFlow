@@ -21,8 +21,11 @@ def crop_and_save(cords, image, dest, fname):
     cropped_image = image[y1:y2, x1:x2]
     dest_file = os.path.join(dest, fname)
     dest_file = dest_file + ".jpg"
-    plt.imsave(dest_file, cropped_image, cmap='Greys_r')  # '
-    print('Saved file to {}'.format(dest_file))
+    try:
+        plt.imsave(dest_file, cropped_image, cmap='Greys_r')  # '
+        print('Saved file to {}'.format(dest_file))
+    except:
+        print('>>>>>>>>>>>>>> Missed file to {}'.format(dest_file))
 
 
 def sorting_east_cords_data(gt_txt_file_pointer):

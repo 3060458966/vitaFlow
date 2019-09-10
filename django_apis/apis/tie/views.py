@@ -21,6 +21,22 @@ from .serializers import ImageUploadSerializer
 from rest_framework import status
 from django.conf import settings
 
+import base64
+
+
+def image_as_base64(image_file, format='jpg'):
+    """
+    :param `image_file` for the complete path of image.
+    :param `format` is format for image, eg: `png` or `jpg`.
+    """
+    if not os.path.isfile(image_file):
+        return None
+
+    encoded_string = ''
+    with open(image_file, 'rb') as img_f:
+        encoded_string = base64.b64encode(img_f.read())
+    return 'data:image/%s;base64,%s' % (format, encoded_string)
+
 # Create your views here.
 
 class UploadImage(generics.CreateAPIView):
@@ -33,6 +49,7 @@ class UploadImage(generics.CreateAPIView):
         return stored file name
         :return:
         """
+        print(request.data)
         serializer = self.get_serializer(data = request.data)
         if serializer.is_valid():
             print("Deleting old EAST directories....")
@@ -45,8 +62,11 @@ class UploadImage(generics.CreateAPIView):
 
             obj = serializer.save()
             saved_file_name = str(obj).split('/')[-1]
+            print("Sending Response")
+            return Response({'img_file': saved_file_name}, status=status.HTTP_200_OK)
         else:
-            return Response({serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        print("2 sending response")
         return Response({'img_file': saved_file_name}, status=status.HTTP_200_OK)
 
 class ProcessImage(generics.GenericAPIView):
@@ -67,9 +87,13 @@ class GetTextLocalization(generics.GenericAPIView):
 
     def get(self, request, *args, **kwargs):
         file_name = request.query_params.get('file_name', None)
-        url = os.path.join(settings.EAST_OUT_IMG_DIR, file_name)
-        return Response({'localised_image': url})
-
+        url = os.path.join(os.path.join(settings.BASE_DIR, settings.EAST_OUT_IMG_DIR), file_name)
+        if os.path.exists(url):
+            with open(url, 'rb') as img_f:
+                encoded_string = base64.b64encode(img_f.read())
+            return Response({'localised_image': encoded_string})
+        else:
+            return Response({'err':"{} File not Found".format(url)}, status=status.HTTP_400_BAD_REQUEST)
 
 class GetLocalizedText(generics.RetrieveAPIView):
 
@@ -88,6 +112,7 @@ class GetLocalizedText(generics.RetrieveAPIView):
                          destination_dir=settings.TEXT_OCR_DATA_DIR)
 
         calamari = CalamariOcrPlugin()
+
         calamari.process_files(source_dir=settings.CROPPER_ROOT_DIR,
                                destination_dir=settings.TEXT_OCR_DATA_DIR,
                                keep_destination=True)

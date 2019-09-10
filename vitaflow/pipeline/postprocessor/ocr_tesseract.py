@@ -42,6 +42,7 @@ class TessaractOcrPlugin(OCRPluginInterface):
     def __init__(self,
                  num_workers=4,
                  tesseract_config='-oem -c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyz -c preserve_interword_spaces=1'):
+        # --psm 1 - -oem 1 - -dpi 300 tsv
         OCRPluginInterface.__init__(self, num_workers=num_workers)
         self._tesseract_config = tesseract_config
 

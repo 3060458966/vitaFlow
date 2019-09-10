@@ -44,8 +44,11 @@ class CalamariArgs:
 class CalamariOcrPlugin(OCRPluginInterface):
 
     def __init__(self,
+                 calamari_models=None,
                  num_workers=4):
-        OCRPluginInterface.__init__(self, num_workers=num_workers)
+        OCRPluginInterface.__init__(self,
+                                    num_workers=num_workers)
+        self._calamari_models = calamari_models
 
     def _handle_file(self, in_file_path, out_file_path):
         destination_dir = out_file_path.split("/")[-2]
@@ -58,6 +61,9 @@ class CalamariOcrPlugin(OCRPluginInterface):
 
         if not os.path.exists(destination_dir):
             os.makedirs(destination_dir)
+
+        if self._calamari_models is not None:
+            CalamariArgs.checkpoint = self._calamari_models
 
         for dir in os.listdir(source_dir):
 

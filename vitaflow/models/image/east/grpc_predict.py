@@ -113,8 +113,7 @@ def get_text_segmentation_pb(img_mat, ratio_h, ratio_w, result, output_dir, file
                 if np.linalg.norm(box[0] - box[1]) < 5 or np.linalg.norm(box[3] - box[0]) < 5:
                     continue
                 f.write('{},{},{},{},{},{},{},{}\r\n'.format(
-                    box[0, 0], box[0, 1], box[1, 0], box[1, 1], box[2,
-                                                                    0], box[2, 1], box[3, 0], box[3, 1],
+                    box[0, 0], box[0, 1], box[1, 0], box[1, 1], box[2,0], box[2, 1], box[3, 0], box[3, 1],
                 ))
                 cv2.polylines(img_mat[:, :, ::-1], [box.astype(np.int32).reshape(
                     (-1, 1, 2))], True, color=(255, 255, 0), thickness=1)
