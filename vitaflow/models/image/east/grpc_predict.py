@@ -97,6 +97,9 @@ def get_text_segmentation_pb(img_mat, ratio_h, ratio_w, result, output_dir, file
         boxes[:, :, 0] /= ratio_w
         boxes[:, :, 1] /= ratio_h
 
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     # save to file
     if boxes is not None:
         res_file = os.path.join(output_dir,

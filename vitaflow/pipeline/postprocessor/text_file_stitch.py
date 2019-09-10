@@ -27,19 +27,27 @@ class TextFile(TextCombiner):
         print(in_file_path)
         print(out_file_path)
 
-        list_of_in_txt_files = in_file_path
+        lines = []
+
+        list_of_in_txt_files = in_file_path #TODO change name in args!
 
         for each_in_text_prediction in tqdm(list_of_in_txt_files):
             if os.path.isfile(out_file_path):
                 #  read the file and append values
                 with open(out_file_path, "a") as fd:
-                    fd.write(open(each_in_text_prediction, "r").read())
+                    line = open(each_in_text_prediction, "r").read()
+                    lines.append(line)
+                    fd.write(line)
                     fd.write("\n")
             else:
                 # create a new file with headers
                 with open(out_file_path, "w") as fd:
-                    fd.write(open(each_in_text_prediction, "r").read())
+                    line = open(each_in_text_prediction, "r").read()
+                    lines.append(line)
+                    fd.write(line)
                     fd.write("\n")
+
+        return lines
 
     def _handle_files(self, source_dir, destination_dir):
         """Plugin module should implement this to handle all the files in the given directory"""
@@ -52,23 +60,29 @@ class TextFile(TextCombiner):
         tesseract = TessaractOcrPlugin.__name__
         calamari = CalamariOcrPlugin.__name__
 
+        extracted_text = dict()
+
         for each_dir in os.listdir(source_dir):
             in_files = self.get_all_input_files(source_dir=os.path.join(source_dir, each_dir),
                                                 input_files_types=[".txt"])
 
             #sort based on file number
             in_files = sorted(in_files,
-                   key=lambda x: int(os.path.splitext(os.path.basename(x).split(os.extsep)[0])[0]))
+                              key=lambda x: int(os.path.splitext(os.path.basename(x).split(os.extsep)[0])[0]))
 
             predicted_outputs[tesseract] = [file for file in in_files if tesseract in file]
             # TODO use calamari args; calamari latest version support renaming the output file names
             predicted_outputs[calamari] = [file for file in in_files if tesseract not in file]
 
-            self._handle_file(in_file_path=predicted_outputs[tesseract],
-                              out_file_path=os.path.join(destination_dir, each_dir) + "_" + tesseract + ".txt")
+            extracted_text[each_dir + "_tesseract"] = self._handle_file(in_file_path=predicted_outputs[tesseract],
+                                                                        out_file_path=os.path.join(destination_dir,
+                                                                                                   each_dir) + "_" + tesseract + ".txt")
 
-            self._handle_file(in_file_path=predicted_outputs[calamari],
-                              out_file_path=os.path.join(destination_dir, each_dir) + "_" + calamari + ".txt")
+            extracted_text[each_dir + "_calamari"] = self._handle_file(in_file_path=predicted_outputs[calamari],
+                                                                       out_file_path=os.path.join(destination_dir,
+                                                                                                  each_dir) + "_" + calamari + ".txt")
+
+        return extracted_text
 
 
 if __name__ == '__main__':

@@ -6,7 +6,7 @@ import tqdm
 
 from vitaflow.pipeline.preprocessor import binarisation
 import config
-from vitaflow.pipeline.interfaces.datatypes import Singleton
+from vitaflow.pipeline.interfaces.utils import Singleton
 from vitaflow.pipeline.interfaces.utils import get_folder_config
 from vitaflow.pipeline.interfaces.utils import trim_file_ext
 

@@ -20,6 +20,7 @@ def crop_and_save(cords, image, dest, fname):
     (x1, x2, y1, y2) = cords
     cropped_image = image[y1:y2, x1:x2]
     dest_file = os.path.join(dest, fname)
+    dest_file = dest_file + ".jpg"
     plt.imsave(dest_file, cropped_image, cmap='Greys_r')  # '
     print('Saved file to {}'.format(dest_file))
 

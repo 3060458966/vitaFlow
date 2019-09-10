@@ -11,7 +11,7 @@ from vitaflow.pipeline.interfaces.utils import check_n_create
 
 
 IMAGE_ROOT_DIR = "/tmp/vitaflow/receipts/"
-EAST_MODEL_DIR = "vitaflow/annotate_server/static/data/east_models/east/EASTModel/exported/1558013588"
+EAST_MODEL_DIR = "vitaflow/annotate_server/static/data/vf_east_models/east/EASTModel/exported/1558013588"
 EAST_OUT_DIR = "/tmp/vitaflow/east"
 BINARIZE_ROOT_DIR = "/tmp/vitaflow/binarisation"
 CROPPER_ROOT_DIR = "/tmp/vitaflow/cropped_images"

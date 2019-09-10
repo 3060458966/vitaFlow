@@ -25,7 +25,7 @@ SECRET_KEY = 'qc*7uv+z2sx-94c-ox5rtxi*8+)(ge*h1sugltx8#40mbtnhwi'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -129,4 +129,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
-IMG_DIR = 'IMG/'
+IMG_DIR = 'gen/IMG/'
+EAST_OUT_IMG_DIR = 'gen/PIMG'
+EAST_MODEL_DIR = 'data/models/vf_east_models/east/EASTModel/exported/1558013588'
+BINARIZE_ROOT_DIR = 'gen/BIMG'
+CROPPER_ROOT_DIR = 'gen/CIMG'
+TEXT_OCR_DATA_DIR = 'gen/TIMG'
+CALAMARI_TEXT_OUT_DIR = 'gen/CTEXT'
+TESERACT_TEXT_OUT_DIR = 'gen/TSTEXT'
+TEXT_OUT_DIR = 'gen/TEXT'

@@ -9,7 +9,7 @@ ROOT_DIR = os.path.dirname(__file__)
 # Note: For Web UI display, these images are requried to avail as sub-folder of Vitaflow Annotation Tools(Flask Server)
 IMAGE_ROOT_DIR = "data/receipts/"
 
-EAST_MODEL_DIR = "vitaflow/annotate_server/static/data/east_models/east/EASTModel/exported/1558013588"
+EAST_MODEL_DIR = "vitaflow/annotate_server/static/data/vf_east_models/east/EASTModel/exported/1558013588"
 
 EAST_OUT_DIR = "vitaflow/annotate_server/static/data/east"
 

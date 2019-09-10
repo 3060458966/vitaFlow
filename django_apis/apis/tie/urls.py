@@ -20,5 +20,9 @@ from . import views
 urlpatterns = [
     path('upload-image', views.UploadImage.as_view()),
     path('process-image/', views.ProcessImage.as_view()),
-    path('get-processed-image/', views.GetProcessedImage.as_view()),
+    path('get-text-localization/', views.GetTextLocalization.as_view()),
+    path('get-localized-text/', views.GetLocalizedText.as_view()),
 ]
+
+
+#get-text-localization/?file_name=<file_name received from upload_image api>

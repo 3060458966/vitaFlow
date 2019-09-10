@@ -9,7 +9,8 @@ except:
     from vitaflow.models.image.east.grpc_predict import read_image, get_text_segmentation_pb
     from vitaflow.datasets.image.icdar.icdar_data import get_images
 
-from tensorflow.contrib import predictor
+# from tensorflow.contrib.predictor
+import tensorflow as tf
 from vitaflow import demo_config
 
 from vitaflow.demo_config import create_dirs
@@ -21,7 +22,7 @@ def east_flow_predictions(input_dir=demo_config.IMAGE_ROOT_DIR,
     print(">>>>>>>>>>>>>>>>>>>>>", input_dir)
     images_dir = input_dir
     images = get_images(images_dir)
-    predict_fn = predictor.from_saved_model(model_dir)
+    predict_fn = tf.contrib.predictor.from_saved_model(model_dir)
     for image_file_path in images:
         im, img_resized, ratio_h, ratio_w = read_image(image_file_path)
         result = predict_fn({'images': img_resized})

@@ -7,7 +7,7 @@ def rename_and_upload_path(instance, filename):
     :return:
     """
     img_dir = settings.IMG_DIR
-    now = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+    now = datetime.now().strftime('%S')
     filename, file_format = filename.split('.')
     new_file_name = img_dir + filename + "_{}.{}".format(now, file_format)
 
