@@ -1,0 +1,15 @@
+@import "../../styles/colors";
+
+.upload-view-container {
+  width: 75%;
+  margin: 0 auto;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 2px 6px 0 rgba(0, 0, 0, 0.1);
+  background-color: $white;
+  padding: 20px;
+
+  .custom-file-label::after {
+    background-color: $secondary;
+    color: $white;
+  }
+}
