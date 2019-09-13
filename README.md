@@ -8,6 +8,11 @@
 
 ## Environment Setup
 
+**Ubuntu Specific Installation**
+- https://www.tensorflow.org/tfx/serving/setup
+- `sudo apt-get -y install postgresql postgresql-contrib libpq-dev postgresql-client postgresql-client-common`
+
+
 **Python Setup**
 
 ```
@@ -19,9 +24,6 @@
    pip install -r requirements.txt
 ```
 
-**Ubuntu Specific Installation**
-- https://www.tensorflow.org/tfx/serving/setup
-- `sudo apt-get -y install postgresql postgresql-contrib libpq-dev postgresql-client postgresql-client-common`
 
 
 ---------------------------------------------------------------------------------------------------------
@@ -38,7 +40,7 @@ The pipeline components includes:
  
 ### Local machine
 
-**MakeFile**  
+**Python Script**  
 
 - Input Files Directory : [data/receipts/](data/receipts/)
 - output  Files Directory : [data/text_out/](data/text_out/)
@@ -50,4 +52,38 @@ python vitaflow/bin/vf-ocr.py --image_dir=data/receipts/ --out_dir=data/text_out
 ```
 
 **Web UI**
-- TODO
+
+```
+cd django_apis/apis/
+python manage.py runserver 0.0.0.0:9000
+```
+
+
+```
+cd ui
+vim .env #add below line
+    REACT_APP_VITAFLOW_APIURL = http://localhost:9000
+npm install
+npm install csstools/normalize.css
+npm start
+```
+
+UI : http://localhost:3000/
+
+
+**Text Annotator**
+```
+cd third_party_apps/text_annotate_server/
+./install.sh -u
+place data in data folder which is created in same directory by above script.
+conda create -n brat python=2.7
+pip install filelock
+python2 standalone.py
+```
+
+UI : http://localhost:8001
+
+```shell script
+cd third_party_apps/text_annotate_server/data/new_data/
+for f in *.txt; do touch "${f%.}.ann"; done
+```

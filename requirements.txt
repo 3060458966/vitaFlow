@@ -30,6 +30,8 @@ tqdm
 overrides
 opencv-python
 imutils
+keras
+xmltodict
 
 
 

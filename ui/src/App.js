@@ -212,6 +212,11 @@ class App extends Component {
                         )}
                       ></textarea>
                     </div>
+                    <img
+                      className="image"
+                      src={"data:image/jpg;base64," + processed_image}
+                      alt="loader"
+                    />
                     <div className="textarea-wrapper">
                       <div className="title">Tesseract</div>
                       <textarea

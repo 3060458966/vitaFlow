@@ -69,6 +69,8 @@ class CalamariOcrPlugin(OCRPluginInterface):
 
             in_files = self.get_all_input_files(source_dir=os.path.join(source_dir, dir))
 
+            print(">>>>>>>>>>>>>>>>>> {}".format(in_files))
+
             if in_files:
                 output_dir = os.path.join(destination_dir, dir)
 
@@ -78,7 +80,7 @@ class CalamariOcrPlugin(OCRPluginInterface):
                 CalamariArgs.files = in_files
                 CalamariArgs.output_dir = output_dir
                 CalamariArgs.batch_size = len(in_files)
-                CalamariArgs.processes = len(in_files)
+                CalamariArgs.processes = 4
                 calamari_ocr_run(CalamariArgs)
 
 

@@ -1,8 +1,11 @@
 import os
 import subprocess
+from PIL import Image
+from keras.optimizers import Adam
 
 from vitaflow.pipeline.interfaces.plugin import ImagePluginInterface
 from vitaflow import demo_config
+from vitaflow.pipeline.preprocessor.nnet_binarizer import unet, nnet_binarizes
 
 _command_convert = ['convert',
                     '-auto-level',
@@ -68,8 +71,14 @@ def blur(image_loc, dest_image_loc):
 
 
 class ImageBinarisePreprocessor(ImagePluginInterface):
-    def __init__(self):
+    def __init__(self,
+                 weights_path):
         ImagePluginInterface.__init__(self)
+        self._weights_path = weights_path
+
+        # self._model = unet()
+        # self._model.compile(optimizer=Adam(lr=1e-4), loss='binary_crossentropy', metrics=['accuracy'])
+        # self._model.load_weights(self._weights_path)
 
     def _handle_data(self, in_file_data):
         """Each plugin module should implement this to handle image array data"""
@@ -79,15 +88,27 @@ class ImageBinarisePreprocessor(ImagePluginInterface):
         if os.path.isfile(out_file_path):
             print('Binarisation found existing file {}'.format(out_file_path))
             return
+
         try:
             binarisation(in_file_path, out_file_path)
             print('Binarisation generated file {}'.format(out_file_path))
         except Exception as e:
             print(e)
             print('Binarisation - Failed - Generated file {}'.format(out_file_path))
-
+        # try:
+        #     im = Image.open(in_file_path)
+        #     dpi = 300#im.info['dpi']
+        #     if dpi is not None and dpi > 299:
+        #         nnet_binarizes(in_file_path, out_file_path, model=self._model)
+        #     else:
+        #         binarisation(in_file_path, out_file_path)
+        #     print('Binarisation generated file {}'.format(out_file_path))
+        # except Exception as e:
+        #     print(e)
+        #     print('Binarisation - Failed - Generated file {}'.format(out_file_path))
+        #
 
 if __name__ == '__main__':
-    t = ImageBinarisePreprocessor()
+    t = ImageBinarisePreprocessor(weights_path=None) #TODO fix
     print('--' * 55)
     t.process_files(source_dir=demo_config.EAST_OUT_DIR, destination_dir=demo_config.BINARIZE_ROOT_DIR)

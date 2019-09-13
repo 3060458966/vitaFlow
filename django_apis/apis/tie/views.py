@@ -98,7 +98,7 @@ class GetTextLocalization(generics.GenericAPIView):
 class GetLocalizedText(generics.RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
-        t = ImageBinarisePreprocessor()
+        t = ImageBinarisePreprocessor(weights_path=settings.BINARIZER_MODEL_WEIGTHS)
         print('--' * 55)
         t.process_files(source_dir=settings.EAST_OUT_IMG_DIR, destination_dir=settings.BINARIZE_ROOT_DIR)
 

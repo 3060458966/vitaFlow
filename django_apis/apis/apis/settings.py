@@ -134,6 +134,8 @@ STATIC_URL = '/static/'
 IMG_DIR = 'gen/IMG/'
 EAST_OUT_IMG_DIR = 'gen/PIMG'
 EAST_MODEL_DIR = 'data/models/vf_east_models/east/EASTModel/exported/1558013588'
+BINARIZER_MODEL_WEIGTHS = 'data/models/binarizer/bin_weights.hdf5'
+
 BINARIZE_ROOT_DIR = 'gen/BIMG'
 CROPPER_ROOT_DIR = 'gen/CIMG'
 TEXT_OCR_DATA_DIR = 'gen/TIMG'

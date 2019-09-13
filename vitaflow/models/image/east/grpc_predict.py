@@ -116,7 +116,7 @@ def get_text_segmentation_pb(img_mat, ratio_h, ratio_w, result, output_dir, file
                     box[0, 0], box[0, 1], box[1, 0], box[1, 1], box[2,0], box[2, 1], box[3, 0], box[3, 1],
                 ))
                 cv2.polylines(img_mat[:, :, ::-1], [box.astype(np.int32).reshape(
-                    (-1, 1, 2))], True, color=(255, 255, 0), thickness=1)
+                    (-1, 1, 2))], True, color=(255, 32, 32), thickness=1)
 
     img_path = os.path.join(output_dir, file_name)
     # img_mat = np.squeeze(img_mat, axis=0)
