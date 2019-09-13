@@ -1,5 +1,5 @@
 #arrange in alphabetic order
-apache-airflow[postgres, celery, rabbitmq]
+#apache-airflow[postgres, celery, rabbitmq]
 calamari_ocr==0.3.3
 django
 djangorestframework
@@ -29,6 +29,9 @@ tensorflow-hub
 tqdm
 overrides
 opencv-python
+imutils
+keras
+xmltodict
 
 
 

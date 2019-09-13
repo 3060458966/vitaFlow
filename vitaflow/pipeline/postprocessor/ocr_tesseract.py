@@ -41,16 +41,20 @@ def string_parser(text):
 class TessaractOcrPlugin(OCRPluginInterface):
     def __init__(self,
                  num_workers=4,
-                 tesseract_config='-oem -c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyz -c preserve_interword_spaces=1'):
+                 tesseract_config='-oem 2 -c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyz -c preserve_interword_spaces=1'):
+        # --psm 1 - -oem 1 - -dpi 300 tsv
         OCRPluginInterface.__init__(self, num_workers=num_workers)
         self._tesseract_config = tesseract_config
 
     def _handle_file(self, in_file_path, out_file_path):
-        img = cv2.imread(in_file_path)
-        text = pytesseract.image_to_string(img, lang='eng', config=self._tesseract_config)
-        with open(out_file_path, "w") as fd:
-            fd.write(string_parser(text))
-        return out_file_path
+        try:
+            img = cv2.imread(in_file_path)
+            text = pytesseract.image_to_string(img, lang='eng', config=self._tesseract_config)
+            with open(out_file_path, "w") as fd:
+                fd.write(string_parser(text))
+            return out_file_path
+        except:
+            print("Failed : {} ----> {}".format(in_file_path, out_file_path))
 
 
 if __name__ == '__main__':

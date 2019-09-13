@@ -1,17 +1,17 @@
 import os
+import shutil
 from abc import ABC
 from glob import glob
 import concurrent.futures
+from vitaflow.pipeline.interfaces import utils
 
-from vitaflow.annotate_server.common import verify_isimagefile, verify_isfile
+def verify_isfile(full_path_file_name):
+    return os.path.isfile(full_path_file_name)
 
-try:
-    from vitaflow.annotate_server import config
-    import sys
-    # Add the draft folder path to the sys.path list
-    sys.path.append('..')
-except ImportError:
-    import config
+
+def verify_isimagefile(full_path_file_name, exts=['.JPG', '.jpg', '.png']):
+    return utils.get_file_ext(full_path_file_name) in exts
+
 
 
 def find_files_with_ext(search_folder, exts=['.JPG', '.jpg', '.png']):
@@ -54,9 +54,6 @@ class ImagePluginInterface(ABC):
     def _handle_files(self, source_dir, destination_dir):
         """Plugin module should implement this to handle all the files in the given directory"""
 
-        if not os.path.exists(destination_dir):
-            os.makedirs(destination_dir)
-
         in_files = self.get_all_input_files(source_dir=source_dir)
         for img_file in in_files:
             filename = os.path.basename(img_file)
@@ -75,10 +72,17 @@ class ImagePluginInterface(ABC):
 
     def process_files(self,
                       source_dir,
-                      destination_dir):
+                      destination_dir,
+                      keep_destination=False):
         """Process all the image files at the source location and store them in the destination directory"""
         # self._validate_inputs()
-        self._handle_files(source_dir=source_dir, destination_dir=destination_dir)
+        if not keep_destination:
+            if os.path.exists(destination_dir):
+                shutil.rmtree(destination_dir) #TODO do we need to do this ?
+                os.makedirs(destination_dir)
+            else:
+                os.makedirs(destination_dir)
+        return self._handle_files(source_dir=source_dir, destination_dir=destination_dir)
 
 
 class OCRPluginInterface(ImagePluginInterface):
