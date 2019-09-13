@@ -34,7 +34,7 @@ We have put up a small working demo, which basically can read text from camera i
 The pipeline components includes:   
  - EAST Model
  - Image Binarization 
- - Cropping tool (crops each text line from the image as single image)
+ - Cropping module (crops each text line from the image as single image)
  - OCR with Tesseract and DL based OCR called Calamari  (image to text for all the images that were generated from previous cropper stage)
  - Text stiching (where each text out from the images are stiched as one text file)
  
@@ -69,6 +69,10 @@ npm start
 ```
 
 UI : http://localhost:3000/
+
+![](docs/images/demo1.png)
+
+![](docs/images/demo2.png)
 
 
 **Text Annotator**
