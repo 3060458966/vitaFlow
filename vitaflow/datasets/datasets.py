@@ -18,7 +18,7 @@
 
 from vitaflow.datasets import all_datasets
 from vitaflow.utils import registry
-from vitaflow.datasets.internal.datasetinterface import DatasetInterface
+from vitaflow.datasets.interface_dataset import IDataset
 
 
 def _dataset(name):
@@ -31,7 +31,7 @@ def available():
 
 def get_dataset(name_or_instance):
     """Get dataset instance from problem name or instance"""
-    if isinstance(name_or_instance, DatasetInterface):
+    if isinstance(name_or_instance, IDataset):
         ds = name_or_instance
     else:
         ds = _dataset(name_or_instance)

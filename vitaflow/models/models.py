@@ -18,7 +18,7 @@
 
 from vitaflow.models import all_models
 from vitaflow.utils import registry
-from vitaflow.models.internals.model_base import ModelBase
+from vitaflow.models.interface_model import IModelBase
 
 
 def _model(name):
@@ -31,7 +31,7 @@ def available():
 
 def get_model(name_or_instance):
     """Get data_iterator instance from problem name or instance"""
-    if isinstance(name_or_instance, ModelBase):
+    if isinstance(name_or_instance, IModelBase):
         ds = name_or_instance
     else:
         ds = _model(name_or_instance)

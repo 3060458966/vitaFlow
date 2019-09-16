@@ -4,7 +4,7 @@ import logging
 import gin
 import tensorflow as tf
 import os
-from vitaflow.models.image.east.east_model import EASTModel
+from vitaflow.models.image.east.east_model_v0 import EASTIEstimatorModel
 from vitaflow.datasets.image.icdar.icdar_data import ICDARTFDataset, get_images
 from vitaflow.iterators.image.icdar_iterator import CIDARIterator
 from executor import Executor
@@ -31,7 +31,7 @@ def run(save_checkpoints_steps=10,
     """
     """
 
-    model = EASTModel()
+    model = EASTIEstimatorModel()
     data_iterator = CIDARIterator()
 
     run_config = tf.ConfigProto()

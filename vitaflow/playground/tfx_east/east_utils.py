@@ -512,7 +512,7 @@ class EASTModel:
                  learning_rate=0.0001,
                  model_root_directory="./",
                  moving_average_decay=0.997):
-        print_info("EASTModel")
+        print_info("EASTIEstimatorModel")
         print_info("model_root_directory : {}".format(model_root_directory))
         print_info("learning_rate : {}".format(learning_rate))
 

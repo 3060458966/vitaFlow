@@ -26,9 +26,9 @@ echo $DEMO_DATA_PATH/standoff2conll/annotations/
 
 cd ../../../
 #
-python vitaflow/bin/run_experiments.py --mode=train --config=vitaflow/playground/clientx/config.gin
+python vitaflow/bin/vf_engine.py --mode=train --config=vitaflow/playground/clientx/config.gin
 #
 #python vitaflow/app/main.py
 
 
-#### python vitaflow/bin/run_experiments.py --mode=predict --config=vitaflow/playground/clientx/config.gin
+#### python vitaflow/bin/vf_engine.py --mode=predict --config=vitaflow/playground/clientx/config.gin

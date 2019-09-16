@@ -25,7 +25,7 @@ mv csv/* $DEMO_DATA_PATH/val/
 cd /opt/github/vitaFlow/
 #vim examples/clientx/config.py
 #vim examples/clientx/clientx_dataset.py
-python vitaflow/bin/run_experiments.py --mode=train --config_python_file=examples/clientx/config.py
+python vitaflow/bin/vf_engine.py --mode=train --config_python_file=examples/clientx/config.py
 
 python vitaflow/app/main.py 
 

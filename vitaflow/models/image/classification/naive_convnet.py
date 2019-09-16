@@ -38,7 +38,7 @@ class NaiveConvNet(ClassifierBase, ImageFeature):
         ClassifierBase.__init__(self,
                                 experiment_name=experiment_name,
                                 model_root_directory=model_root_directory,
-                                name=name,
+                                experiment_name=name,
                                 out_dim=out_dim,
                                 learning_rate=learning_rate)
         ImageFeature.__init__(self)

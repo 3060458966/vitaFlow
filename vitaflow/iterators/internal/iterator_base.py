@@ -23,7 +23,7 @@ import pickle
 from vitaflow.utils.hyperparams import HParams
 from vitaflow.datasets.internal.datasetinterface import DatasetInterface
 from vitaflow.utils.print_helper import print_info
-from vitaflow.engines import Executor
+from vitaflow.backend import Executor
 
 
 class IteratorInterface(ABC):

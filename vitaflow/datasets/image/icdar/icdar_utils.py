@@ -10,6 +10,9 @@ import tensorflow as tf
 from shapely.geometry import Polygon
 from tqdm import tqdm
 
+from vitaflow.datasets.interface_dataset import thread_safe_generator
+from vitaflow.utils.print_helper import print_warn
+
 
 def get_images(data_path):
     """
@@ -25,16 +28,25 @@ def get_images(data_path):
                 if filename.endswith(ext):
                     files.append(os.path.join(parent, filename))
                     break
-    print('Found {} images'.format(len(files)))
+    print('Found {} images in {}'.format(len(files), data_path))
     return files
 
 
-def load_annoataion(txt_file_path):
+def load_annoataion(txt_file_path, ignore_text_list=["*", "###"]):
     """
     load annotation from the text file
     "x1, y1, x2, y2, x3, y3, x4, y4, transcription"
 
+    x4,y4                          x3,y3
+    ----------------------------------
+    |                                |
+    |                                |
+    |                                |
+    ----------------------------------
+    x1,y1                         x2,y2
+
     :param txt_file_path:
+    :param txt_file_path: List of ignore texts
     :return:
     """
 
@@ -58,12 +70,53 @@ def load_annoataion(txt_file_path):
                 x1, y1, x2, y2, x3, y3, x4, y4 = list(map(float, line[:8]))
                 text_polys.append([[x1, y1], [x2, y2], [x3, y3], [x4, y4]])
                 # In ICDAR 2015 dataset unreadable text regions are annotated with either * or #
-                if label == '*' or label == '###':
+                if label in ignore_text_list:
                     text_tags.append(True)
                 else:
                     text_tags.append(False)
 
-            return np.array(text_polys, dtype=np.float32), np.array(text_tags, dtype=np.bool)
+                return np.array(text_polys, dtype=np.float32), np.array(text_tags, dtype=np.bool)
+
+def all(iterable):
+    for element in iterable:
+        if not element:
+            return False
+    return True
+
+
+def get_text_file(image_file):
+    txt_file = image_file.replace(os.path.basename(image_file).split('.')[1], 'txt')
+    txt_file_name = txt_file.split('/')[-1]
+    txt_file = txt_file.replace(txt_file_name, 'gt_' + txt_file_name)
+    return txt_file
+
+
+def pad_image(img, input_size, is_train):
+    new_h, new_w, _ = img.shape
+    max_h_w_i = np.max([new_h, new_w, input_size])
+    img_padded = np.zeros((max_h_w_i, max_h_w_i, 3), dtype=np.uint8)
+    if is_train:
+        shift_h = np.random.randint(max_h_w_i - new_h + 1)
+        shift_w = np.random.randint(max_h_w_i - new_w + 1)
+    else:
+        shift_h = (max_h_w_i - new_h) // 2
+        shift_w = (max_h_w_i - new_w) // 2
+    img_padded[shift_h:new_h+shift_h, shift_w:new_w+shift_w, :] = img.copy()
+    img = img_padded
+    return img, shift_h, shift_w
+
+
+def resize_image(img, text_polys, input_size, shift_h, shift_w):
+    new_h, new_w, _ = img.shape
+    img = cv2.resize(img, dsize=(input_size, input_size))
+    # pad and resize text polygons
+    resize_ratio_3_x = input_size/float(new_w)
+    resize_ratio_3_y = input_size/float(new_h)
+    text_polys[:, :, 0] += shift_w
+    text_polys[:, :, 1] += shift_h
+    text_polys[:, :, 0] *= resize_ratio_3_x
+    text_polys[:, :, 1] *= resize_ratio_3_y
+    return img, text_polys
 
 
 def polygon_area(poly):
@@ -83,13 +136,13 @@ def polygon_area(poly):
     2|x3|y3|
     3|x4|y4|
 
-    x1,y1                          x2,y2
+    x4,y4                          x3,y3
     ----------------------------------
     |                                |
     |                                |
     |                                |
     ----------------------------------
-    x4,y4                         x3,y3
+    x1,y1                         x2,y2
     """
 
     edge = [
@@ -105,7 +158,7 @@ def polygon_area(poly):
     return np.sum(edge) / 2.
 
 
-def check_and_validate_polys(polys, tags, height_weight_tuple):
+def check_and_validate_polys(polys, tags, height_weight_tuple, ):
     """
     check so that the text poly is in the same direction,
     and also filter some invalid polygons
@@ -128,10 +181,10 @@ def check_and_validate_polys(polys, tags, height_weight_tuple):
     for poly, tag in zip(polys, tags):
         p_area = polygon_area(poly)
         if abs(p_area) < 1:
-            print('invalid poly')
+            print_warn('invalid poly')
             continue
         if p_area > 0:  # TODO what maths is involved?
-            print('poly in wrong direction')
+            print_warn('poly in wrong direction')
             # rows are inter changed
             poly = poly[(0, 3, 2, 1), :]
         validated_polys.append(poly)
@@ -215,13 +268,13 @@ def shrink_poly(poly, r):
 
     """
 
-      p0                         p1
+      p3                         p2
        --------------------------
       |                          |
       |                          |
       |                          |
        --------------------------  
-      p3                         p2 
+      p0                         p1 
     """
     # shrink ratio
     R = 0.3
@@ -303,7 +356,7 @@ def line_cross_point(line1, line2):
         print('Cross point does not exist')
         return None
     if line1[0] == 0 and line2[0] == 0:
-        print('Cross point does not exist')
+        print_warn('Cross point does not exist')
         return None
     if line1[1] == 0:
         x = -line1[2]
@@ -340,13 +393,13 @@ def rectangle_from_parallelogram(poly):
 
     """
 
-      p0                         p1
+      p3                         p2
        --------------------------
       |                          |
       |                          |
       |                          |
        --------------------------  
-      p3                         p2 
+      p0                         p1 
     """
 
     p0, p1, p2, p3 = poly
@@ -440,11 +493,12 @@ def sort_rectangle(poly):
 
 def generate_rbox(im_size, polys, tags, min_text_size):
     h, w = im_size
-    poly_mask = np.zeros((h, w), dtype=np.uint8)
+    shrinked_poly_mask = np.zeros((h, w), dtype=np.uint8)
+    orig_poly_mask = np.zeros((h, w), dtype=np.uint8)
     score_map = np.zeros((h, w), dtype=np.uint8)
     geo_map = np.zeros((h, w, 5), dtype=np.float32)
     # mask used during training, to ignore some hard areas
-    training_mask = np.ones((h, w), dtype=np.uint8)
+    overly_small_text_region_training_mask = np.ones((h, w), dtype=np.uint8)
 
     for poly_idx, poly_tag in enumerate(zip(polys, tags)):
         poly = poly_tag[0]
@@ -456,20 +510,20 @@ def generate_rbox(im_size, polys, tags, min_text_size):
 
         """
 
-          0                          1
+          3                          2
            --------------------------
           |                          |
           |                          |
           |                          |
            --------------------------  
-          3                          2 
+          0                          1 
         """
 
         reference_length = [None, None, None, None]
         for i in range(4):
             # find the shorted edge distances(vertices1,vertices2)
-            # (0,1) | (1,2) | (2,3) | (3,0) <- (i+1) % 4
-            # (0,3) | (1,0) | (2,1) | (3,2) <- (i-1) % 4
+            # (0-1) | (1-2) | (2-3) | (3-0) <- (i+1) % 4
+            # (0-3) | (1-0) | (2-1) | (3-2) <- (i-1) % 4
             reference_length[i] = min(np.linalg.norm(poly[i] - poly[(i + 1) % 4]),
                                       np.linalg.norm(poly[i] - poly[(i - 1) % 4]))
 
@@ -477,24 +531,27 @@ def generate_rbox(im_size, polys, tags, min_text_size):
 
         # score map
         shrinked_poly = shrink_poly(poly.copy(), reference_length).astype(np.int32)[np.newaxis, :, :]
+        cv2.fillPoly(shrinked_poly_mask, shrinked_poly, poly_idx + 1)
         cv2.fillPoly(score_map, shrinked_poly, 1)  # TODO ?
 
         # ------------------------------------------------------------------------------------------------
 
-        cv2.fillPoly(poly_mask, shrinked_poly, poly_idx + 1)
+        cv2.fillPoly(orig_poly_mask, shrinked_poly, poly_idx + 1)
         # if the poly is too small or unreadable text is found, then ignore it during training
         poly_h = min(np.linalg.norm(poly[0] - poly[3]), np.linalg.norm(poly[1] - poly[2]))
         poly_w = min(np.linalg.norm(poly[0] - poly[1]), np.linalg.norm(poly[2] - poly[3]))
 
         if min(poly_h, poly_w) < min_text_size:
-            cv2.fillPoly(training_mask, poly.astype(np.int32)[np.newaxis, :, :], 0)
+            cv2.fillPoly(overly_small_text_region_training_mask, poly.astype(np.int32)[np.newaxis, :, :], 0)
 
         if tag:
-            cv2.fillPoly(training_mask, poly.astype(np.int32)[np.newaxis, :, :], 0)
+            cv2.fillPoly(overly_small_text_region_training_mask, poly.astype(np.int32)[np.newaxis, :, :], 0)
 
         # ------------------------------------------------------------------------------------------------
 
-        xy_in_poly = np.argwhere(poly_mask == (poly_idx + 1))
+        # xy_in_poly = np.argwhere(orig_poly_mask == (poly_idx + 1)) TODO : this was commented to support EAST model
+        xy_in_poly = np.argwhere(shrinked_poly_mask == (poly_idx + 1))
+
 
         # if geometry == 'RBOX':
         # 对任意两个顶点的组合生成一个平行四边形 - generate a parallelogram for any combination of two vertices
@@ -616,7 +673,10 @@ def generate_rbox(im_size, polys, tags, min_text_size):
             # angle
             geo_map[y, x, 4] = rotate_angle
 
-    return score_map, geo_map, training_mask
+    shrinked_poly_mask = (shrinked_poly_mask > 0).astype('uint8')
+    text_region_boundary_training_mask = 1 - (orig_poly_mask - shrinked_poly_mask)
+
+    return score_map, geo_map, overly_small_text_region_training_mask, text_region_boundary_training_mask
 
 
 def print_shape(mat, name="name"):
@@ -630,7 +690,8 @@ def image_2_data(image_file_path,
                  input_size=512,
                  background_ratio=3. / 8,
                  random_scale=np.array([0.5, 1, 2.0]),  # , 3.0]),
-                 vis=False):
+                 vis=False,
+                 is_train=True):
     images = []
     image_fns = []
     score_maps = []
@@ -672,9 +733,16 @@ def image_2_data(image_file_path,
         text_polys, text_tags = check_and_validate_polys(text_polys, text_tags, (h, w))
 
         # random scale this image
+        # rd_scale = np.random.choice(random_scale)
+        # im = cv2.resize(im, dsize=None, fx=rd_scale, fy=rd_scale)
+        # text_polys *= rd_scale
+
         rd_scale = np.random.choice(random_scale)
-        im = cv2.resize(im, dsize=None, fx=rd_scale, fy=rd_scale)
-        text_polys *= rd_scale
+        x_scale_variation = np.random.randint(-10, 10) / 100.
+        y_scale_variation = np.random.randint(-10, 10) / 100.
+        im = cv2.resize(im, dsize=None, fx=rd_scale + x_scale_variation, fy=rd_scale + y_scale_variation)
+        text_polys[:, :, 0] *= rd_scale + x_scale_variation
+        text_polys[:, :, 1] *= rd_scale + y_scale_variation
 
         # random crop a area from image
         # if np.random.rand() < background_ratio:
@@ -701,37 +769,50 @@ def image_2_data(image_file_path,
         #
         #     training_mask = np.ones((input_size, input_size), dtype=np.uint8)
         # else:
+
         im, text_polys, text_tags = crop_area(im, text_polys, text_tags,
                                               min_crop_side_ratio=min_crop_side_ratio,
                                               crop_background=False)
         if text_polys.shape[0] == 0:
             return
+
+        # h, w, _ = im.shape
+        #
+        # # pad the image to the training input size or the longer side of image
+        # new_h, new_w, _ = im.shape
+        # max_h_w_i = np.max([new_h, new_w, input_size])
+        # im_padded = np.zeros((max_h_w_i, max_h_w_i, 3), dtype=np.uint8)
+        # im_padded[:new_h, :new_w, :] = im.copy()
+        # im = im_padded
+        #
+        # # resize the image to input size
+        # new_h, new_w, _ = im.shape
+        # resize_h = input_size
+        # resize_w = input_size
+        # im = cv2.resize(im, dsize=(resize_w, resize_h))
+        #
+        # resize_ratio_3_x = resize_w / float(new_w)
+        # resize_ratio_3_y = resize_h / float(new_h)
+        #
+        # text_polys[:, :, 0] *= resize_ratio_3_x
+        # text_polys[:, :, 1] *= resize_ratio_3_y
+        # new_h, new_w, _ = im.shape
+        #
+        # score_map, geo_map, overly_small_text_region_training_mask, text_region_boundary_training_mask = \
+        #     generate_rbox((new_h, new_w),
+        #                   text_polys,
+        #                   text_tags,
+        #                   min_text_size=min_text_size)
+
         h, w, _ = im.shape
-
-        # pad the image to the training input size or the longer side of image
+        im, shift_h, shift_w = pad_image(im, input_size, is_train)
+        im, text_polys = resize_image(im, text_polys, input_size, shift_h, shift_w)
         new_h, new_w, _ = im.shape
-        max_h_w_i = np.max([new_h, new_w, input_size])
-        im_padded = np.zeros((max_h_w_i, max_h_w_i, 3), dtype=np.uint8)
-        im_padded[:new_h, :new_w, :] = im.copy()
-        im = im_padded
-
-        # resize the image to input size
-        new_h, new_w, _ = im.shape
-        resize_h = input_size
-        resize_w = input_size
-        im = cv2.resize(im, dsize=(resize_w, resize_h))
-
-        resize_ratio_3_x = resize_w / float(new_w)
-        resize_ratio_3_y = resize_h / float(new_h)
-
-        text_polys[:, :, 0] *= resize_ratio_3_x
-        text_polys[:, :, 1] *= resize_ratio_3_y
-        new_h, new_w, _ = im.shape
-
-        score_map, geo_map, training_mask = generate_rbox((new_h, new_w),
-                                                          text_polys,
-                                                          text_tags,
-                                                          min_text_size=min_text_size)
+        score_map, geo_map, overly_small_text_region_training_mask, text_region_boundary_training_mask = \
+            generate_rbox((new_h, new_w),
+                          text_polys,
+                          text_tags,
+                          min_text_size=min_text_size)
 
         if vis:
             plt.imshow(im)
@@ -776,7 +857,7 @@ def image_2_data(image_file_path,
             axs[2, 0].set_yticks([])
             axs[2, 0].set_title("geo_map2")
 
-            axs[2, 1].imshow(training_mask[::, ::])
+            axs[2, 1].imshow(overly_small_text_region_training_mask[::, ::])
             axs[2, 1].set_xticks([])
             axs[2, 1].set_yticks([])
             axs[2, 0].set_title("training_mask")
@@ -794,21 +875,86 @@ def image_2_data(image_file_path,
         # scale rest of the ata by 4 i.e sample 1 for every 4 pixels
         score_map = score_map[::4, ::4, np.newaxis].astype(np.float32)
         geo_map = geo_map[::4, ::4, :].astype(np.float32)
-        training_mask = training_mask[::4, ::4, np.newaxis].astype(np.float32)
+        overly_small_text_region_training_mask= overly_small_text_region_training_mask[::4, ::4, np.newaxis].astype(np.float32)
+        text_region_boundary_training_mask = text_region_boundary_training_mask[::4, ::4, np.newaxis].astype(np.float32)
 
         # print_shape(image, "image")
         # print_shape(score_map, "score_map")
         # print_shape(geo_map, "geo_map")
         # print_shape(training_mask, "training_mask")
-        return image, score_map, geo_map, training_mask
+        return image, score_map, geo_map, text_region_boundary_training_mask, overly_small_text_region_training_mask
 
     except Exception as e:
         import traceback
         traceback.print_exc()
+        return
 
 
 def make_dirs(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-# ======================================================================================================================
+
+def generator(data_dir,
+              batch_size,
+              geometry,
+              min_text_size,
+              min_crop_side_ratio,
+              input_size=512,
+              background_ratio=3. / 8,
+              random_scale=np.array([0.5, 1, 2.0]),  # , 3.0]),
+              vis=False,
+              is_train=True,
+              shuffle=True):
+    image_list = np.array(get_images(data_path=data_dir))
+
+    images = []
+    score_maps = []
+    geo_maps = []
+    overly_small_text_region_training_masks = []
+    text_region_boundary_training_masks = []
+
+    index = np.arange(0, image_list.shape[0])
+    epoch = 1
+
+    while True:
+        for i in index:
+            image_file_path = image_list[i]
+            data = image_2_data(image_file_path=image_file_path,
+                                geometry=geometry,
+                                min_text_size=min_text_size,
+                                min_crop_side_ratio=min_crop_side_ratio,
+                                input_size=input_size,
+                                background_ratio=background_ratio,
+                                random_scale=random_scale,
+                                vis=vis,
+                                is_train=is_train)
+
+            image, score_map, geo_map, text_region_boundary_training_mask, overly_small_text_region_training_mask = data
+
+            images.append(image[:, :, ::-1].astype(np.float32))
+            score_maps.append(score_map[::4, ::4, np.newaxis].astype(np.float32))
+            geo_maps.append(geo_map[::4, ::4, :].astype(np.float32))
+            overly_small_text_region_training_masks.append(
+                overly_small_text_region_training_mask[::4, ::4, np.newaxis].astype(np.float32))
+            text_region_boundary_training_masks.append(
+                text_region_boundary_training_mask[::4, ::4, np.newaxis].astype(np.float32))
+
+            if len(images) == batch_size:
+                yield [np.array(images),
+                       np.array(overly_small_text_region_training_masks),
+                       np.array(text_region_boundary_training_masks),
+                       np.array(score_maps)], [np.array(score_maps), np.array(geo_maps)]
+                images = []
+                image_fns = []
+                score_maps = []
+                geo_maps = []
+                overly_small_text_region_training_masks = []
+                text_region_boundary_training_masks = []
+
+            if data is None:
+                continue
+            # else:
+            #     yield data
+        epoch += 1
+

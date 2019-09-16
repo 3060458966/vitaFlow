@@ -4,21 +4,21 @@ import vitaflow.playground.clientx
 experiment_name="clientx_dataset"
 get_experiment_root_directory.value="/home/gaurishk/Projects/vitaFlow/vitaflow/playground/clientx"
 batch_size = 4
-#Experiments
-Experiments.batch_size=%batch_size
-Experiments.num_epochs=150
-Experiments.dataset_class_with_path="vitaflow.playground.clientx.clientx_dataset.CLIENTXDataset"
-Experiments.iterator_class_with_path="vitaflow.iterators.text.csv_seq_to_seq_iterator.CSVSeqToSeqIterator"
-Experiments.model_class_with_path="vitaflow.models.text.seq2seq.BiLSTMCrf"
+#VitaFlowEngine
+VitaFlowEngine.batch_size=%batch_size
+VitaFlowEngine.num_epochs=150
+VitaFlowEngine.dataset_class_with_path="vitaflow.playground.clientx.clientx_dataset.CLIENTXDataset"
+VitaFlowEngine.iterator_class_with_path="vitaflow.iterators.text.csv_seq_to_seq_iterator.CSVSeqToSeqIterator"
+VitaFlowEngine.model_class_with_path="vitaflow.models.text.seq2seq.BiLSTMCrf"
 #(45000 // batch_size) // 5 = 112
-Experiments.save_checkpoints_steps=50
-Experiments.keep_checkpoint_max=5
+VitaFlowEngine.save_checkpoints_steps=50
+VitaFlowEngine.keep_checkpoint_max=5
 #(45000 // batch_size) // 100
-Experiments.save_summary_steps=25
-Experiments.log_step_count_steps=10
-Experiments.clear_model_data=False
-Experiments.plug_dataset=True
-Experiments.mode='train'
+VitaFlowEngine.save_summary_steps=25
+VitaFlowEngine.log_step_count_steps=10
+VitaFlowEngine.clear_model_data=False
+VitaFlowEngine.plug_dataset=True
+VitaFlowEngine.mode='train'
 
 # Dataset
 CLIENTXDataset.experiment_name=%experiment_name

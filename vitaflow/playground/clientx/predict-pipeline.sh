@@ -44,7 +44,7 @@ mv csv/* $inputdirectory'clientx_dataset/preprocessed_data/test/'
 # run predictions
 #source activate qPy3
 
-CUDA_VISIBLE_DEVICES=0 python vitaflow/bin/run_experiments.py --mode=predict --config_python_file=examples/clientx/config.py
+CUDA_VISIBLE_DEVICES=0 python vitaflow/bin/vf_engine.py --mode=predict --config_python_file=examples/clientx/config.py
 
 #change here
 mv $inputdirectory"clientx_dataset/clientx_data_iterator/postprocessed/" .

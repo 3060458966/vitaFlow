@@ -2,7 +2,7 @@
 python pb_predict\
  --images_dir="/home/gaurishk/Desktop/preprocess/test"\
  --output_dir="/home/gaurishk/Desktop/preprocess/"\
- --model="/home/gaurishk/Projects/vitaFlow/vitaflow/annotate_server/static/data/vf_east_models/east_airflow_demo/EASTModel/exported/1558013588"
+ --model="/home/gaurishk/Projects/vitaFlow/vitaflow/annotate_server/static/data/vf_east_models/east_airflow_demo/EASTIEstimatorModel/exported/1558013588"
 '''
 
 import argparse

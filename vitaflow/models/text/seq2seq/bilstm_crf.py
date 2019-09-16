@@ -22,7 +22,7 @@ from tensorflow.contrib.learn import ModeKeys
 
 import gin
 from vitaflow.internal.features.feature_types import ITextFeature
-from vitaflow.models.internals.model_base import ModelBase
+from vitaflow.models.internals.model_base import IEstimatorModel
 from vitaflow.iterators.text.csv_seq_to_seq_iterator import CSVSeqToSeqIterator
 from vitaflow.iterators.text.vocabulary import SpecialTokens
 from vitaflow.utils.print_helper import *
@@ -30,7 +30,7 @@ from vitaflow.utils.tf_data_helper import get_sequence_length
 
 
 @gin.configurable
-class BiLSTMCrf(ModelBase, ITextFeature):
+class BiLSTMCrf(IEstimatorModel, ITextFeature):
     """
 
     .. code-block:: text
@@ -77,9 +77,9 @@ class BiLSTMCrf(ModelBase, ITextFeature):
                  keep_probability=0.5,
                  data_iterator: CSVSeqToSeqIterator = None):
         ITextFeature.__init__(self)
-        ModelBase.__init__(self,
-                           experiment_name=experiment_name,
-                           model_root_directory=model_root_directory)
+        IEstimatorModel.__init__(self,
+                                 experiment_name=experiment_name,
+                                 model_root_directory=model_root_directory)
 
         # if not isinstance(data_iterator, CoNLLCsvDataIterator):
         #     raise RuntimeError

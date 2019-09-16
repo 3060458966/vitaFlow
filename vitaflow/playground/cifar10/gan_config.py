@@ -1,8 +1,8 @@
 """
 ``` bash
 cd /path/to/vitaflow/
-python vitaflow/bin/run_experiments.py --config_python_file=examples/cifar10/gan_config.py --mode=run_iterator
-python vitaflow/bin/run_experiments.py --config_python_file=examples/cifar10/gan_config.py --mode=train
+python vitaflow/bin/vf_engine.py --config_python_file=examples/cifar10/gan_config.py --mode=run_iterator
+python vitaflow/bin/vf_engine.py --config_python_file=examples/cifar10/gan_config.py --mode=train
 ```
 """
 import os

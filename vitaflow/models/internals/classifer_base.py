@@ -20,10 +20,10 @@ from overrides import overrides
 
 # from vitaflow.utils.hyperparams import HParams
 import gin
-from vitaflow.models.internals.model_base import ModelBase
+from vitaflow.models.internals.model_base import IEstimatorModel
 
 @gin.configurable
-class ClassifierBase(ModelBase):
+class ClassifierIEstimator(IEstimatorModel):
     """
     Base class for classification models
     """
@@ -34,9 +34,9 @@ class ClassifierBase(ModelBase):
                 name="classifier_base",
                 out_dim=-1,
                 learning_rate=0.001):
-        ModelBase.__init__(self,
-                           experiment_name=experiment_name,
-                           model_root_directory=model_root_directory)
+        IEstimatorModel.__init__(self,
+                                 experiment_name=experiment_name,
+                                 model_root_directory=model_root_directory)
         # self._hparams = HParams(hparams, self.default_hparams())
 
         self._out_dim = out_dim
@@ -81,7 +81,7 @@ class ClassifierBase(ModelBase):
     #
     #     :return:  A dictionary of hyperparameters with default values
     #     """
-    #     params = ModelBase.default_hparams()
+    #     params = IEstimatorModel.default_hparams()
     #     params.update({
     #         "name": "classifier_base",
     #         "out_dim": -1,

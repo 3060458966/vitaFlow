@@ -88,6 +88,6 @@ python2 standalone.py
 UI : http://localhost:8001
 
 ```shell script
-cd third_party_apps/text_annotate_server/data/new_data/
+cd annotation_tools
 for f in *.txt; do touch "${f%.}.ann"; done
 ```

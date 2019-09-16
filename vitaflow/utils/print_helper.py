@@ -11,6 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import os
+
+from absl import logging
 """
 Wrapper for print function with colorful text output
 """
@@ -66,7 +70,7 @@ def print_info(*args):
     :param args: user string information
     :return: stdout
     """
-    print(CGREEN2 + str(*args) + CEND)
+    logging.info(CGREEN2 + str(*args) + CEND)
 
 
 def print_error(*args):
@@ -75,7 +79,7 @@ def print_error(*args):
     :param args: user string information
     :return: stdout
     """
-    print(CRED + str(*args) + CEND)
+    logging.error(CRED + str(*args) + CEND)
 
 
 def print_warn(*args):
@@ -84,7 +88,7 @@ def print_warn(*args):
     :param args: user string information
     :return: stdout
     """
-    print(CYELLOW2 + str(*args) + CEND)
+    logging.warning(CYELLOW2 + str(*args) + CEND)
 
 
 def print_debug(*args):
@@ -93,4 +97,16 @@ def print_debug(*args):
     :param args: user string information
     :return: stdout
     """
-    print(CBLUEBG2 + str(*args) + CEND)
+    logging.debug(CVIOLET + str(*args) + CEND)
+
+
+def memory_usage_psutil():
+    # return the memory usage in MB
+    import psutil
+    process = psutil.Process(os.getpid())
+    mem = process.memory_info()[0] / float(2 ** 20)
+    print_info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    print_warn(f"Memory used is {mem}")
+    print_info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+
+    return mem

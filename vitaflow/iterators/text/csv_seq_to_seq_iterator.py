@@ -26,7 +26,7 @@ import tensorflow as tf
 from overrides import overrides
 from tqdm import tqdm
 
-from vitaflow.engines import Executor
+from vitaflow.backend import Executor
 from vitaflow.iterators.internal.iterator_base import IteratorInterface
 from vitaflow.internal.features import ITextFeature
 from vitaflow.internal.nlp.spacy_helper import naive_vocab_creater, get_char_vocab, vocab_to_tsv

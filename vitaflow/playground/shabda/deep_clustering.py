@@ -20,14 +20,14 @@ import tensorflow as tf
 
 from vitaflow.playground.shabda.core.feature_types.shabda_wav_pair_feature import ShabdaWavPairFeature
 from vitaflow.utils.hyperparams import HParams
-from vitaflow.models.internals.model_base import ModelBase
+from vitaflow.models.internals.model_base import IEstimatorModel
 from vitaflow.utils.print_helper import print_error
 # from vitaflow.core.hyperparams import HParams
-# from vitaflow.core.models.model_base import ModelBase
+# from vitaflow.core.models.model_base import IEstimatorModel
 # from vitaflow.helpers.print_helper import print_error
 
 
-class DeepClustering(ModelBase, ShabdaWavPairFeature):
+class DeepClustering(IEstimatorModel, ShabdaWavPairFeature):
     def __init__(self, hparams=None, data_iterator=None):
         """
         https://arxiv.org/abs/1508.04306
@@ -35,7 +35,7 @@ class DeepClustering(ModelBase, ShabdaWavPairFeature):
         :param data_iterator:
         """
         # ITextFeature.__init__(self)
-        ModelBase.__init__(self, hparams=hparams)
+        IEstimatorModel.__init__(self, hparams=hparams)
         ShabdaWavPairFeature.__init__(self)
         self._hparams = HParams(hparams,
                             self.default_hparams())
@@ -53,7 +53,7 @@ class DeepClustering(ModelBase, ShabdaWavPairFeature):
 
     @staticmethod
     def default_hparams():
-        params = ModelBase.default_hparams()
+        params = IEstimatorModel.default_hparams()
         params.update({
             "lstm_hidden_size" : 256,
             "batch_size" : 32,

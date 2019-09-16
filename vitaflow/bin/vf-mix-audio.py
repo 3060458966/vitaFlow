@@ -1,17 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import importlib
 import os
 import sys
 import librosa
-import numpy as np
 import tensorflow as tf
 
 # Appending vitaFlow main Path
 sys.path.append(os.path.abspath('.'))
-
-from vitaflow.engines.experiments import Experiments
 
 # TODO: Use ArgParse
 # tf.args works just like argparse

@@ -20,7 +20,7 @@ import importlib
 import re
 
 MODULES = [
-    "vitaflow.datasets.text.conll_2003_dataset",
+    # "vitaflow.datasets.text.conll_2003_dataset",
     "vitaflow.datasets.image.icdar.icdar_data"
 ]
 

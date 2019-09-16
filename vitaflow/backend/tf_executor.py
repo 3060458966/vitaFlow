@@ -1,11 +1,37 @@
+# Copyright 2018 The Shabda Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
+A class that executes training, evaluation, prediction, export of estimators.
 """
+
 import gin
 import time
 import tensorflow as tf
 import os
+from tqdm import tqdm
+from absl import logging
 
-class Executor(object):
+# pylint: disable=too-many-instance-attributes, too-many-arguments
+from vitaflow.backend.interface_trainer import TrainerBase
+from vitaflow.utils.print_helper import print_error
+
+__all__ = [
+    "TFExecutor"
+]
+
+
+class TFExecutor(TrainerBase):
     """Class that executes training, evaluation, prediction, export, and other
     actions of :tf_main:`tf.estimator.Estimator <estimator/Estimator>`.
 
@@ -39,27 +65,43 @@ class Executor(object):
 
             TODO
 
-    See `bin/train.py` for the usage in detail.
+    See `bin/train_old.py` for the usage in detail.
     """
 
     def __init__(self,
+                 experiment_name,
                  model,
-                 data_iterator,
+                 dataset,
                  config,
+                 max_train_steps,
+                 validation_interval_steps,
+                 stored_model="",
+                 max_steps_without_decrease=1000,
                  train_hooks=None,
                  eval_hooks=None,
                  session_config=None):
+
+        TrainerBase.__init__(self,
+                             experiment_name=experiment_name,
+                             model=model,
+                             dataset=dataset,
+                             max_train_steps=max_train_steps,
+                             validation_interval_steps=validation_interval_steps,
+                             stored_model=stored_model)
+
+        self._experiment_name = experiment_name
         self._model = model
         self._config = config
-        self._data_iterator = data_iterator
+        self.dataset = dataset
         self._train_hooks = train_hooks
         self._eval_hooks = eval_hooks
         self._session_config = session_config
 
-        self._estimator = tf.estimator.Estimator(
-            model_fn=self._model, config=config, params=None)
+        self._estimator = tf.estimator.Estimator(model_fn=self._model, config=config, params=None)
 
-        hook = tf.contrib.estimator.stop_if_no_decrease_hook(self._estimator, "loss", 1000)
+        hook = tf.estimator.experimental.stop_if_no_decrease_hook(self._estimator,
+                                                                  "loss",
+                                                                  max_steps_without_decrease=max_steps_without_decrease)
 
         if self._train_hooks is None:
             self._train_hooks = [hook]
@@ -76,23 +118,23 @@ class Executor(object):
 
     @property
     def data_iterator(self):
-        return self._data_iterator
+        return self.dataset
 
-    def _get_train_spec(self, max_steps=None):
+    def _get_train_spec(self, max_steps=None, num_epochs=None):
         # Estimators expect an input_fn to take no arguments.
         # To work around this restriction, we use lambda to capture the arguments and provide the expected interface.
         return tf.estimator.TrainSpec(
-            input_fn=lambda: self._data_iterator.train_input_fn(),
+            input_fn=lambda: self.dataset.train_set(num_epochs=num_epochs),
             max_steps=max_steps,
             hooks=self._train_hooks)
 
     def _get_eval_spec(self, steps):
         return tf.estimator.EvalSpec(
-            input_fn=lambda: self._data_iterator.val_input_fn(),
+            input_fn=lambda: self.dataset.validation_set(),
             steps=steps,
             hooks=self._eval_hooks)
 
-    def train(self, max_steps=None):
+    def train(self, max_steps=None, num_epochs=None):
         """
         Trains the model. See :tf_main:`tf.estimator.Estimator.train
         <estimator/Estimator#train>` for more details.
@@ -103,11 +145,11 @@ class Executor(object):
                 data generates the OutOfRange exception. If OutOfRange occurs
                 in the middle, training stops before :attr:`max_steps` steps.
         """
-        train_spec = self._get_train_spec(max_steps=max_steps)
+        self.train_spec = self._get_train_spec(max_steps=max_steps, num_epochs=num_epochs)
         self._estimator.train(
-            input_fn=train_spec.input_fn,
-            hooks=train_spec.hooks,
-            max_steps=train_spec.max_steps)
+            input_fn=self.train_spec.input_fn,
+            hooks=self.train_spec.hooks,
+            max_steps=self.train_spec.max_steps)
 
     def evaluate(self, steps=None, checkpoint_path=None):
         """
@@ -131,7 +173,7 @@ class Executor(object):
             hooks=eval_spec.hooks,
             checkpoint_path=checkpoint_path)
 
-    def train_and_evaluate(self, max_train_steps=None, eval_steps=None):
+    def train_and_evaluate(self, max_train_steps=None, eval_steps=None, num_epochs=None):
         """
         Trains and evaluates the model. See
         :tf_main:`tf.estimator.train_and_evaluate
@@ -146,48 +188,14 @@ class Executor(object):
                 model. If `None`, evaluates until the eval data raises an
                 OutOfRange exception.
         """
-        train_spec = self._get_train_spec(max_steps=max_train_steps)
-        eval_spec = self._get_eval_spec(steps=eval_steps)
+        train_spec = self._get_train_spec(max_steps=max_train_steps, num_epochs=num_epochs)
+        eval_spec = self._get_eval_spec(steps=eval_steps, num_epochs=num_epochs)
         tf.estimator.train_and_evaluate(self._estimator, train_spec, eval_spec)
 
-    def test_iterator(self):
-        iterator = self._data_iterator.train_input_fn().make_initializable_iterator()
-        training_init_op = iterator.initializer
-        num_samples = self._data_iterator._num_train_examples
-        batch_size = self._data_iterator._batch_size
-        next_element = iterator.get_next()
-
-        with tf.Session() as sess:
-            sess.run(training_init_op)
-            start_time = time.time()
-
-            pbar = tqdm(desc="steps", total=int(num_samples/batch_size))
-
-            i = 0
-            while (True):
-                try:
-                    res = sess.run(next_element)
-                    pbar.update()
-
-                    if True:
-                        print("Data shapes : ", end=" ")
-                        for key in res[0].keys():
-                            print(res[0][key].shape, end=", ")
-                        print(" label shape : {}".format(res[1].shape))
-
-                except tf.errors.OutOfRangeError:
-                    print("tf.errors.OutOfRangeError")
-                    break
-            end_time = time.time()
-
-            print("Time taken : ", end_time - start_time)
-            exit(-1)
-
-
     def export_model(self, model_export_path):
-        print("=====================", model_export_path)
+        logging.info("Saving model to =======> {}".format(model_export_path))
         if not os.path.exists(model_export_path):
             os.makedirs(model_export_path)
-        self._estimator.export_savedmodel(
+        self._estimator.export_saved_model(
             model_export_path,
-            serving_input_receiver_fn=self._data_iterator.serving_input_receiver_fn)
+            serving_input_receiver_fn=self.dataset.serving_input_receiver_fn)

@@ -21,7 +21,8 @@ import re
 
 
 MODULES = [
-    "vitaflow.models.image.east.east_model"
+    # "vitaflow.models.image.east.east_model_v0",
+    "vitaflow.models.image.east.east_model_keras_v2"
 ]
 
 ALL_MODULES = list(MODULES)

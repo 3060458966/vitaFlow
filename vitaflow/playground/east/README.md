@@ -91,7 +91,7 @@ python vitaflow/bin/run_experiments.py \
 
 #serving
 export MODEL_NAME=EAST
-export MODEL_PATH=/opt/tmp/icdar/east/EASTModel/exported/
+export MODEL_PATH=/opt/tmp/icdar/east/EASTIEstimatorModel/exported/
 
 tensorflow_model_server   \
 --port=8500   \
