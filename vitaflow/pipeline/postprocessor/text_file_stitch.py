@@ -7,26 +7,22 @@ To run
     `PYTHONIOENCODING=utf-8 python3`
 
 """
-import concurrent.futures
+import sys
 import os
+sys.path.append(os.getcwd())
+import fire
 
-import glob
 # import config
 from vitaflow.pipeline.interfaces.plugin import TextCombiner
-from vitaflow.pipeline.postprocessor.ocr_tesseract import TessaractOcrPlugin
-from vitaflow.pipeline.postprocessor.ocr_calamari import CalamariOcrPlugin
+from vitaflow.pipeline.postprocessor.ocr_tesseract import TessaractOcrModule
+from vitaflow.pipeline.postprocessor.ocr_calamari import CalamariOcrModule
 from tqdm import tqdm
-from vitaflow import demo_config
 
 os.environ['OMP_THREAD_LIMIT'] = '1'
 
 class TextFile(TextCombiner):
 
     def _handle_file(self, in_file_path, out_file_path):
-
-        print(in_file_path)
-        print(out_file_path)
-
         lines = []
 
         list_of_in_txt_files = in_file_path #TODO change name in args!
@@ -57,8 +53,8 @@ class TextFile(TextCombiner):
 
         predicted_outputs = {}
 
-        tesseract = TessaractOcrPlugin.__name__
-        calamari = CalamariOcrPlugin.__name__
+        tesseract = TessaractOcrModule.__name__
+        calamari = CalamariOcrModule.__name__
 
         extracted_text = dict()
 
@@ -85,7 +81,21 @@ class TextFile(TextCombiner):
         return extracted_text
 
 
-if __name__ == '__main__':
+def run(source_directory,
+        destination_dir):
+    """
+    Utility to combine all the text OCRed from cropped images. Basically this takes some assumption that the
+    directory names follows certain naming convention, specific to vitaflow pipeline
+    :param source_directory: Directory which has list of folders each folder containing cropped images of identified text regions
+    :param destination_dir: Directory to store the extracted text from cropped images preserving the folder structure
+    :return:
+    """
+
     tt = TextFile()
     print('--' * 55)
-    tt.process_files(source_dir=demo_config.TEXT_OCR_DATA_DIR, destination_dir=demo_config.TEXT_OUT_DIR)
+    tt.process_files(source_dir=source_directory, destination_dir=destination_dir)
+
+
+if __name__ == '__main__':
+    fire.Fire(run)
+

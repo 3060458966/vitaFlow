@@ -11,7 +11,18 @@
 **Ubuntu Specific Installation**
 - https://www.tensorflow.org/tfx/serving/setup
 - `sudo apt-get -y install postgresql postgresql-contrib libpq-dev postgresql-client postgresql-client-common`
-
+- Tesseract
+    ```
+       sudo add-apt-repository ppa:alex-p/tesseract-ocr 
+       sudo apt-get update
+       sudo apt install libtesseract-dev libleptonica-dev liblept5
+       sudo apt install tesseract -y
+  
+       tesseract iamge.jpg out_text -l eng --oem 1 --psm 3
+    ```
+  
+    - https://launchpad.net/~alex-p/+archive/ubuntu/tesseract-ocr
+    - 
 
 **Python Setup**
 
@@ -44,8 +55,8 @@ The pipeline components includes:
 
 - Input Files Directory : [data/receipts/](data/receipts/)
 - output  Files Directory : [data/text_out/](data/text_out/)
-  - X51008142068_**CalamariOcrPlugin**.txt : **Output using our pipeline**
-  - X51008142068_**TessaractOcrPlugin**.txt : **Ouput using PyTesseract**
+  - X51008142068_**CalamariOcrModule**.txt : **Output using our pipeline**
+  - X51008142068_**TessaractOcrModule**.txt : **Ouput using PyTesseract**
   
 ```
 python vitaflow/bin/vf-ocr.py --image_dir=data/receipts/ --out_dir=data/text_out/

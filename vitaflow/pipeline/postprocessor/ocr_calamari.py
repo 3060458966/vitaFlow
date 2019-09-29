@@ -2,15 +2,16 @@
 Demo sample example of how to include calamari_ocr into python code
 '''
 
+import sys
 import os
+sys.path.append(os.getcwd())
+import fire
 
 from calamari_ocr.ocr.datasets import DataSetType
 from calamari_ocr.scripts.predict import run as calamari_ocr_run
 
 # import config
-from vitaflow.pipeline.interfaces.plugin import OCRPluginInterface
-
-from vitaflow import demo_config
+from vitaflow.pipeline.interfaces.plugin import OCRModuleInterface
 
 # TODO:
 # - convert to gray scale images
@@ -41,12 +42,12 @@ class CalamariArgs:
     extension = None
 
 
-class CalamariOcrPlugin(OCRPluginInterface):
+class CalamariOcrModule(OCRModuleInterface):
 
     def __init__(self,
                  calamari_models=None,
                  num_workers=4):
-        OCRPluginInterface.__init__(self,
+        OCRModuleInterface.__init__(self,
                                     num_workers=num_workers)
         self._calamari_models = calamari_models
 
@@ -69,8 +70,6 @@ class CalamariOcrPlugin(OCRPluginInterface):
 
             in_files = self.get_all_input_files(source_dir=os.path.join(source_dir, dir))
 
-            print(">>>>>>>>>>>>>>>>>> {}".format(in_files))
-
             if in_files:
                 output_dir = os.path.join(destination_dir, dir)
 
@@ -83,8 +82,19 @@ class CalamariOcrPlugin(OCRPluginInterface):
                 CalamariArgs.processes = 4
                 calamari_ocr_run(CalamariArgs)
 
+def run(source_directory,
+        destination_dir):
+    """
+    Utility to run Calamari-OCR on cropped text images
+    :param source_directory: Directory which has list of folders each folder containing cropped images of identified text regions
+    :param destination_dir: Directory to store the extracted text from cropped images preserving the folder structure
+    :return:
+    """
+
+    calamari = CalamariOcrModule()
+    calamari.process_files(source_dir=source_directory,
+                           destination_dir=destination_dir)
+
 
 if __name__ == '__main__':
-    calamari = CalamariOcrPlugin()
-    calamari.process_files(source_dir=demo_config.CROPPER_ROOT_DIR,
-                           destination_dir=demo_config.TEXT_OCR_DATA_DIR)
+    fire.Fire(run)

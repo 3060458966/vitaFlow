@@ -7,8 +7,8 @@ import torch.backends.cudnn as cudnn
 import torch.nn.init as init
 from vitaflow.datasets.image.scene_text_recognition.utils import Averager
 from vitaflow.backend.interface_trainer import TrainerBase
+from vitaflow.models.interface_model import ITorchModel
 from vitaflow.utils.print_helper import print_info
-
 
 
 class TorchTrainer(TrainerBase):
@@ -23,12 +23,14 @@ class TorchTrainer(TrainerBase):
                  workers=4):
 
         TrainerBase.__init__(self,
-                              experiment_name=experiment_name,
-                              max_train_steps=max_train_steps,
-                              validation_interval_steps=validation_interval_steps,
-                              stored_model=stored_model)
+                             experiment_name=experiment_name,
+                             max_train_steps=max_train_steps,
+                             validation_interval_steps=validation_interval_steps,
+                             stored_model=stored_model,
+                             dataset=dataset,
+                             model=model)
 
-        assert (isinstance(model, torch.nn.Module))
+        assert (isinstance(model, ITorchModel))
         self._experiment_name = experiment_name
         self._model = model
         self._dataset = dataset
@@ -69,7 +71,7 @@ class TorchTrainer(TrainerBase):
 
     def validation(self, model):
         """ validation or evaluation """
-        evaluation_loader = self._dataset.validation_set()
+        evaluation_loader = self._dataset.get_val_dataset_gen()
         n_correct = 0
         norm_ED = 0
         length_of_data = 0
@@ -132,7 +134,7 @@ class TorchTrainer(TrainerBase):
         # loss averager
         loss_avg = Averager()
 
-        train_dataset = self._dataset.train_set()
+        train_dataset = self._dataset.get_train_dataset_gen()
 
         start_time = time.time()
         best_accuracy = -1

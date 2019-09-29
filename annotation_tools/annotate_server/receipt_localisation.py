@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import config
-from vitaflow.pipeline.interfaces.plugin import ImagePluginInterface
+from vitaflow.pipeline.interfaces.plugin import ModuleInterface
 from vitaflow.pipeline.interfaces.utils import trim_file_ext
 
 
@@ -188,7 +188,7 @@ def rotate_image_with_east(img_filename, save_file=None):
         plt.imshow(warped)
 
 
-class receiptLocalisationImagePlugin(ImagePluginInterface):
+class receiptLocalisationModule(ModuleInterface):
 
     def plugin_inputs(self):
         # Custom location according to need
@@ -238,7 +238,7 @@ class receiptLocalisationImagePlugin(ImagePluginInterface):
 
 
 if __name__ == '__main__':
-    t = receiptLocalisationImagePlugin()
+    t = receiptLocalisationModule()
     t.plugin_inputs()
     print('--' * 55)
     t.bulk_run()

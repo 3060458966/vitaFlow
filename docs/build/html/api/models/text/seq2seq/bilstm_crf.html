@@ -179,7 +179,7 @@
 <dl class="class">
 <dt id="vitaflow.models.text.seq2seq.BiLSTMCrf">
 <em class="property">class </em><code class="descclassname">vitaflow.models.text.seq2seq.</code><code class="descname">BiLSTMCrf</code><span class="sig-paren">(</span><em>hparams=None</em>, <em>data_iterator: vitaflow.data.text.iterators.csv_seq_to_seq_iterator.CSVSeqToSeqIterator = None</em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/vitaflow/models/text/seq2seq/bilstm_crf.html#BiLSTMCrf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vitaflow.models.text.seq2seq.BiLSTMCrf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">vitaflow.core.models.model_base.ModelBase</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">vitaflow.core.features.feature_types.ITextFeature</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">vitaflow.core.models.model_base.IEstimatorModel</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">vitaflow.core.features.feature_types.ITextFeature</span></code></p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Features : {Sentence, [character ids]}, label
 Word Feature Tensor
 Character Feature Tensor

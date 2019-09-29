@@ -193,13 +193,13 @@
 <span class="kn">from</span> <span class="nn">vitaflow.core.hyperparams</span> <span class="k">import</span> <span class="n">HParams</span>
 <span class="kn">from</span> <span class="nn">vitaflow.data.text.iterators.csv_seq_to_seq_iterator</span> <span class="k">import</span> <span class="n">CSVSeqToSeqIterator</span>
 <span class="kn">from</span> <span class="nn">vitaflow.data.text.vocabulary</span> <span class="k">import</span> <span class="n">SpecialTokens</span>
-<span class="kn">from</span> <span class="nn">vitaflow.core.models.model_base</span> <span class="k">import</span> <span class="n">ModelBase</span>
+<span class="kn">from</span> <span class="nn">vitaflow.core.models.model_base</span> <span class="k">import</span> <span class="n">IEstimatorModel</span>
 <span class="kn">from</span> <span class="nn">vitaflow.core.features.feature_types</span> <span class="k">import</span> <span class="n">ITextFeature</span>
 <span class="kn">from</span> <span class="nn">vitaflow.helpers.tf_data_helper</span> <span class="k">import</span> <span class="n">get_sequence_length</span>
 <span class="kn">from</span> <span class="nn">vitaflow.helpers.print_helper</span> <span class="k">import</span> <span class="o">*</span>
 
 
-<div class="viewcode-block" id="BiLSTMCrf"><a class="viewcode-back" href="../../../../../api/models/text/seq2seq/bilstm_crf.html#vitaflow.models.text.seq2seq.BiLSTMCrf">[docs]</a><span class="k">class</span> <span class="nc">BiLSTMCrf</span><span class="p">(</span><span class="n">ModelBase</span><span class="p">,</span> <span class="n">ITextFeature</span><span class="p">):</span>
+<div class="viewcode-block" id="BiLSTMCrf"><a class="viewcode-back" href="../../../../../api/models/text/seq2seq/bilstm_crf.html#vitaflow.models.text.seq2seq.BiLSTMCrf">[docs]</a><span class="k">class</span> <span class="nc">BiLSTMCrf</span><span class="p">(</span><span class="n">IEstimatorModel</span><span class="p">,</span> <span class="n">ITextFeature</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">    .. code-block:: text</span>
@@ -234,7 +234,7 @@
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_iterator</span><span class="p">:</span> <span class="n">CSVSeqToSeqIterator</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="n">ITextFeature</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">ModelBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hparams</span><span class="o">=</span><span class="n">hparams</span><span class="p">)</span>
+        <span class="n">IEstimatorModel</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hparams</span><span class="o">=</span><span class="n">hparams</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_hparams</span> <span class="o">=</span> <span class="n">HParams</span><span class="p">(</span><span class="n">hparams</span><span class="p">,</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">default_hparams</span><span class="p">())</span>
 

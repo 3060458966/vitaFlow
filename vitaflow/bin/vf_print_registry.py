@@ -20,21 +20,17 @@ Run to see available datasets and models
 python vf_print_registry.py
 """
 
-import os
 import sys
-from absl import flags
+import os
+import warnings
 from absl import logging
+warnings.simplefilter(action='ignore', category=FutureWarning)
+sys.path.append(os.getcwd())
 logging.set_verbosity(logging.INFO)
-import tensorflow as tf
-# Appending vitaFlow main Path
-sys.path.append(os.path.abspath('.'))
 
 from vitaflow.datasets import datasets # pylint: disable=unused-import
 from vitaflow.models import models # pylint: disable=unused-import
 import vitaflow.utils.registry as registry
-
-flags.DEFINE_bool("registry_help", False, "If True, logs the contents of the registry and exits.")
-FLAGS = flags.FLAGS
 
 
 def maybe_log_registry_and_exit():

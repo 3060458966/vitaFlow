@@ -22,7 +22,7 @@ from tensorflow.python.platform import gfile
 
 from vitaflow.utils.print_helper import print_warn
 # from vitaflow.helpers.print_helper import print_warn
-from vitaflow.iterators.text.vocabulary import SpecialTokens
+from vitaflow.deprecated.iterators import SpecialTokens
 
 
 def naive_vocab_creater(out_file_name, lines, use_nlp):

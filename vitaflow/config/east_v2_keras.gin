@@ -11,8 +11,6 @@ VitaFlowEngine.save_summary_steps=5
 VitaFlowEngine.log_step_count_steps=2
 VitaFlowEngine.clear_model_data=False
 
-
-
 #CDARDataset
 CDARDataset.data_in_dir="/opt/vlab/icdar-2019-data"
 CDARDataset.data_out_dir="/opt/tmp/vitaflow/east_v2_keras/data/"

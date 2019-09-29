@@ -18,7 +18,7 @@ setup(
     package_data={
     },
     scripts=[
-        'vitaflow/bin/run_experiments.py'
+        'vitaflow/bin/vf_engine.py'
     ],
     install_requires=install_requires,
     extras_require={

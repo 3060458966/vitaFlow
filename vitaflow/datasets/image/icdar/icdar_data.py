@@ -3,10 +3,12 @@
 import glob
 import multiprocessing
 
+from absl import logging
+
 from vitaflow.datasets.interface_dataset import IDataset
 from vitaflow.datasets.image.icdar.icdar_utils import *
 
-from vitaflow.utils.print_helper import print_error, print_info, memory_usage_psutil
+from vitaflow.utils.print_helper import print_error, print_info, memory_usage_psutil, print_debug
 from vitaflow.utils import registry
 
 
@@ -169,11 +171,11 @@ class CDARDataset(IDataset):
         index = 0
         multiprocess_list = [] # list of tuples: list of images and a TFRecord file name
 
-        for i in tqdm(range(0, len(images), self._number_images_per_tfrecords), desc="prepare_data: "):
+        for i in range(0, len(images), self._number_images_per_tfrecords):
             file_path_name = out_path + "/" + str(index) + ".tfrecords"
             if os.path.exists(file_path_name):
-                num_records = get_tf_records_count([file_path_name])
-                print("Found in ", file_path_name, f"with {num_records} records already! Hence skipping")
+                # num_records = get_tf_records_count([file_path_name])
+                print_debug("Found in " + str(file_path_name) + f"with records already! Hence skipping")
             else:
                 multiprocess_list.append((images[i:i + self._number_images_per_tfrecords], file_path_name))
                 index += 1
@@ -362,13 +364,12 @@ class CDARDataset(IDataset):
         }
         return tf.estimator.export.ServingInputReceiver(inputs, inputs)
 
-    @thread_safe_generator
     def get_train_dataset_gen(self, num_epochs=None):
         """
         Returns an data set generator function that can be used in train loop
         :return:
         """
-        yield generator(data_dir=self._data_in_dir + "/train",
+        return generator(data_dir=self._data_in_dir + "/train",
                         batch_size=self.batch_size,
                         geometry="RBOX",
                         min_text_size=self._min_text_size,
@@ -380,13 +381,13 @@ class CDARDataset(IDataset):
                         is_train=True,
                         shuffle=True)
 
-    @thread_safe_generator
+
     def get_val_dataset_gen(self, num_epochs=None):
         """
         Returns an data set generator function that can be used in validation loop
         :return:
         """
-        yield generator(data_dir=self._data_in_dir + "/val",
+        return generator(data_dir=self._data_in_dir + "/val",
                          batch_size=self.batch_size,
                          geometry="RBOX",
                          min_text_size=self._min_text_size,

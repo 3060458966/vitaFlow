@@ -13,7 +13,7 @@ from torch.utils.data import Dataset, ConcatDataset, Subset
 from torch._utils import _accumulate
 import torchvision.transforms as transforms
 
-from print_helper import *
+from vitaflow.utils.print_helper import *
 
 
 class ResizeNormalize(object):

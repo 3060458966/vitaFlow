@@ -25,17 +25,17 @@ run_experiments \
 
 import os
 import sys
-# Appending vitaFlow main Path
-sys.path.append(os.path.abspath('.'))
 from absl import app
 from absl import flags
+from  absl import logging
+import warnings
+# Appending vitaFlow main Path
+sys.path.append(os.path.abspath('.'))
+warnings.simplefilter(action='ignore', category=FutureWarning)
+logging.set_verbosity(logging.DEBUG)
 import tensorflow as tf
 import gin
-
-
-
 from vitaflow.engine.engine import VitaFlowEngine
-
 from vitaflow.datasets import datasets # pylint: disable=unused-import
 from vitaflow.models import models # pylint: disable=unused-import
 import vitaflow.utils.registry as registry
@@ -43,7 +43,6 @@ import vitaflow.utils.registry as registry
 FLAGS = flags.FLAGS
 flags.DEFINE_string("config_file", "Google gin config file", "path/to/gin_config.gin")
 flags.DEFINE_string("mode", "train", "train/retrain/predict/predict_instance")
-
 
 def main(argv):
     gin.parse_config_file(FLAGS.config_file)

@@ -7,17 +7,17 @@ To run
     `PYTHONIOENCODING=utf-8 python3`
 
 """
-import concurrent.futures
+import sys
 import os
+sys.path.append(os.getcwd())
+import fire
 import unicodedata
 
 import cv2
 import pytesseract
 
 # import config
-from vitaflow.pipeline.interfaces.plugin import OCRPluginInterface
-from vitaflow.pipeline.interfaces.utils import trim_file_ext
-from vitaflow import demo_config
+from vitaflow.pipeline.interfaces.plugin import OCRModuleInterface
 
 os.environ['OMP_THREAD_LIMIT'] = '1'
 
@@ -38,12 +38,13 @@ def string_parser(text):
     return str(text)
 
 
-class TessaractOcrPlugin(OCRPluginInterface):
+class TessaractOcrModule(OCRModuleInterface):
     def __init__(self,
+                 file_postfix=None,
                  num_workers=4,
-                 tesseract_config='-oem 2 -c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyz -c preserve_interword_spaces=1'):
+                 tesseract_config='--oem 1 --psm 3 -l eng'):# -c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyz -c preserve_interword_spaces=1'):
         # --psm 1 - -oem 1 - -dpi 300 tsv
-        OCRPluginInterface.__init__(self, num_workers=num_workers)
+        OCRModuleInterface.__init__(self, num_workers=num_workers, file_postfix=file_postfix)
         self._tesseract_config = tesseract_config
 
     def _handle_file(self, in_file_path, out_file_path):
@@ -57,8 +58,19 @@ class TessaractOcrPlugin(OCRPluginInterface):
             print("Failed : {} ----> {}".format(in_file_path, out_file_path))
 
 
-if __name__ == '__main__':
-    tt = TessaractOcrPlugin(num_workers=4)
+def run(source_directory,
+        destination_dir):
+    """
+    Utility to run Tesseract-OCR on cropped text images
+    :param source_directory: Directory which has list of folders each folder containing cropped images of identified text regions
+    :param destination_dir: Directory to store the extracted text from cropped images preserving the folder structure
+    :return:
+    """
+
+    tt = TessaractOcrModule(num_workers=4)
     print('--' * 55)
-    tt.process_files(source_dir=demo_config.CROPPER_ROOT_DIR,
-                     destination_dir=demo_config.TEXT_OCR_DATA_DIR)
+    tt.process_files(source_dir=source_directory,
+                     destination_dir=destination_dir)
+
+if __name__ == '__main__':
+    fire.Fire(run)

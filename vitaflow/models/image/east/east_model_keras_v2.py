@@ -22,18 +22,19 @@ from keras.utils.generic_utils import deserialize_keras_object
 
 # import keras
 # from keras.applications.resnet50 import ResNet50
-# from keras.models import Model
+from keras.models import Model
 # from keras.layers import Conv2D, concatenate, BatchNormalization, Lambda, Input, multiply, add, ZeroPadding2D, Activation, Layer, MaxPooling2D, Dropout
 # from keras import regularizers
 # import tensorflow as tf
 # from keras.optimizers import Optimizer
 #
 
-# from keras.legacy import interfaces
+from keras.legacy import interfaces
 # from keras.callbacks import LearningRateScheduler, TensorBoard, ModelCheckpoint, Callback
 
 
 from vitaflow.models.interface_model import IKerasModel
+from vitaflow.utils.print_helper import print_debug
 from vitaflow.utils.registry import register_model
 
 RESIZE_FACTOR = 2
@@ -97,18 +98,48 @@ class AdamW(Optimizer):
         - [Fixing Weight Decay Regularization in Adam](https://arxiv.org/abs/1711.05101)
     """
 
-    def __init__(self, lr=0.001, beta_1=0.9, beta_2=0.999, weight_decay=1e-4,  # decoupled weight decay (1/4)
-                 epsilon=1e-8, decay=0., **kwargs):
-        super(AdamW, self).__init__(name="AdamW", **kwargs)
+    def __init__(self,
+                 name="AdamW",
+                 lr=0.001,
+                 beta_1=0.9,
+                 beta_2=0.999,
+                 weight_decay=1e-4,  # decoupled weight decay (1/4)
+                 epsilon=1e-8,
+                 decay=0.,
+                 **kwargs):
+        try:
+            super(AdamW, self).__init__(name=name, **kwargs)
+        except:
+            super(AdamW, self).__init__(**kwargs)
+
+        from pprint import pprint
+        pprint(vars(self))
         with K.name_scope(self.__class__.__name__):
+            self.lr = tf.Variable(lr, name='AdamW_lr')
             self.iterations = tf.Variable(0, dtype='int64', name='iterations')
-            self.lr = tf.Variable(lr, name='lr')
             self.beta_1 = tf.Variable(beta_1, name='beta_1')
             self.beta_2 = tf.Variable(beta_2, name='beta_2')
             self.decay = tf.Variable(decay, name='decay')
             self.wd = tf.Variable(weight_decay, name='weight_decay') # decoupled weight decay (2/4)
         self.epsilon = epsilon
         self.initial_decay = decay
+
+    def __getattribute__(self, name):
+        """Overridden to support hyperparameter access."""
+        try:
+            if name == "lr":
+                name = "learning_rate"
+            return super(Optimizer, self).__getattribute__(name)
+        except AttributeError as e:
+            # Needed to avoid infinite recursion with __setattr__.
+            if name == "_hyper":
+                raise e
+            # Backwards compatibility with Keras optimizers.
+            if name == "lr":
+                name = "learning_rate"
+            if name in self._hyper:
+                return self._get_hyper(name)
+            raise e
 
     # @interfaces.legacy_get_updates_support
     def get_updates(self, loss, params):
@@ -220,6 +251,7 @@ class CustomTensorBoard(TensorBoard):
         self.writer.add_summary(tf_summary, epoch + 1)
         super(CustomTensorBoard, self).on_epoch_end(epoch + 1, logs)
 
+
 class ValidationEvaluator(Callback):
     def __init__(self, validation_data, validation_log_dir, batch_size, period=5):
         super(Callback, self).__init__()
@@ -283,6 +315,7 @@ class ValidationEvaluator(Callback):
             self.val_writer.add_summary(tf_summary, epoch + 1)
             self.val_writer.flush()
 
+
 class SmallTextWeight(Callback):
     def __init__(self, weight):
         self.weight = weight
@@ -314,11 +347,11 @@ class EASTV2Keras(IKerasModel):
         text_region_boundary_training_mask = Input(shape=(None, None, 1), name='text_region_boundary_training_mask')
         target_score_map = Input(shape=(None, None, 1), name='target_score_map')
         resnet = ResNet50(input_tensor=input_image, weights='imagenet', include_top=False, pooling=None)
-        # print(resnet.summary())
-        x = resnet.get_layer('conv5_block3_out').output  # activation_49
+        print_debug(resnet.summary())
+        x = resnet.get_layer('activation_49').output  # activation_49 -> conv5_block3_out
 
         x = Lambda(resize_bilinear, name='resize_1')(x)
-        x = concatenate([x, resnet.get_layer('conv4_block6_out').output], axis=3)  # activation_40
+        x = concatenate([x, resnet.get_layer('activation_40').output], axis=3)  # activation_40 -> concat_conv4_block6_out
         x = Conv2D(128, (1, 1), padding='same', kernel_regularizer=regularizers.l2(1e-5))(x)
         x = BatchNormalization(momentum=0.997, epsilon=1e-5, scale=True)(x)
         x = Activation('relu')(x)
@@ -327,7 +360,7 @@ class EASTV2Keras(IKerasModel):
         x = Activation('relu')(x)
 
         x = Lambda(resize_bilinear, name='resize_2')(x)
-        x = concatenate([x, resnet.get_layer('conv3_block4_out').output], axis=3) # activation_22
+        x = concatenate([x, resnet.get_layer('activation_22').output], axis=3) # activation_22 -> conv3_block4_out
         x = Conv2D(64, (1, 1), padding='same', kernel_regularizer=regularizers.l2(1e-5))(x)
         x = BatchNormalization(momentum=0.997, epsilon=1e-5, scale=True)(x)
         x = Activation('relu')(x)
@@ -336,7 +369,7 @@ class EASTV2Keras(IKerasModel):
         x = Activation('relu')(x)
 
         x = Lambda(resize_bilinear, name='resize_3')(x)
-        x = concatenate([x, ZeroPadding2D(((1, 0),(1, 0)))(resnet.get_layer('conv2_block3_out').output)], axis=3) # activation_10
+        x = concatenate([x, ZeroPadding2D(((1, 0),(1, 0)))(resnet.get_layer('activation_10').output)], axis=3) # activation_10 -> conv2_block3_out
         x = Conv2D(32, (1, 1), padding='same', kernel_regularizer=regularizers.l2(1e-5))(x)
         x = BatchNormalization(momentum=0.997, epsilon=1e-5, scale=True)(x)
         x = Activation('relu')(x)
@@ -368,10 +401,11 @@ class EASTV2Keras(IKerasModel):
 
         self.small_text_weight_callback = SmallTextWeight(self.small_text_weight)
 
+        train_data_generator = dataset.get_train_dataset_gen()
         self.tb = CustomTensorBoard(log_dir=model_root_directory + '/train',
                                     score_map_loss_weight=self.score_map_loss_weight,
                                     small_text_weight=self.small_text_weight,
-                                    data_generator=dataset.get_train_dataset_gen(),
+                                    data_generator=train_data_generator,
                                     write_graph=True,
                                     input_size=512)
         validation_evaluator = ValidationEvaluator(dataset.get_val_dataset_gen(),
@@ -395,7 +429,7 @@ class EASTV2Keras(IKerasModel):
         return loss
 
     def get_optimizer(self, loss=None):
-        return  AdamW(self._init_learning_rate)
+        return "adam" #AdamW(lr=self._init_learning_rate)
 
     def get_callbacks(self):
         return self._callbacks

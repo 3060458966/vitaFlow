@@ -25,7 +25,7 @@ def find_files_with_ext(search_folder, exts=['.JPG', '.jpg', '.png']):
     return bag
 
 
-class ImagePluginInterface(ABC):
+class ModuleInterface(ABC):
     """Simple image processing plugin application
 
     Must implement `run` method for using."""
@@ -85,13 +85,16 @@ class ImagePluginInterface(ABC):
         return self._handle_files(source_dir=source_dir, destination_dir=destination_dir)
 
 
-class OCRPluginInterface(ImagePluginInterface):
+class OCRModuleInterface(ModuleInterface):
     """OCR Abstract Class"""
 
     def __init__(self,
+                 file_postfix=None,
                  num_workers=4):
-        ImagePluginInterface.__init__(self)
+        ModuleInterface.__init__(self)
         self._num_workers = num_workers
+
+        self._file_postfix = file_postfix
 
     def _parallel(self, image_list, out_file_list):
         completed_jobs = []
@@ -118,15 +121,17 @@ class OCRPluginInterface(ImagePluginInterface):
             if not os.path.exists(out_file_dir):
                 os.makedirs(out_file_dir)
 
-            out_file_path = os.path.join(out_file_dir, filename + "_" + self.__class__.__name__ + "_.txt")
+            if self._file_postfix is None:
+                self._file_postfix = self.__class__.__name__
+            out_file_path = os.path.join(out_file_dir, filename + "_" + self._file_postfix + "_.txt")
             out_files.append(out_file_path)
 
         self._parallel(image_list=in_files, out_file_list=out_files)
 
 
-class TextCombiner(ImagePluginInterface):
+class TextCombiner(ModuleInterface):
     """Abstract Class"""
 
     def __init__(self):
-        ImagePluginInterface.__init__(self)
+        ModuleInterface.__init__(self)
 

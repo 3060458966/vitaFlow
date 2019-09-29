@@ -6,12 +6,13 @@ from vitaflow.datasets.interface_dataset import IDataset
 from vitaflow.datasets.image.scene_text_recognition.helpers import hierarchical_dataset, AlignCollate, BatchBalancedDataset, RawDataset
 from absl import logging
 from vitaflow.utils.print_helper import *
+from vitaflow.utils import registry
 
+@registry.register_dataset
 @gin.configurable
 class SceneTextRecognitionDataset(IDataset):
     def __init__(self,
-                 train_data=None,
-                 valid_data=None,
+                 data_in_dir,
                  select_data="MJ-ST",
                  batch_ratio="0.5-0.5",
                  batch_size=192,
@@ -26,13 +27,15 @@ class SceneTextRecognitionDataset(IDataset):
                  num_cores=4,
                  total_data_usage_ratio=1.0):
 
-        TorchDataset.__init__(self,
-                              data_dir=None,
-                              batch_size=batch_size,
-                              num_cores=num_cores)
+        IDataset.__init__(self,
+                          data_in_dir=data_in_dir,
+                          data_out_dir=None,
+                          batch_size=batch_size,
+                          is_preprocess=None,
+                          num_cores=num_cores)
 
-        self._train_data = train_data
-        self._valid_data = valid_data
+        self._train_data = data_in_dir + "/training/"
+        self._valid_data = data_in_dir + "/validation/"
         self._select_data = select_data
         self._batch_ratio = batch_ratio
         self._batch_size = batch_size
@@ -55,7 +58,7 @@ class SceneTextRecognitionDataset(IDataset):
 
         self._batch_size = batch_size
 
-        self.train_dataset = BatchBalancedDataset(train_data=train_data,
+        self.train_dataset = BatchBalancedDataset(train_data=self._train_data,
                                                   select_data=select_data,
                                                   batch_ratio=batch_ratio,
                                                   batch_size=batch_size,
@@ -74,7 +77,7 @@ class SceneTextRecognitionDataset(IDataset):
                                            img_width=img_width,
                                            keep_ratio_with_pad=is_pad)
 
-        valid_dataset = hierarchical_dataset(root=valid_data,
+        valid_dataset = hierarchical_dataset(root=self._valid_data,
                                              data_filtering_off=data_filtering_off,
                                              batch_max_length=batch_max_length,
                                              character=character,
@@ -95,13 +98,13 @@ class SceneTextRecognitionDataset(IDataset):
     def __len__(self):
         return len(self.train_dataset)
 
-    def _get_train_dataset(self):
+    def get_train_dataset_gen(self):
         return self.train_dataset
 
-    def _get_val_dataset(self):
+    def get_val_dataset_gen(self):
         return self.valid_loader
 
-    def _get_serving_dataset(self, file_or_path):
+    def get_serving_dataset(self, file_or_path):
         # prepare data. two demo images from https://github.com/bgshih/crnn#run-demo
         align_collate_demo = AlignCollate(img_height=self._img_height,
                                           img_width=self._img_width,

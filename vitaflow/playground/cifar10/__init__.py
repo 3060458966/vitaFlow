@@ -1,3 +1,0 @@
-from vitaflow.playground.cifar10.cifar10_dataset import Cifar10Dataset
-from vitaflow.playground.cifar10.cifar10_basic_iterator import Cifar10BasicIterator
-from vitaflow.models.image.classification.naive_convnet import NaiveConvNet

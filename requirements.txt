@@ -32,6 +32,13 @@ opencv-python
 imutils
 keras
 xmltodict
+torch=1.2.0
+fire
+lmdb
+torchvision
+natsort
+fire
+nltk
 
 
 

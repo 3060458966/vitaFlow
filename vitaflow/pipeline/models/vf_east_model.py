@@ -1,5 +1,7 @@
+import sys
 import os
-import argparse
+sys.path.append(os.getcwd())
+import fire
 
 
 try:
@@ -11,9 +13,7 @@ except:
 
 # from tensorflow.contrib.predictor
 import tensorflow as tf
-from vitaflow import demo_config
-
-from vitaflow.demo_config import create_dirs
+from vitaflow.deprecated import demo_config
 
 
 def east_flow_predictions(input_dir=demo_config.IMAGE_ROOT_DIR,
@@ -34,9 +34,20 @@ def east_flow_predictions(input_dir=demo_config.IMAGE_ROOT_DIR,
                                  ratio_w=ratio_w)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--images_dir', default=demo_config.IMAGE_ROOT_DIR, help='input images', type=str)
-    create_dirs()
-    args = parser.parse_args()
+def run(input_dir,
+        output_dir,
+        model_dir):
+    """
+    Predict script for EAST model
+    :param input_dir: Directory containing images
+    :param output_dir: Directory to store the predictions as text file and images (with text boxes)
+    :param model_dir: EAST model directory
+    :return:
+    """
+
     east_flow_predictions(input_dir=args.images_dir)
+
+
+if __name__ == '__main__':
+    fire.Fire(run)
+

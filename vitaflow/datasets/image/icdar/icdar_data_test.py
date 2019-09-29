@@ -1,10 +1,30 @@
 import os
 import sys
 # Appending vitaFlow main Path
+from tensorflow_core._api.v2 import errors
+
 sys.path.append(os.path.abspath('.'))
 import unittest
 from vitaflow.datasets.image.icdar.icdar_data import CDARDataset
 
+
+def _get_next_batch(generator):
+  """Retrieves the next batch of input data."""
+  try:
+    generator_output = next(generator)
+  except (StopIteration, errors.OutOfRangeError):
+    return None
+
+  if not isinstance(generator_output, tuple):
+    # Always wrap in a tuple.
+    generator_output = (generator_output,)
+
+  if len(generator_output) not in [1, 2, 3]:
+    raise ValueError(
+        'Output of generator should be a tuple of 1 or 2 or 3 '
+        'elements: (input,) or (input, target) or '
+        '(input, target, sample_weights). Received {}'.format(generator_output))
+  return generator_output
 
 class CDARDatasetTest(unittest.TestCase):
 
@@ -26,12 +46,26 @@ class CDARDatasetTest(unittest.TestCase):
         assert (dataset.train_samples_count == 547)
 
         gen = dataset.get_train_dataset_gen()
-        i = 0
-        for features_n_label in next(gen):
-            print(features_n_label[0][0].shape)
-            i += 1
-            if i == 2:
-                break
+        num_batches = 0
+        #
+        # for features_n_label in next(gen):
+        #     for j in range(len(features_n_label)):
+        #         if num_batches < 2:
+        #             for i in range(len(features_n_label[j])):
+        #                 print(features_n_label[j][i].shape)
+        #     # print("\n")
+        #     num_batches += 1
+        #     print(num_batches)
+
+
+        for features_n_label in _get_next_batch(gen):
+            for j in range(len(features_n_label)):
+                if num_batches < 2:
+                    for i in range(len(features_n_label[j])):
+                        print(features_n_label[j][i].shape)
+            # print("\n")
+            num_batches += 1
+            print(num_batches)
 
 if __name__ == '__main__':
     unittest.main()

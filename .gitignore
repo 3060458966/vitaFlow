@@ -1,3 +1,6 @@
+store/*
+ui/node_modules/*
+get_val_dataset_gen/*
 django_apis/apis/gen/*
 vitaFlow.iml
 doctrees/

@@ -3,16 +3,23 @@ import shutil
 import argparse
 import sys
 sys.path.append('/opt/vlab/vitaFlow')
+from absl import logging
+logging.set_verbosity(logging.ERROR)
 
 from vitaflow.pipeline.models.vf_east_model import east_flow_predictions
+from vitaflow.utils.print_helper import print_info
 
 
 
-from vitaflow.pipeline.postprocessor.ocr_calamari import CalamariOcrPlugin
-from vitaflow.pipeline.postprocessor.ocr_tesseract import TessaractOcrPlugin
+from vitaflow.pipeline.postprocessor.ocr_calamari import CalamariOcrModule
+from vitaflow.pipeline.postprocessor.ocr_tesseract import TessaractOcrModule
 from vitaflow.pipeline.postprocessor.text_file_stitch import TextFile
 from vitaflow.pipeline.preprocessor.binarisation import ImageBinarisePreprocessor
-from vitaflow.pipeline.preprocessor.crop_to_box import EastCropperImagePlugin
+from vitaflow.pipeline.preprocessor.crop_to_box import EastCropperModule
+
+# import tensorflow as tf
+#
+# tf.logging.set_verbosity(v)
 
 
 def main(args):
@@ -32,29 +39,32 @@ def main(args):
                           model_dir=EAST_MODEL_DIR)
 
     t = ImageBinarisePreprocessor(weights_path=BINARIZER_MODEL_WEIGTHS)
-    print('--' * 55)
+    print_info('--' * 55)
     t.process_files(source_dir=EAST_OUT_IMG_DIR, destination_dir=BINARIZE_ROOT_DIR)
 
-    t = EastCropperImagePlugin(east_out_dir=EAST_OUT_IMG_DIR)
-    print('--' * 55)
+    t = EastCropperModule(east_out_dir=EAST_OUT_IMG_DIR)
+    print_info('--' * 55)
     t.process_files(source_dir=BINARIZE_ROOT_DIR, destination_dir=CROPPER_ROOT_DIR)
 
-    tt = TessaractOcrPlugin(num_workers=4)
-    print('--' * 55)
+    tt = TessaractOcrModule(num_workers=4)
+    print_info('--' * 55)
     tt.process_files(source_dir=CROPPER_ROOT_DIR,
                      destination_dir=TEXT_OCR_DATA_DIR)
 
-    calamari = CalamariOcrPlugin(calamari_models=CALAMARI_MODEL_DIR)
+    calamari = CalamariOcrModule(calamari_models=CALAMARI_MODEL_DIR)
     calamari.process_files(source_dir=CROPPER_ROOT_DIR,
                            destination_dir=TEXT_OCR_DATA_DIR,
                            keep_destination=True)
 
     tt = TextFile()
-    print('--' * 55)
+    print_info('--' * 55)
     extracted_text = tt.process_files(source_dir=TEXT_OCR_DATA_DIR, destination_dir=TEXT_OUT_DIR)
 
-    print("=" * 50)
-    print(extracted_text)
+    tt = TessaractOcrModule(num_workers=4, file_postfix="full_page")
+    print_info('--' * 55)
+    tt.process_files(source_dir=args['image_dir'],
+                     destination_dir=TEXT_OUT_DIR,
+                     keep_destination=True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run OCR (EAST+Calamari)')

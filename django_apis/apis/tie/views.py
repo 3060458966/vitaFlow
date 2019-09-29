@@ -3,11 +3,11 @@ import shutil
 import sys
 sys.path.append('/opt/vlab/vitaFlow')
 
-from vitaflow.pipeline.postprocessor.ocr_calamari import CalamariOcrPlugin
-from vitaflow.pipeline.postprocessor.ocr_tesseract import TessaractOcrPlugin
+from vitaflow.pipeline.postprocessor.ocr_calamari import CalamariOcrModule
+from vitaflow.pipeline.postprocessor.ocr_tesseract import TessaractOcrModule
 from vitaflow.pipeline.postprocessor.text_file_stitch import TextFile
 from vitaflow.pipeline.preprocessor.binarisation import ImageBinarisePreprocessor
-from vitaflow.pipeline.preprocessor.crop_to_box import EastCropperImagePlugin
+from vitaflow.pipeline.preprocessor.crop_to_box import EastCropperModule
 
 
 
@@ -102,16 +102,16 @@ class GetLocalizedText(generics.RetrieveAPIView):
         print('--' * 55)
         t.process_files(source_dir=settings.EAST_OUT_IMG_DIR, destination_dir=settings.BINARIZE_ROOT_DIR)
 
-        t = EastCropperImagePlugin(east_out_dir=settings.EAST_OUT_IMG_DIR)
+        t = EastCropperModule(east_out_dir=settings.EAST_OUT_IMG_DIR)
         print('--' * 55)
         t.process_files(source_dir=settings.BINARIZE_ROOT_DIR, destination_dir=settings.CROPPER_ROOT_DIR)
 
-        tt = TessaractOcrPlugin(num_workers=4)
+        tt = TessaractOcrModule(num_workers=4)
         print('--' * 55)
         tt.process_files(source_dir=settings.CROPPER_ROOT_DIR,
                          destination_dir=settings.TEXT_OCR_DATA_DIR)
 
-        calamari = CalamariOcrPlugin()
+        calamari = CalamariOcrModule()
 
         calamari.process_files(source_dir=settings.CROPPER_ROOT_DIR,
                                destination_dir=settings.TEXT_OCR_DATA_DIR,

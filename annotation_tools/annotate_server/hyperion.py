@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from vitaflow.pipeline.interfaces.plugin import ImagePluginInterface
+from vitaflow.pipeline.interfaces.plugin import ModuleInterface
 
 _command_convert = ['/usr/bin/convert',
                     '-density', '300',
@@ -56,7 +56,7 @@ def main(image_loc, dest_image_loc=None):
         print('Binarisation - Failed - Generated file {}'.format(dest_image_loc))
 
 
-class PdfToOCR(ImagePluginInterface):
+class PdfToOCR(ModuleInterface):
 
     def plugin_inputs(self):
         # Custom location according to need

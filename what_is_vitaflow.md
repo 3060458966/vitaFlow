@@ -57,7 +57,7 @@ configuration:
 
 We are continuously exploring and extending VitaFlow, by solving some real world problems. 
 
-As baseline problem we have considered [Receipts](vitaflow/playground/receipt_ocr/) to extract some useful text information from camera images. 
+As baseline problem we have considered [Receipts](vitaflow/deprecated/playground/receipt_ocr/) to extract some useful text information from camera images. 
 
 ![](docs/images/vitaflow_abstract_workflow_modified.png)
 
@@ -92,7 +92,7 @@ As baseline problem we have considered [Receipts](vitaflow/playground/receipt_oc
 
 Apache License - Version 2.0.
 
-# [Contributions](contributions.md)
+# [Contributions](vitaflow/deprecated/contributions.md)
 
 # References
 

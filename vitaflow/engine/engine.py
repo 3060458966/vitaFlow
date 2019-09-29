@@ -23,7 +23,6 @@ from vitaflow.utils.print_helper import *
 from vitaflow.backend.tf_executor import TFExecutor
 from vitaflow.backend.torch_trainer import TorchTrainer
 # import objgraph
-from keras.models import Model
 
 
 

@@ -15,7 +15,7 @@
 Base class for models.
 """
 import os
-
+import torch.nn as nn
 from vitaflow.utils.hyperparams import HParams
 
 # pylint: disable=too-many-arguments
@@ -115,12 +115,13 @@ class IKerasModel(IModelBase):
     def get_callbacks(self):
         raise NotImplementedError
 
-class ITorchModel(IModelBase):
+class ITorchModel(IModelBase, nn.Module):
 
     def __init__(self,
                  experiment_name,
                  model_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/", "keras_model"),
                  dataset=None):
+        nn.Module.__init__(self)
         IModelBase.__init__(self,
                             experiment_name=experiment_name,
                             model_root_directory=model_root_directory,

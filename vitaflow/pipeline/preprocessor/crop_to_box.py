@@ -8,12 +8,14 @@ image files are processed and save to Images folder.
 
 """
 
+import sys
 import os
-
+sys.path.append(os.getcwd())
+import fire
 import matplotlib.pyplot as plt
 
-from vitaflow.pipeline.interfaces.plugin import ImagePluginInterface
-from vitaflow import demo_config
+from vitaflow.pipeline.interfaces.plugin import ModuleInterface
+from vitaflow.utils.print_helper import print_error
 
 
 def crop_and_save(cords, image, dest, fname):
@@ -23,9 +25,10 @@ def crop_and_save(cords, image, dest, fname):
     dest_file = dest_file + ".jpg"
     try:
         plt.imsave(dest_file, cropped_image, cmap='Greys_r')  # '
-        print('Saved file to {}'.format(dest_file))
+        # print('Saved file to {}'.format(dest_file))
     except:
-        print('>>>>>>>>>>>>>> Missed file to {}'.format(dest_file))
+        print_error(">>>>>>>>>>>>>> dest : {}".format(dest))
+        print_error('>>>>>>>>>>>>>> Missed file to {}'.format(dest_file))
 
 
 def sorting_east_cords_data(gt_txt_file_pointer):
@@ -68,9 +71,9 @@ def crop_to_box(gt_text_file_loc, source_image_loc, cropped_dir):
                 print("error", fnf_error)
 
 
-class EastCropperImagePlugin(ImagePluginInterface):
+class EastCropperModule(ModuleInterface):
     def __init__(self, east_out_dir):
-        ImagePluginInterface.__init__(self)
+        ModuleInterface.__init__(self)
         self._east_out_dir = east_out_dir
 
     def _handle_data(self, in_file_data):
@@ -90,10 +93,24 @@ class EastCropperImagePlugin(ImagePluginInterface):
         if not os.path.isfile(gt_text_file_loc):
             print("Skipping the run as {} has not east_airflow_demo predictions".format(gt_text_file_loc))
         else:
+            print(dest_loc_dir)
             crop_to_box(gt_text_file_loc, in_file_path, dest_loc_dir)
 
 
-if __name__ == '__main__':
-    t = EastCropperImagePlugin(east_out_dir=demo_config.EAST_OUT_DIR)
+def run(east_out_dir,
+        img_source_dir,
+        img_destination_dir):
+    """
+    This is handy tool to crop the identified text regions
+    :param east_out_dir: EAST output directory which contains text files (ICDAR format : 8 pairs of XY points per line)
+    :param img_source_dir: Directory where images needs to be cropped based on text files co-ordinates
+    :param img_destination_dir: Output directory to store cropped images as individual
+    :return:
+    """
+    t = EastCropperModule(east_out_dir=east_out_dir)
     print('--' * 55)
-    t.process_files(source_dir=demo_config.BINARIZE_ROOT_DIR, destination_dir=demo_config.CROPPER_ROOT_DIR)
+    t.process_files(source_dir=img_source_dir, destination_dir=img_destination_dir)
+
+
+if __name__ == '__main__':
+    fire.Fire(run)

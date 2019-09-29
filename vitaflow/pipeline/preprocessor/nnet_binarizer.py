@@ -1,20 +1,5 @@
-import numpy as np
-from keras.optimizers import Adam
-
 # from model.unet import unet
-from vitaflow.pipeline.preprocessor.img_processing import *
-
-import os
-import subprocess
-
-from vitaflow.pipeline.interfaces.plugin import ImagePluginInterface
-from vitaflow import demo_config
-
-import shlex
-import argparse
-import glob
-import time
-from tqdm import tqdm
+from vitaflow.deprecated.img_processing import *
 
 from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D
 from keras.layers.core import SpatialDropout2D, Activation

@@ -21,7 +21,8 @@ import re
 
 MODULES = [
     # "vitaflow.datasets.text.conll_2003_dataset",
-    "vitaflow.datasets.image.icdar.icdar_data"
+    "vitaflow.datasets.image.icdar.icdar_data",
+    "vitaflow.datasets.image.scene_text_recognition.str_dataset"
 ]
 
 ALL_MODULES = list(MODULES)

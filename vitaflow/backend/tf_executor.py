@@ -1,4 +1,4 @@
-# Copyright 2018 The Shabda Authors. All Rights Reserved.
+# Copyright 2019 The Shabda Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,38 +34,6 @@ __all__ = [
 class TFExecutor(TrainerBase):
     """Class that executes training, evaluation, prediction, export, and other
     actions of :tf_main:`tf.estimator.Estimator <estimator/Estimator>`.
-
-    Args:
-        model: An instance of a subclass of
-            :class:`~shabda.models.model_base.IEstimatorModel`.
-        data_hparams: A `dict` or an instance of :class:`~shabda.hparams.HParams`
-            containing the hyperparameters of data. It must contain `train`
-            and/or `eval` fields for relevant processes. For example, for
-            :meth:`train_and_evaluate`, both fields are required.
-        config: An instance of
-            :tf_main:`tf.estimator.RunConfig <estimator/RunConfig>`, used as
-            the :attr:`config` argument of
-            :tf_main:`Estimator <estimator/Estimator#__init__>`.
-        model_hparams (optional): A `dict` or an instance of
-            :class:`~shabda.hparams.HParams` containing the hyperparameters of
-            the model. If `None`, uses :attr:`model.hparams`. Used as
-            the :attr:`params` argument of
-            :tf_main:`Estimator <estimator/Estimator#__init__>`.
-        train_hooks (optional): Iterable of :tf_main:`tf.train.SessionRunHook <train/SessionRunHook>`
-            objects to run during training.
-        eval_hooks (optional): Iterable of :tf_main:`tf.train.SessionRunHook <train/SessionRunHook>`
-            objects to run during evaluation.
-        session_config (optional): An instance of
-            :tf_main:`tf.ConfigProto <ConfigProto>`, used as the :attr:`config`
-            argument of :tf_main:`tf session <Session>`.
-
-    Example:
-
-        .. code-block:: python
-
-            TODO
-
-    See `bin/train_old.py` for the usage in detail.
     """
 
     def __init__(self,
@@ -80,6 +48,21 @@ class TFExecutor(TrainerBase):
                  train_hooks=None,
                  eval_hooks=None,
                  session_config=None):
+        """
+
+        :param experiment_name: Name of the current experiment
+        :param model: IEstimatorModel based models
+        :param dataset:
+        :param config: Tensorflow Config
+        :param max_train_steps: Maximum number of training steps for current experimentation
+                                (step = number of samples / batch size)
+        :param validation_interval_steps: Number of training steps before running validation
+        :param stored_model: Previously trained model path
+        :param max_steps_without_decrease:
+        :param train_hooks:
+        :param eval_hooks:
+        :param session_config:
+        """
 
         TrainerBase.__init__(self,
                              experiment_name=experiment_name,
@@ -193,7 +176,7 @@ class TFExecutor(TrainerBase):
         tf.estimator.train_and_evaluate(self._estimator, train_spec, eval_spec)
 
     def export_model(self, model_export_path):
-        logging.info("Saving model to =======> {}".format(model_export_path))
+        logging.info("Saving model to {}".format(model_export_path))
         if not os.path.exists(model_export_path):
             os.makedirs(model_export_path)
         self._estimator.export_saved_model(

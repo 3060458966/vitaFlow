@@ -1,5 +1,6 @@
 import csv
 import os
+import sys
 
 import cv2
 import gin
@@ -895,6 +896,7 @@ def make_dirs(path):
         os.makedirs(path)
 
 
+@thread_safe_generator
 def generator(data_dir,
               batch_size,
               geometry,
@@ -932,19 +934,19 @@ def generator(data_dir,
 
             image, score_map, geo_map, text_region_boundary_training_mask, overly_small_text_region_training_mask = data
 
-            images.append(image[:, :, ::-1].astype(np.float32))
-            score_maps.append(score_map[::4, ::4, np.newaxis].astype(np.float32))
-            geo_maps.append(geo_map[::4, ::4, :].astype(np.float32))
-            overly_small_text_region_training_masks.append(
-                overly_small_text_region_training_mask[::4, ::4, np.newaxis].astype(np.float32))
-            text_region_boundary_training_masks.append(
-                text_region_boundary_training_mask[::4, ::4, np.newaxis].astype(np.float32))
+            images.append(image)
+            score_maps.append(score_map)
+            geo_maps.append(geo_map)
+            overly_small_text_region_training_masks.append(overly_small_text_region_training_mask)
+            text_region_boundary_training_masks.append(text_region_boundary_training_mask)
 
             if len(images) == batch_size:
-                yield [np.array(images),
+                res = [np.array(images),
                        np.array(overly_small_text_region_training_masks),
                        np.array(text_region_boundary_training_masks),
                        np.array(score_maps)], [np.array(score_maps), np.array(geo_maps)]
+
+                yield res
                 images = []
                 image_fns = []
                 score_maps = []

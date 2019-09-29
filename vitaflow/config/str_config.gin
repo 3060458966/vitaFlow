@@ -1,0 +1,76 @@
+import vitaflow.config.str_imports
+
+IMAGE_WIDTH = 100
+IMAGE_HEIGHT = 32
+CASE_SENSITIVE = True
+BATCH_SIZE = 96
+DATA_ROOT_PATH = "/opt/datasets/data_lmdb_release/"
+
+
+#VitaFlowEngine
+VitaFlowEngine.experiment_name = "STR"
+VitaFlowEngine.dataset_name="scene_text_recognition_dataset"
+VitaFlowEngine.model_name="scene_text_recognition_model"
+VitaFlowEngine.num_epochs=10
+VitaFlowEngine.save_checkpoints_steps=112
+VitaFlowEngine.keep_checkpoint_max=5
+VitaFlowEngine.save_summary_steps=5
+VitaFlowEngine.log_step_count_steps=2
+VitaFlowEngine.clear_model_data=False
+VitaFlowEngine.plug_dataset=True
+VitaFlowEngine.max_steps_without_decrease = 100000
+VitaFlowEngine.num_max_steps = 300000
+VitaFlowEngine.validation_interval_steps = 2000
+
+
+#path to training dataset
+SceneTextRecognitionDataset.data_in_dir = %DATA_ROOT_PATH
+#select training data (default is MJ-ST which means MJ and ST used as training data)
+SceneTextRecognitionDataset.select_data = "MJ-ST"
+#assign ratio for each selected data in the batch
+SceneTextRecognitionDataset.batch_ratio = "0.5-0.5"
+SceneTextRecognitionDataset.batch_size = %BATCH_SIZE
+SceneTextRecognitionDataset.img_height = %IMAGE_HEIGHT
+SceneTextRecognitionDataset.img_width = %IMAGE_WIDTH
+#whether to keep ratio then pad for image resize
+SceneTextRecognitionDataset.is_pad = True
+#for data_filtering_off mode
+SceneTextRecognitionDataset.data_filtering_off = True
+#SceneTextRecognitionDataset.num_samples
+#maximum-label-length
+SceneTextRecognitionDataset.batch_max_length = 25
+#character label None | "0123456789abcdefghijklmnopqrstuvwxyz"
+SceneTextRecognitionDataset.character = "0123456789abcdefghijklmnopqrstuvwxyz"
+SceneTextRecognitionDataset.is_rgb = False
+# for sensitive character mode
+SceneTextRecognitionDataset.sensitive = %CASE_SENSITIVE
+# number of data loading workers
+SceneTextRecognitionDataset.num_cores = 4
+#total data usage ratio, this ratio is multiplied to total number of data.
+SceneTextRecognitionDataset.total_data_usage_ratio = 1.0
+SceneTextRecognitionDataset.batch_max_length = 25
+
+#None|TPS
+SceneTextRecognitionModel.transformation_stage = "TPS"
+#VGG|RCNN|ResNet
+SceneTextRecognitionModel.feature_extraction_stage = "ResNet"
+#None|BiLSTM
+SceneTextRecognitionModel.sequence_modeling_stage = "BiLSTM"
+#CTC|Attn
+SceneTextRecognitionModel.prediction_stage = "Attn"
+SceneTextRecognitionModel.img_width = %IMAGE_WIDTH
+SceneTextRecognitionModel.img_height = %IMAGE_HEIGHT
+#the number of input channel of Feature extractor
+SceneTextRecognitionModel.input_channel = 1 #depends on SceneTextRecognitionDataset.is_rgb
+#the number of output channel of Feature extractor
+SceneTextRecognitionModel.output_channel = 512
+#number of fiducial points of TPS-STN
+SceneTextRecognitionModel.num_fiducial = 20
+#the size of the LSTM hidden state
+SceneTextRecognitionModel.hidden_size = 256
+#SceneTextRecognitionModel.num_class =
+#character label None | "0123456789abcdefghijklmnopqrstuvwxyz"
+SceneTextRecognitionModel.character = "0123456789abcdefghijklmnopqrstuvwxyz"
+SceneTextRecognitionModel.is_sensitive = %CASE_SENSITIVE
+SceneTextRecognitionModel.batch_size = %BATCH_SIZE
+SceneTextRecognitionModel.model_root_directory = "store/SceneTextRecognitionModel/"

@@ -2,11 +2,13 @@ import os
 import numpy as np
 import tensorflow as tf
 import gin
-from models.model_base import TFModelBase
+
+from vitaflow.utils.registry import register_model
+from vitaflow.models.interface_model import IEstimatorModel
 
 from absl import logging
 
-from print_helper import print_info, print_warn, print_error
+from vitaflow.utils.print_helper import print_info, print_warn, print_error
 
 layers = tf.keras.layers
 models = tf.keras.models
@@ -390,8 +392,9 @@ def average_gradients(tower_grads):
 
 # -----------------------------------------------------------------------------------------------------------
 
+@register_model
 @gin.configurable
-class EASTTFModel(TFModelBase):
+class EASTTFModel(IEstimatorModel):
     def __init__(self,
                  learning_rate=0.0001,
                  model_root_directory=gin.REQUIRED,
