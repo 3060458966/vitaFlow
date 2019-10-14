@@ -2,10 +2,13 @@ import os
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib import slim
-import vitaflow.models.image.east.resnet_v1 as resnet_v1
+import vitaflow.models.image.east.utils.resnet_v1 as resnet_v1
 import gin
+
+from vitaflow.utils.print_helper import print_info
 from vitaflow.utils.registry import register_model
-from vitaflow.models.internals.model_base import IEstimatorModel
+from vitaflow.models.interface_model import IEstimatorModel
+
 
 def unpool(inputs):
     return tf.image.resize_bilinear(inputs, size=[tf.shape(inputs)[1]*2,  tf.shape(inputs)[2]*2])
@@ -20,7 +23,7 @@ def mean_image_subtraction(images, means=[123.68, 116.78, 103.94]):
     """
     num_channels = images.get_shape().as_list()[-1]
     if len(means) != num_channels:
-      raise ValueError('len(means) must match the number of channels')
+        raise ValueError('len(means) must match the number of channels')
     channels = tf.split(axis=3, num_or_size_splits=num_channels, value=images)
     for i in range(num_channels):
         channels[i] = channels[i] - tf.convert_to_tensor(means[i])
@@ -39,10 +42,10 @@ def model(images, text_scale=512, weight_decay=1e-5, is_training=True):
 
     with tf.variable_scope('feature_fusion', values=[end_points.values]):
         batch_norm_params = {
-        'decay': 0.997,
-        'epsilon': 1e-5,
-        'scale': True,
-        'is_training': is_training
+            'decay': 0.997,
+            'epsilon': 1e-5,
+            'scale': True,
+            'is_training': is_training
         }
         with slim.arg_scope([slim.conv2d],
                             activation_fn=tf.nn.relu,
@@ -79,13 +82,13 @@ def model(images, text_scale=512, weight_decay=1e-5, is_training=True):
             geo_map = slim.conv2d(
                 g[3], 4, 1, activation_fn=tf.nn.sigmoid, normalizer_fn=None) * text_scale
             angle_map = (slim.conv2d(g[3], 1, 1, activation_fn=tf.nn.sigmoid,
-                         normalizer_fn=None) - 0.5) * np.pi/2  # angle is between [-45, 45]
+                                     normalizer_fn=None) - 0.5) * np.pi/2  # angle is between [-45, 45]
             F_geometry = tf.concat([geo_map, angle_map], axis=-1)
 
     return F_score, F_geometry
 
 
-def dice_coefficient(y_true_cls, y_pred_cls, training_mask):
+def dice_coefficient(y_true_cls, y_pred_cls, training_mask=None):
     """
     dice loss
     :param y_true_cls:
@@ -94,9 +97,16 @@ def dice_coefficient(y_true_cls, y_pred_cls, training_mask):
     :return:
     """
     eps = 1e-5
-    intersection = tf.reduce_sum(y_true_cls * y_pred_cls * training_mask)
-    union = tf.reduce_sum(y_true_cls * training_mask) + \
-                          tf.reduce_sum(y_pred_cls * training_mask) + eps
+    # intersection = tf.reduce_sum(y_true_cls * y_pred_cls * training_mask)
+    intersection = tf.reduce_sum(y_true_cls * y_pred_cls)
+    #
+    # union = tf.reduce_sum(y_true_cls * training_mask) + \
+    #         tf.reduce_sum(y_pred_cls * training_mask) + eps
+
+
+    union = tf.reduce_sum(y_true_cls) + \
+            tf.reduce_sum(y_pred_cls) + eps
+
     loss = 1. - (2 * intersection / union)
     tf.summary.scalar('classification_dice_loss', loss)
     return loss
@@ -104,7 +114,7 @@ def dice_coefficient(y_true_cls, y_pred_cls, training_mask):
 
 def get_loss(y_true_cls, y_pred_cls,
              y_true_geo, y_pred_geo,
-             training_mask):
+             training_mask=None):
     """
     define the loss used for training, contraning two part,
     the first part we use dice loss instead of weighted logloss,
@@ -131,7 +141,8 @@ def get_loss(y_true_cls, y_pred_cls,
      left boundary of its corresponding rectangle, respectively. 
     """
 
-    classification_loss = dice_coefficient(y_true_cls, y_pred_cls, training_mask)
+    # classification_loss = dice_coefficient(y_true_cls, y_pred_cls, training_mask)
+    classification_loss = dice_coefficient(y_true_cls, y_pred_cls)
 
     # scale classification loss to match the iou loss part
     classification_loss *= 0.01
@@ -155,12 +166,19 @@ def get_loss(y_true_cls, y_pred_cls,
     L_theta = 1 - tf.cos(theta_pred - theta_gt)
     L_g = L_AABB + 20 * L_theta
 
-    tf.summary.scalar('geometry_AABB', tf.reduce_mean(
-        L_AABB * y_true_cls * training_mask))
-    tf.summary.scalar('geometry_theta', tf.reduce_mean(
-        L_theta * y_true_cls * training_mask))
+    # tf.summary.scalar('geometry_AABB', tf.reduce_mean(
+    #     L_AABB * y_true_cls * training_mask))
+    # tf.summary.scalar('geometry_theta', tf.reduce_mean(
+    #     L_theta * y_true_cls * training_mask))
 
-    return tf.reduce_mean(L_g * y_true_cls * training_mask) + classification_loss
+    tf.summary.scalar('geometry_AABB', tf.reduce_mean(
+        L_AABB * y_true_cls))
+    tf.summary.scalar('geometry_theta', tf.reduce_mean(
+        L_theta * y_true_cls))
+
+    # return tf.reduce_mean(L_g * y_true_cls * training_mask) + classification_loss
+    return tf.reduce_mean(L_g * y_true_cls) + classification_loss
+
 
 
 def average_gradients(tower_grads):
@@ -184,12 +202,23 @@ def average_gradients(tower_grads):
 
 @register_model
 @gin.configurable
-class EASTIEstimatorModel(IEstimatorModel):
+class EASTSlimModel(IEstimatorModel):
     def __init__(self,
-                 data_iterator=None,
+                 experiment_name,
+                 dataset,
                  learning_rate=0.0001,
                  model_root_directory=gin.REQUIRED,
                  moving_average_decay=0.997):
+        IEstimatorModel.__init__(self,
+                                 experiment_name=experiment_name,
+                                 model_root_directory=model_root_directory,
+                                 dataset=dataset)
+        version = (tf.version.VERSION).split(".")
+
+        if int(version[0]) > 1 or int(version[1]) > 13:
+            print_info("Selected model is doesn't supports current Tensorflow version. Use Tensorflow 1.13.0 or before!")
+            exit(0)
+
         self._model_root_directory = model_root_directory
         self._learning_rate = learning_rate
         self._moving_average_decay = moving_average_decay
@@ -199,7 +228,7 @@ class EASTIEstimatorModel(IEstimatorModel):
         with tf.name_scope("optimizer") as scope:
 
             global_step=tf.train.get_global_step()
-            learning_rate = tf.train.exponential_decay(self._learning_rate, 
+            learning_rate = tf.train.exponential_decay(self._learning_rate,
                                                        global_step,
                                                        decay_steps=100,
                                                        decay_rate=0.94,
@@ -212,7 +241,7 @@ class EASTIEstimatorModel(IEstimatorModel):
                 beta1=0.9,
                 beta2=0.999,
                 epsilon=1e-8)
-            
+
             batch_norm_updates_op = tf.group(*tf.get_collection(tf.GraphKeys.UPDATE_OPS)) #TODO scope
             grads = optimizer.compute_gradients(loss)
             tower_grads.append(grads)
@@ -228,14 +257,6 @@ class EASTIEstimatorModel(IEstimatorModel):
                 train_op = tf.no_op(name='train_op')
 
         return train_op
-
-    def __call__(self, features, labels, params, mode, config=None):
-        """
-        Used for the :tf_main:`model_fn <estimator/Estimator#__init__>`
-        argument when constructing
-        :tf_main:`tf.estimator.Estimator <estimator/Estimator>`.
-        """
-        return self._build(features, labels, params, mode, config=config)
 
     @property
     def model_dir(self):
@@ -263,13 +284,13 @@ class EASTIEstimatorModel(IEstimatorModel):
         if mode != tf.estimator.ModeKeys.PREDICT:
             input_score_maps = features['score_maps']
             input_geo_maps = features['geo_maps']
-            input_training_masks = features['training_masks']
-        
+            # input_training_masks = features['training_masks']
+
             model_loss = get_loss(input_score_maps,
                                   f_score,
                                   input_geo_maps,
-                                  f_geometry,
-                                  input_training_masks)
+                                  f_geometry)#,
+                                  # input_training_masks)
             loss = tf.add_n(
                 [model_loss] + tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
 
@@ -280,16 +301,16 @@ class EASTIEstimatorModel(IEstimatorModel):
             tf.summary.image('score_map_pred', f_score * 255)
             tf.summary.image('geo_map_0', input_geo_maps[:, :, :, 0:1])
             tf.summary.image('geo_map_0_pred', f_geometry[:, :, :, 0:1])
-            tf.summary.image('training_masks', input_training_masks)
+            # tf.summary.image('training_masks', input_training_masks)
             tf.summary.scalar('model_loss', model_loss)
             tf.summary.scalar('total_loss', loss)
 
             optimizer = self._get_optimizer(loss=loss)
 
         return tf.estimator.EstimatorSpec(
-                mode=mode,
-                predictions=predictions,
-                export_outputs={'predict': tf.estimator.export.PredictOutput(predictions)},
-                loss=loss,
-                train_op=optimizer,
-                eval_metric_ops=None)
+            mode=mode,
+            predictions=predictions,
+            export_outputs={'predict': tf.estimator.export.PredictOutput(predictions)},
+            loss=loss,
+            train_op=optimizer,
+            eval_metric_ops=None)

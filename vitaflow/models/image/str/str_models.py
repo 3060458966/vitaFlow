@@ -7,6 +7,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from nltk.metrics.distance import edit_distance
+
+from vitaflow.utils.print_helper import print_info
 from vitaflow.utils.registry import register_model
 
 import numpy as np
@@ -26,6 +28,8 @@ class SceneTextRecognitionModel(ITorchModel):
 
     def __init__(self,
                  dataset,
+                 learning_rate=0.01,
+                 num_epochs=5,
                  model_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/", "str_model"),
                  transformation_stage="TPS",
                  feature_extraction_stage="ResNet",
@@ -44,7 +48,9 @@ class SceneTextRecognitionModel(ITorchModel):
                  batch_max_length=25):
         super(SceneTextRecognitionModel, self).__init__(experiment_name=transformation_stage,
                                                         model_root_directory=model_root_directory,
-                                                        dataset=dataset)
+                                                        dataset=dataset,
+                                                        learning_rate=learning_rate,
+                                                        num_epochs=num_epochs)
         self.stages = {"transformation_stage": transformation_stage,
                        "feature_extraction_stage": feature_extraction_stage,
                        "sequence_modeling_stage": sequence_modeling_stage,
@@ -55,6 +61,8 @@ class SceneTextRecognitionModel(ITorchModel):
         self.batch_size = batch_size
         self.batch_max_length = batch_max_length
         self._model_root_directory = model_root_directory
+
+        self.grad_clip = 5 #gradient clipping value. default=5
 
         if is_sensitive:
             # opt.character += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -140,6 +148,14 @@ class SceneTextRecognitionModel(ITorchModel):
         return os.path.join(self._model_root_directory,
                             type(self).__name__)
 
+    def _setup(self):
+        self._criterion = self.get_loss_op()
+        self._optimizer = self.get_optimizer()
+        # self._scheduler = lr_scheduler.MultiStepLR(self._optimizer, milestones=[self._num_epochs // 2], gamma=0.1)
+        self._device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self._converter = self.get_converter()
+
+
     def get_loss_op(self):
         """ setup loss """
         if 'CTC' in self.stages["prediction_stage"]:
@@ -188,12 +204,12 @@ class SceneTextRecognitionModel(ITorchModel):
 
         return converter
 
-    def get_optimizer(self, model):
+    def get_optimizer(self):
         # assert (isinstance(model, SceneTextRecognitionModel))
         # filter that only require gradient decent
         filtered_parameters = []
         params_num = []
-        for p in filter(lambda p: p.requires_grad, model.parameters()):
+        for p in filter(lambda p: p.requires_grad, self.parameters()):
             filtered_parameters.append(p)
             params_num.append(np.prod(p.size()))
         print('Trainable params num : ', sum(params_num))
@@ -305,4 +321,36 @@ class SceneTextRecognitionModel(ITorchModel):
 
         return n_correct, norm_ED
 
+
+    def _train_epoch(self, epoch):
+        for data_loader in self._dataset.get_torch_train_data_loaders():
+            for i, (image_tensors, labels) in enumerate(data_loader):
+                # image_tensors, labels = self._dataset.get_torch_train_dataset().get_batch()
+                image = image_tensors.to(device)
+                text, length = self._converter.encode(labels, batch_max_length=self.batch_max_length)
+                batch_size = image.size(0)
+    
+                if 'CTC' in self.stages["prediction_stage"]:
+                    preds = self.model_step(image, text).log_softmax(2)
+                    preds_size = torch.IntTensor([preds.size(1)] * batch_size).to(device)
+                    preds = preds.permute(1, 0, 2)  # to use CTCLoss format
+
+                    # To avoid ctc_loss issue, disabled cudnn for the computation of the ctc_loss
+                    # https://github.com/jpuigcerver/PyLaia/issues/16
+                    torch.backends.cudnn.enabled = False
+                    cost = self._criterion(preds, text, preds_size, length)
+                    torch.backends.cudnn.enabled = True
+
+                else:
+                    preds = self.model_step(image, text[:, :-1])  # align with Attention.forward
+                    target = text[:, 1:]  # without [GO] Symbol
+                    cost = self._criterion(preds.view(-1, preds.shape[-1]), target.contiguous().view(-1))
+
+                self.zero_grad()
+                cost.backward()
+                torch.nn.utils.clip_grad_norm_(self.parameters(), self.grad_clip)  # gradient clipping with 5 (Default)
+                self._optimizer.step()
+
+                # loss_avg.add(cost)
+                print_info("Batch {} over".format(i))
 

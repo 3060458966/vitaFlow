@@ -9,10 +9,10 @@ import argparse
 import os
 
 try:
-    from vitaflow.models.image.east.grpc_predict import read_image, get_text_segmentation_pb
+    from vitaflow.models.image.east.utils.grpc_predict import read_image, get_text_segmentation_pb
     from vitaflow.datasets.image.icdar.icdar_data import get_images
 except:
-    from vitaflow.models.image.east.grpc_predict import read_image, get_text_segmentation_pb
+    from vitaflow.models.image.east.utils.grpc_predict import read_image, get_text_segmentation_pb
     from vitaflow.datasets.image.icdar.icdar_data import get_images
 
 

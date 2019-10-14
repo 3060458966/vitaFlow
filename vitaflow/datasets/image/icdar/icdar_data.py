@@ -37,7 +37,7 @@ def get_tf_records_count(files):
 
 @gin.configurable
 @registry.register_dataset
-class CDARDataset(IDataset):
+class ICDARDataset(IDataset):
     """
     Reads ICDAR 2019 dataset which is organized as train/val/test folder which contains image and
     text files with polygon co-ordinates
@@ -57,7 +57,8 @@ class CDARDataset(IDataset):
                  number_images_per_tfrecords=8,
                  num_cores=4,
                  batch_size=4,
-                 prefetch_size=16):
+                 prefetch_size=16,
+                 num_epochs=5):
         """
         """
 
@@ -91,6 +92,8 @@ class CDARDataset(IDataset):
         self._prefetch_size = prefetch_size
 
         self._num_train_examples = 0
+
+        self._num_epochs = num_epochs
 
         if self._is_preprocess is True:
             self.preprocess()
@@ -222,8 +225,8 @@ class CDARDataset(IDataset):
 
         return {"images": image, "score_maps": score_map, "geo_maps": geo_map}, image #dummy label/Y
 
-    def get_tf_train_dataset(self, num_epochs=-1):
-        print_info("_get_train_dataset {}".format(num_epochs))
+    def get_tf_train_dataset(self):
+        # print_info("_get_train_dataset {}".format(num_epochs))
         memory_usage_psutil()
         path = os.path.join(self._train_out_dir, "*.tfrecords")
         path = path.replace("//", "/")
@@ -242,7 +245,7 @@ class CDARDataset(IDataset):
         dataset = dataset.batch(batch_size=self._batch_size, drop_remainder=False)
         dataset= dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
         # self._train_dataset = self._train_dataset.make_one_shot_iterator()
-        dataset = dataset.repeat(num_epochs)
+        dataset = dataset.repeat(self._num_epochs)
         # dataset = dataset.cache(filename=os.path.join(self.iterator_dir, "train_data_cache"))
         print_info("Dataset output sizes are: ")
         print_info(dataset)
@@ -256,40 +259,7 @@ class CDARDataset(IDataset):
 
         return dataset
 
-    # def _get_train_dataset(self):
-    #
-    #     data_generator = icdar_utils.get_batch(num_workers=self._num_cores,
-    #                                            data_path=self._data_dir + "/train/",
-    #                                            input_size=512,
-    #                                            batch_size=self._batch_size,
-    #                                            background_ratio=3. / 8,
-    #                                            random_scale=np.array([0.5, 1, 2.0, 3.0]),
-    #                                            vis=False,
-    #                                            min_crop_side_ratio=self._min_crop_side_ratio,
-    #                                            min_text_size=self._min_text_size)
-    #     def gen():
-    #         return next(data_generator)
-    #
-    #     dataset = tf.data.Dataset.from_generator(generator=gen,
-    #                                              output_types=(tf.float32,tf.float32, tf.float32))
-    #                                              # output_shapes=(tf.TensorShape([512, 512, 3]),
-    #                                              #                tf.TensorShape([128, 128, 1]),
-    #                                              #                tf.TensorShape([128, 128, 5])))
-    #     # data = next(data_generator)
-    #     # # images, score_maps, geo_maps = data
-    #     # return data #{"images": images, "score_maps": score_maps, "geo_maps": geo_maps}, images
-    #     dataset = dataset.batch(batch_size=self._batch_size, drop_remainder=False)
-    #     dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
-    #     # dataset = dataset.repeat()
-    #     # dataset = dataset.cache(filename=os.path.join(self.iterator_dir, "train_data_cache"))
-    #     print_info("Dataset output sizes are: ")
-    #     print_info(dataset)
-    #     memory_usage_psutil()
-    #
-    #     return dataset
-
-    def get_tf_val_dataset(self, num_epochs=None):
-        print_info("_get_val_dataset {}".format(num_epochs))
+    def get_tf_val_dataset(self):
         memory_usage_psutil()
         path = os.path.join(self._val_out_dir, "*.tfrecords")
         path = path.replace("//", "/")
@@ -310,7 +280,7 @@ class CDARDataset(IDataset):
 
         # self._val_dataset = self._val_dataset.make_one_shot_iterator()
 
-        dataset = dataset.repeat(num_epochs)
+        dataset = dataset.repeat()
         # dataset = dataset.cache(filename=os.path.join(self.iterator_dir, "train_data_cache"))
 
         print_info("Dataset output sizes are: ")
@@ -366,20 +336,21 @@ class CDARDataset(IDataset):
 
     def get_train_dataset_gen(self, num_epochs=None):
         """
-        Returns an data set generator function that can be used in train loop
+        Returns
+        an data set generator function that can be used in train loop
         :return:
         """
         return generator(data_dir=self._data_in_dir + "/train",
-                        batch_size=self.batch_size,
-                        geometry="RBOX",
-                        min_text_size=self._min_text_size,
-                        min_crop_side_ratio=self._min_crop_side_ratio,
-                        input_size=512,
-                        background_ratio=3. / 8,
-                        random_scale=np.array([0.5, 1, 2.0]),  # , 3.0]),
-                        vis=False,
-                        is_train=True,
-                        shuffle=True)
+                         batch_size=self.batch_size,
+                         geometry="RBOX",
+                         min_text_size=self._min_text_size,
+                         min_crop_side_ratio=self._min_crop_side_ratio,
+                         input_size=512,
+                         background_ratio=3. / 8,
+                         random_scale=np.array([0.5, 1, 2.0]),  # , 3.0]),
+                         vis=False,
+                         is_train=True,
+                         shuffle=True)
 
 
     def get_val_dataset_gen(self, num_epochs=None):

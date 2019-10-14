@@ -8,7 +8,7 @@ from vitaflow.models.image.east.east_model_v0 import EASTIEstimatorModel
 from vitaflow.datasets.image.icdar.icdar_data import ICDARTFDataset, get_images
 from vitaflow.deprecated.iterators import CIDARIterator
 from executor import Executor
-from vitaflow.models.image.east.prediction import *
+from vitaflow.models.image.east.utils.prediction import *
 
 
 # get TF logger

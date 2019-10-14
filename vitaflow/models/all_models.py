@@ -18,13 +18,20 @@
 
 import importlib
 import re
+import tensorflow as tf
 
+from vitaflow.utils.print_helper import print_error
 
 MODULES = [
     "vitaflow.models.image.east.east_model_v1",
     "vitaflow.models.image.east.east_model_keras_v2",
+    "vitaflow.models.image.east.east_torch_model",
     "vitaflow.models.image.str.str_models"
 ]
+
+version = (tf.version.VERSION).split(".")
+if int(version[0]) == 1 and int(version[1]) < 14:
+    MODULES.append("vitaflow.models.image.east.east_model_v0",)
 
 ALL_MODULES = list(MODULES)
 

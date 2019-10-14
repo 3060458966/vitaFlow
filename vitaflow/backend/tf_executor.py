@@ -15,11 +15,8 @@
 A class that executes training, evaluation, prediction, export of estimators.
 """
 
-import gin
-import time
 import tensorflow as tf
 import os
-from tqdm import tqdm
 from absl import logging
 
 # pylint: disable=too-many-instance-attributes, too-many-arguments
@@ -107,13 +104,13 @@ class TFExecutor(TrainerBase):
         # Estimators expect an input_fn to take no arguments.
         # To work around this restriction, we use lambda to capture the arguments and provide the expected interface.
         return tf.estimator.TrainSpec(
-            input_fn=lambda: self.dataset.train_set(num_epochs=num_epochs),
+            input_fn=lambda: self.dataset.get_tf_train_dataset(),
             max_steps=max_steps,
             hooks=self._train_hooks)
 
     def _get_eval_spec(self, steps):
         return tf.estimator.EvalSpec(
-            input_fn=lambda: self.dataset.validation_set(),
+            input_fn=lambda: self.dataset.get_tf_val_dataset(),
             steps=steps,
             hooks=self._eval_hooks)
 

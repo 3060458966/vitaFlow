@@ -53,3 +53,5 @@ class TrainerBase(object):
 
     def predict_file(self, in_path, out_path):
         raise NotImplementedError
+
+

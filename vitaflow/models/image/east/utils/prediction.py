@@ -6,7 +6,7 @@ import cv2
 try:
     import locality_aware_nms as nms_locality
 except:
-    import vitaflow.models.image.east.locality_aware_nms as nms_locality
+    import vitaflow.models.image.east.utils.locality_aware_nms as nms_locality
 
 import numpy as np
 from tqdm import tqdm

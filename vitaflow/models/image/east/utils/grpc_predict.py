@@ -7,10 +7,10 @@ import numpy as np
 from grpc.beta import implementations
 try:
     from vitaflow.datasets.image.icdar.icdar_data import get_images
-    from vitaflow.models.image.east.prediction import resize_image, sort_poly, detect
+    from vitaflow.models.image.east.utils.prediction import resize_image, sort_poly, detect
 except:
     from vitaflow.datasets.image.icdar.icdar_data import get_images
-    from vitaflow.models.image.east.prediction import resize_image, sort_poly, detect
+    from vitaflow.models.image.east.utils.prediction import resize_image, sort_poly, detect
 
 from tensorflow.contrib.util import make_tensor_proto
 from tensorflow_serving.apis import predict_pb2

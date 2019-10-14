@@ -59,7 +59,7 @@ ResNet-101 for semantic segmentation into 21 classes:
 import tensorflow as tf
 from tensorflow.contrib import slim
 
-import vitaflow.models.image.east.resnet_utils as resnet_utils
+import vitaflow.models.image.east.utils.resnet_utils as resnet_utils
 
 resnet_arg_scope = resnet_utils.resnet_arg_scope
 

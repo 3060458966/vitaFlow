@@ -15,7 +15,12 @@
 Base class for models.
 """
 import os
+from abc import abstractmethod
+
+import numpy as np
 import torch.nn as nn
+from torch.utils import data
+
 from vitaflow.utils.hyperparams import HParams
 
 # pylint: disable=too-many-arguments
@@ -44,15 +49,19 @@ class IModelBase(object):
                             self._experiment_name,
                             type(self).__name__)
 
+    @abstractmethod
     def get_inputs(self):
         raise NotImplementedError("User model class must implement this routine")
 
+    @abstractmethod
     def get_outputs(self):
         raise NotImplementedError("User model class must implement this routine")
 
+    @abstractmethod
     def get_loss(self, labels=None, logits=None):
         raise NotImplementedError("User model class must implement this routine")
 
+    @abstractmethod
     def get_optimizer(self, loss=None):
         raise NotImplementedError("User model class must implement this routine")
 
@@ -71,12 +80,13 @@ class IEstimatorModel(IModelBase):
     """
 
     def __init__(self,
+                 dataset,
                  experiment_name,
                  model_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/", "tf_model")):
         IModelBase.__init__(self,
                             experiment_name=experiment_name,
                             model_root_directory=model_root_directory,
-                            datasert=dataset)
+                            dataset=dataset)
 
     def __call__(self, features, labels, params, mode, config=None):
         """
@@ -86,12 +96,15 @@ class IEstimatorModel(IModelBase):
         """
         return self._build(features, labels, params, mode, config=config)
 
+    @abstractmethod
     def build_layers(self, features, mode):
         raise NotImplementedError
 
+    @abstractmethod
     def get_eval_metrics(self, predictions, labels):
         raise NotImplementedError
 
+    @abstractmethod
     def _build(self, features, labels, params, mode, config=None):
         """
         Used for the :tf_main:`model_fn <estimator/Estimator#__init__>`
@@ -112,17 +125,60 @@ class IKerasModel(IModelBase):
                             model_root_directory=model_root_directory,
                             dataset=dataset)
 
+    @abstractmethod
     def get_callbacks(self):
         raise NotImplementedError
+
 
 class ITorchModel(IModelBase, nn.Module):
 
     def __init__(self,
+                 dataset,
+                 num_epochs,
+                 learning_rate,
                  experiment_name,
-                 model_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/", "keras_model"),
-                 dataset=None):
+                 model_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/", "keras_model")):
         nn.Module.__init__(self)
         IModelBase.__init__(self,
                             experiment_name=experiment_name,
                             model_root_directory=model_root_directory,
                             dataset=dataset)
+
+        self._dataset = dataset
+        self._num_epochs = num_epochs
+        self._learning_rate = learning_rate
+
+    def model_step(self, *input, **kwargs):
+        return self.__call__(*input, **kwargs)
+
+    @abstractmethod
+    def _train_epoch(self, epoch):
+        raise NotImplementedError
+
+    @abstractmethod
+    def _val_epoch(self, epoch):
+        raise NotImplementedError
+
+    @abstractmethod
+    def _setup(self):
+        self._criterion = None
+        self._optimizer = None
+        self._scheduler = None
+        self._device = None
+
+    @abstractmethod
+    def forward(self, *inputs):
+        """
+        Forward pass logic
+
+        :return: Model output
+        """
+        raise NotImplementedError
+
+    def __str__(self):
+        """
+        Model prints with number of trainable parameters
+        """
+        model_parameters = filter(lambda p: p.requires_grad, self.parameters())
+        params = sum([np.prod(p.size()) for p in model_parameters])
+        return super().__str__() + '\nTrainable parameters: {}'.format(params)

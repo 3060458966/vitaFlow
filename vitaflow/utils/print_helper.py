@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import os
-
 from absl import logging
+
 """
 Wrapper for print function with colorful text output
 """

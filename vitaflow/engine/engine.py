@@ -1,35 +1,26 @@
-"""
-VitaFlowEngine class that allows easy plug n play of modules
-"""
-from absl import logging
-import gc
-import os
-import shutil
+
 import gin
+import numpy as np
+import os
+import random
+import shutil
 import tensorflow as tf
 import torch
-import random
-import numpy as np
-import torch.nn as nn
-from tqdm import tqdm
-import matplotlib.pyplot as plt
-import psutil
 
+from vitaflow.backend.torch_trainer import TorchTrainer
 from vitaflow.datasets.datasets import get_dataset
 from vitaflow.models.models import get_model
 from vitaflow.backend.keras_trainer import KerasTrainer
 from vitaflow.models.interface_model import IEstimatorModel, ITorchModel, IKerasModel
-from vitaflow.utils.print_helper import *
+from vitaflow.utils.print_helper import memory_usage_psutil
 from vitaflow.backend.tf_executor import TFExecutor
-from vitaflow.backend.torch_trainer import TorchTrainer
-# import objgraph
-
 
 
 @gin.configurable
 class VitaFlowEngine(object):
     """
-    VitaFlowEngine uses dataset, model classes and training params to carry out Deep Learning experiments
+    VitaFlowEngine is a wrapper that takes the name of dataset and model.
+    Based on the model type it selects Tensorflow / Keras / Torch training backend.
     """
 
     def __init__(self,
@@ -43,13 +34,25 @@ class VitaFlowEngine(object):
                  keep_checkpoint_max=5,
                  save_summary_steps=25,
                  log_step_count_steps=10,
-                 clear_model_data=False,
-                 plug_dataset=True,
                  max_steps_without_decrease=1000,
                  random_seed=42):
+        """
+
+        :param experiment_name: Name of the experiment
+        :param dataset_name: Dataset name. `run vitalfow/bin/vf_print_registry.py` to get the names
+        :param model_name: Model name. `run vitalfow/bin/vf_print_registry.py` to get the names
+        :param num_epochs: Number of epochs
+        :param num_max_steps: Number of training steps. (Number of training samples / batch size * number oof epochs)
+        :param validation_interval_steps: Number of steps to pass before validating the models each time
+        :param save_checkpoints_steps: Number of steps to pass before each time the model is stored
+        :param keep_checkpoint_max: Number of stored models to keep in disk
+        :param save_summary_steps: Summary logging interval steps
+        :param log_step_count_steps:
+        :param max_steps_without_decrease: Number of steps to continue without any significant loss change
+        :param random_seed: Seed for random generator
+        """
 
         """ Seed and GPU setting """
-        # print("Random Seed: ", random_seed)
         random.seed(random_seed)
         np.random.seed(random_seed)
         torch.manual_seed(random_seed)
@@ -67,8 +70,6 @@ class VitaFlowEngine(object):
         self.keep_checkpoint_max = keep_checkpoint_max
         self.save_summary_steps = save_summary_steps
         self.log_step_count_steps = log_step_count_steps
-        self.clear_model_data = clear_model_data
-        self.plug_dataset = plug_dataset
         self.max_steps_without_decrease = max_steps_without_decrease
         self._validation_interval_steps = validation_interval_steps
 
@@ -104,13 +105,15 @@ class VitaFlowEngine(object):
             self.test_iterator()
 
         if isinstance(self._model, ITorchModel):
+            self._model._setup()
             executor = TorchTrainer(experiment_name=self._experiment_name,
-                                     model=self._model,
-                                     dataset=self._dataset,
-                                     max_train_steps=self._num_max_steps,
-                                     validation_interval_steps=self._validation_interval_steps)
+                                    model=self._model,
+                                    dataset=self._dataset,
+                                    max_train_steps=self._num_max_steps,
+                                    validation_interval_steps=self._validation_interval_steps,
+                                    stored_model=False)
             if mode in ["train", "retrain"]:
-                executor.train(num_max_steps=self._num_max_steps)
+                executor.train(num_max_steps=self._num_max_steps, num_epochs=self._num_epochs)
             elif mode in ["serving"]:
                 executor.predict_directory(in_path=inference_file_or_path, out_path=out_files_path)
 

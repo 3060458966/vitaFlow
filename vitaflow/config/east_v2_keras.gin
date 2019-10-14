@@ -11,19 +11,19 @@ VitaFlowEngine.save_summary_steps=5
 VitaFlowEngine.log_step_count_steps=2
 VitaFlowEngine.clear_model_data=False
 
-#CDARDataset
-CDARDataset.data_in_dir="/opt/vlab/icdar-2019-data"
-CDARDataset.data_out_dir="/opt/tmp/vitaflow/east_v2_keras/data/"
-CDARDataset.is_preprocess=True
-CDARDataset.max_image_large_side=1280
-CDARDataset.max_text_size=800
-CDARDataset.min_text_size=5
-CDARDataset.min_crop_side_ratio=0.1
-CDARDataset.geometry="RBOX"
-CDARDataset.number_images_per_tfrecords=8
-CDARDataset.num_cores=4
-CDARDataset.batch_size=4
-CDARDataset.prefetch_size=16
+#ICDARDataset
+ICDARDataset.data_in_dir="/opt/vlab/icdar-2019-data"
+ICDARDataset.data_out_dir="/opt/tmp/vitaflow/east_v2_keras/data/"
+ICDARDataset.is_preprocess=True
+ICDARDataset.max_image_large_side=1280
+ICDARDataset.max_text_size=800
+ICDARDataset.min_text_size=5
+ICDARDataset.min_crop_side_ratio=0.1
+ICDARDataset.geometry="RBOX"
+ICDARDataset.number_images_per_tfrecords=8
+ICDARDataset.num_cores=4
+ICDARDataset.batch_size=4
+ICDARDataset.prefetch_size=16
 
 #EASTV2Keras
 EASTV2Keras.experiment_name="east_v2_keras"

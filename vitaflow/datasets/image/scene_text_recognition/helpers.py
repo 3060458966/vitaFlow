@@ -178,7 +178,6 @@ class LmdbDataset(Dataset):
                 if self.is_rgb:
                     img = Image.open(buf).convert('RGB')  # for color image
                 else:
-                    print_debug("=====================")
                     img = Image.open(buf).convert('L')
 
             except IOError:
@@ -270,7 +269,7 @@ class BatchBalancedDataset(object):
         total_batch_size = 0
 
         for selected_d, batch_ratio_d in zip(select_data, batch_ratio):
-            print_info(selected_d)
+            # print_info(selected_d)
             _batch_size = max(round(batch_size * float(batch_ratio_d)), 1)
             print('-' * 80)
             _dataset = hierarchical_dataset(root=train_data,
@@ -295,8 +294,8 @@ class BatchBalancedDataset(object):
             indices = range(total_number_dataset)
             _dataset, _ = [Subset(_dataset, indices[offset - length:offset])
                            for offset, length in zip(_accumulate(dataset_split), dataset_split)]
-            print(f'num total samples of {selected_d}: {total_number_dataset} x {total_data_usage_ratio} (total_data_usage_ratio) = {len(_dataset)}')
-            print(f'num samples of {selected_d} per batch: {batch_size} x {float(batch_ratio_d)} (batch_ratio) = {_batch_size}')
+            print_info(f'num total samples of {selected_d}: {total_number_dataset} x {total_data_usage_ratio} (total_data_usage_ratio) = {len(_dataset)}')
+            print_info(f'num samples of {selected_d} per batch: {batch_size} x {float(batch_ratio_d)} (batch_ratio) = {_batch_size}')
 
             batch_size_list.append(str(_batch_size))
             total_batch_size += _batch_size
@@ -315,6 +314,9 @@ class BatchBalancedDataset(object):
         batch_size = total_batch_size
         print('-' * 80)
 
+    def get_data_loaders(self):
+        return self.data_loader_list
+
     def get_batch(self):
         balanced_batch_images = []
         balanced_batch_texts = []
@@ -322,6 +324,7 @@ class BatchBalancedDataset(object):
         for i, data_loader_iter in enumerate(self.dataloader_iter_list):
             try:
                 image, text = data_loader_iter.next()
+                print_error(image.shape)
                 balanced_batch_images.append(image)
                 balanced_batch_texts += text
             except StopIteration:
@@ -337,7 +340,7 @@ class BatchBalancedDataset(object):
         return balanced_batch_images, balanced_batch_texts
 
     def __len__(self):
-        return 7224586 + 5522808 #self.num_samples
+        return 8919241 + 5522808 #self.num_samples
 
 
 class RawDataset(Dataset):
@@ -373,7 +376,6 @@ class RawDataset(Dataset):
             if self.is_rgb:
                 img = Image.open(self.image_path_list[index]).convert('RGB')  # for color image
             else:
-                print_error("=============================")
                 img = Image.open(self.image_path_list[index]).convert('L')
 
         except IOError:

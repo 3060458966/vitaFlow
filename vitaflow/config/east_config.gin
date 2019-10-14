@@ -1,33 +1,44 @@
 import vitaflow.config.east_imports
 
-experiment_name="CoNLL2002"
-get_experiment_root_directory.value="/opt/tmp/vitaflow/"
 
 #VitaFlowEngine
-VitaFlowEngine.batch_size=8
-VitaFlowEngine.num_epochs=5
-VitaFlowEngine.dataset_name="icdartf_dataset"
-VitaFlowEngine.iterator_name="cidar_iterator"
-VitaFlowEngine.model_name="east_model"
-VitaFlowEngine.save_checkpoints_steps=112
-VitaFlowEngine.keep_checkpoint_max=5
-VitaFlowEngine.save_summary_steps=5
-VitaFlowEngine.log_step_count_steps=2
-VitaFlowEngine.clear_model_data=False
-VitaFlowEngine.plug_dataset=True
-VitaFlowEngine.mode='train'
+VitaFlowEngine.experiment_name="east_slim_model"
+VitaFlowEngine.dataset_name="icdar_dataset"
+VitaFlowEngine.model_name="east_slim_model"
+VitaFlowEngine.num_epochs = 10
+VitaFlowEngine.save_checkpoints_steps = 112
+VitaFlowEngine.keep_checkpoint_max = 5
+VitaFlowEngine.save_summary_steps = 5
+VitaFlowEngine.log_step_count_steps = 2
+VitaFlowEngine.clear_model_data = False
+VitaFlowEngine.plug_dataset = True
+VitaFlowEngine.max_steps_without_decrease = 2000
+VitaFlowEngine.num_max_steps = 13600
+VitaFlowEngine.validation_interval_steps = 100
 
-# DataSet
-ICDARTFDataset.data_dir = "/opt/data/icdar/2019/"
-ICDARTFDataset.out_dir = "/opt/tmp/icdar/2019"
 
-# Iterator
-CIDARIterator.data_dir = "/opt/tmp/icdar/2019/"
-CIDARIterator.batch_size = 10
-CIDARIterator.prefetch_size = 1
+#ICDARDataset
+ICDARDataset.data_in_dir="/opt/vlab/icdar-2019-data"
+ICDARDataset.data_out_dir="/opt/tmp/vitaflow/east_v1/data/"
+ICDARDataset.is_preprocess=True
+ICDARDataset.max_image_large_side=1280
+ICDARDataset.max_text_size=800
+ICDARDataset.min_text_size=5
+ICDARDataset.min_crop_side_ratio=0.1
+ICDARDataset.geometry="RBOX"
+ICDARDataset.number_images_per_tfrecords=8
+ICDARDataset.num_cores=4
+ICDARDataset.batch_size=4
+ICDARDataset.prefetch_size=16
 
 # Model
-EASTIEstimatorModel.model_root_directory = "/opt/tmp/icdar/2019/"
-EASTIEstimatorModel.learning_rate = 0.0001
+EASTTFModel.model_root_directory = "store/east/"
+EASTTFModel.learning_rate = 0.001#EASTV2Keras
+EASTTFModel.experiment_name="east_v2_keras"
 
+
+
+EASTSlimModel.model_root_directory = "store/east/"
+EASTSlimModel.learning_rate = 0.001
+EASTSlimModel.experiment_name="east_slim_model"
 

@@ -396,9 +396,15 @@ def average_gradients(tower_grads):
 @gin.configurable
 class EASTTFModel(IEstimatorModel):
     def __init__(self,
+                 experiment_name,
+                 dataset,
                  learning_rate=0.0001,
                  model_root_directory=gin.REQUIRED,
                  moving_average_decay=0.997):
+        IEstimatorModel.__init__(self,
+                            experiment_name=experiment_name,
+                            model_root_directory=model_root_directory,
+                            dataset=dataset)
         self._model_root_directory = model_root_directory
         self._learning_rate = learning_rate
         self._moving_average_decay = moving_average_decay
@@ -467,14 +473,6 @@ class EASTTFModel(IEstimatorModel):
     #             tf.compat.v1.trainable_variables())[0]
     #         train_op = tf.group(minimize_op)
     #         return train_op
-
-    def __call__(self, features, labels, params, mode, config=None):
-        """
-        Used for the :tf_main:`model_fn <estimator/Estimator#__init__>`
-        argument when constructing
-        :tf_main:`tf.estimator.Estimator <estimator/Estimator>`.
-        """
-        return self._build(features, labels, params, mode, config=config)
 
     @property
     def model_dir(self):

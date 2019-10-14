@@ -1,18 +1,98 @@
 import os
 import sys
 import time
-
+from abc import abstractmethod
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn.init as init
 from vitaflow.datasets.image.scene_text_recognition.utils import Averager
 from vitaflow.backend.interface_trainer import TrainerBase
 from vitaflow.models.interface_model import ITorchModel
-from vitaflow.utils.print_helper import print_info
+from vitaflow.utils.print_helper import print_info, print_warn
+from vitaflow.utils.torch.visualization import TensorboardWriter
 
 
 class TorchTrainer(TrainerBase):
+
+    def __init__(self,
+                 model,
+                 experiment_name,
+                 dataset,
+                 max_train_steps,
+                 validation_interval_steps,
+                 stored_model,
+                 n_gpu=1):
+
+        TrainerBase.__init__(self,
+                             experiment_name,
+                             model,
+                             dataset,
+                             max_train_steps,
+                             validation_interval_steps,
+                             stored_model)
+
+        # setup GPU device if available, move model into configured device
+        self.device, device_ids = self._prepare_device(n_gpu)
+        self.model: ITorchModel = model.to(self.device)
+        if len(device_ids) > 1:
+            self.model = torch.nn.DataParallel(model, device_ids=device_ids)
+
+    def train(self, num_max_steps=None, num_epochs=None):
+        """
+        Full training logic
+        """
+        for epoch in range(num_epochs):
+            self.model._train_epoch(epoch)
+
+    def _prepare_device(self, n_gpu_use):
+        """
+        setup GPU device if available, move model into configured device
+        """
+        n_gpu = torch.cuda.device_count()
+        if n_gpu_use > 0 and n_gpu == 0:
+            print_warn("Warning: There\'s no GPU available on this machine,"
+                       "training will be performed on CPU.")
+            n_gpu_use = 0
+        if n_gpu_use > n_gpu:
+            print_warn("Warning: The number of GPU\'s configured to use is {}, but only {} are available "
+                       "on this machine.".format(n_gpu_use, n_gpu))
+            n_gpu_use = n_gpu
+        device = torch.device('cuda:0' if n_gpu_use > 0 else 'cpu')
+        list_ids = list(range(n_gpu_use))
+        return device, list_ids
+
+    def store_model(self, model, file_name):
+
+        if not os.path.exists(f"./store/{self._experiment_name}/{model.__class__.__name__}"):
+            os.makedirs(f"./store/{self._experiment_name}/{model.__class__.__name__}")
+
+        torch.save(model, f"./store/{self._experiment_name}/{model.__class__.__name__}/{file_name}")
+
+    def _save_checkpoint(self, epoch, save_best=False):
+        """
+        Saving checkpoints
+        :param epoch: current epoch number
+        :param save_best: if True, rename the saved checkpoint to 'model_best.pth'
+        """
+        pass
+
+    def _resume_checkpoint(self, stored_model_path):
+        """
+        Resume from saved checkpoints
+        :param resume_path: Checkpoint path to be resumed
+        """
+        model = torch.nn.DataParallel(self._model).to(self.device)
+        if os.path.exists(stored_model_path):
+            print(f'loading pretrained model from {self._stored_model}')
+            model.load_state_dict(torch.load(self._stored_model))
+        return model
+
+
+"""
+class TorchTrainer(TrainerBase):
+
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
     def __init__(self,
                  experiment_name,
                  model,
@@ -70,7 +150,6 @@ class TorchTrainer(TrainerBase):
         torch.save(model, f"./store/{self._experiment_name}/{model.__class__.__name__}/{file_name}")
 
     def validation(self, model):
-        """ validation or evaluation """
         evaluation_loader = self._dataset.get_val_dataset_gen()
         n_correct = 0
         norm_ED = 0
@@ -104,9 +183,9 @@ class TorchTrainer(TrainerBase):
         if os.path.exists(path):
             print(f'loading pretrained model from {self._stored_model}')
             model.load_state_dict(torch.load(self._stored_model))
-
-        print("Model:")
-        print(model)
+        #
+        # print("Model:")
+        # print(model)
         return model
 
     def train(self, num_max_steps=None, num_epoch=None):
@@ -157,48 +236,48 @@ class TorchTrainer(TrainerBase):
 
             loss_avg.add(cost)
 
-            # validation part
-            if i % self._validation_interval_steps == 0:
-                elapsed_time = time.time() - start_time
-                print(f'[{i}/{self._max_train_steps}] Loss: {loss_avg.val():0.5f} elapsed_time: {elapsed_time:0.5f}')
-                # for log
-
-                if not os.path.exists(f"./store/{self._experiment_name}"):
-                    os.makedirs(f"./store/{self._experiment_name}")
-
-                with open(f'./store/{self._experiment_name}/log_train.txt', 'a') as log:
-                    log.write(f'[{i}/{self._max_train_steps}] Loss: {loss_avg.val():0.5f} elapsed_time: {elapsed_time:0.5f}\n')
-                    loss_avg.reset()
-
-                    model.eval()
-                    with torch.no_grad():
-                        valid_loss, current_accuracy, current_norm_ed, \
-                        preds, labels, infer_time, length_of_data = self.validation(model=model)
-                    model.train()
-                    #
-                    # for pred, gt in zip(preds[:5], labels[:5]):
-                    #     if 'Attn' in opt.Prediction:
-                    #         pred = pred[:pred.find('[s]')]
-                    #         gt = gt[:gt.find('[s]')]
-                    #     print(f'{pred:20s}, gt: {gt:20s},   {str(pred == gt)}')
-                    #     log.write(f'{pred:20s}, gt: {gt:20s},   {str(pred == gt)}\n')
-
-                    valid_log = f'[{i}/{self._max_train_steps}] valid loss: {valid_loss:0.5f}'
-                    valid_log += f' accuracy: {current_accuracy:0.3f}, norm_ED: {current_norm_ed:0.2f}'
-                    print(valid_log)
-                    log.write(valid_log + '\n')
-
-                    # keep best accuracy model
-                    if current_accuracy > best_accuracy:
-                        best_accuracy = current_accuracy
-                        self.store_model(file_name="best_accuracy.pth", model=model)
-                    if current_norm_ed < best_norm_ed:
-                        best_norm_ed = current_norm_ed
-                        self.store_model(file_name="best_norm_ed.pth", model=model)
-
-                    best_model_log = f'best_accuracy: {best_accuracy:0.3f}, best_norm_ed: {best_norm_ed:0.2f}'
-                    print(best_model_log)
-                    log.write(best_model_log + '\n')
+            # # validation part
+            # if i % self._validation_interval_steps == 0:
+            #     elapsed_time = time.time() - start_time
+            #     print(f'[{i}/{self._max_train_steps}] Loss: {loss_avg.val():0.5f} elapsed_time: {elapsed_time:0.5f}')
+            #     # for log
+            #
+            #     if not os.path.exists(f"./store/{self._experiment_name}"):
+            #         os.makedirs(f"./store/{self._experiment_name}")
+            #
+            #     with open(f'./store/{self._experiment_name}/log_train.txt', 'a') as log:
+            #         log.write(f'[{i}/{self._max_train_steps}] Loss: {loss_avg.val():0.5f} elapsed_time: {elapsed_time:0.5f}\n')
+            #         loss_avg.reset()
+            #
+            #         model.eval()
+            #         with torch.no_grad():
+            #             valid_loss, current_accuracy, current_norm_ed, \
+            #             preds, labels, infer_time, length_of_data = self.validation(model=model)
+            #         model.train()
+            #         #
+            #         # for pred, gt in zip(preds[:5], labels[:5]):
+            #         #     if 'Attn' in opt.Prediction:
+            #         #         pred = pred[:pred.find('[s]')]
+            #         #         gt = gt[:gt.find('[s]')]
+            #         #     print(f'{pred:20s}, gt: {gt:20s},   {str(pred == gt)}')
+            #         #     log.write(f'{pred:20s}, gt: {gt:20s},   {str(pred == gt)}\n')
+            #
+            #         valid_log = f'[{i}/{self._max_train_steps}] valid loss: {valid_loss:0.5f}'
+            #         valid_log += f' accuracy: {current_accuracy:0.3f}, norm_ED: {current_norm_ed:0.2f}'
+            #         print(valid_log)
+            #         log.write(valid_log + '\n')
+            #
+            #         # keep best accuracy model
+            #         if current_accuracy > best_accuracy:
+            #             best_accuracy = current_accuracy
+            #             self.store_model(file_name="best_accuracy.pth", model=model)
+            #         if current_norm_ed < best_norm_ed:
+            #             best_norm_ed = current_norm_ed
+            #             self.store_model(file_name="best_norm_ed.pth", model=model)
+            #
+            #         best_model_log = f'best_accuracy: {best_accuracy:0.3f}, best_norm_ed: {best_norm_ed:0.2f}'
+            #         print(best_model_log)
+            #         log.write(best_model_log + '\n')
 
             # save model per 1e+5 iter.
             if (i + 1) % 1e+5 == 0:
@@ -232,4 +311,4 @@ class TorchTrainer(TrainerBase):
 
                 for img_name, pred in zip(image_path_list, preds_str):
                     print(f'{img_name}\t{pred}')
-
+"""

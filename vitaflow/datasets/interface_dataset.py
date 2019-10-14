@@ -133,6 +133,15 @@ class IDataset(object):
     def get_tf_test_dataset(self):
         raise NotImplementedError("No implementation for TensorFlow Dataset API")
 
+    def get_torch_train_dataset(self):
+        raise NotImplementedError("No implementation for TensorFlow Dataset API")
+
+    def get_torch_val_dataset(self):
+        raise NotImplementedError("No implementation for TensorFlow Dataset API")
+
+    def get_torch_test_dataset(self):
+        raise NotImplementedError("No implementation for TensorFlow Dataset API")
+
     def get_tf_serving_dataset(self, file_or_path):
         raise NotImplementedError("No implementation for TensorFlow Dataset API")
 

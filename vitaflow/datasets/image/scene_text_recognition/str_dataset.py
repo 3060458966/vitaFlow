@@ -98,10 +98,13 @@ class SceneTextRecognitionDataset(IDataset):
     def __len__(self):
         return len(self.train_dataset)
 
-    def get_train_dataset_gen(self):
+    def get_torch_train_dataset(self):
         return self.train_dataset
 
-    def get_val_dataset_gen(self):
+    def get_torch_train_data_loaders(self):
+        return self.train_dataset.data_loader_list
+
+    def get_torch_val_dataset(self):
         return self.valid_loader
 
     def get_serving_dataset(self, file_or_path):

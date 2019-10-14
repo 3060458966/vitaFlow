@@ -93,7 +93,7 @@ class EastCropperModule(ModuleInterface):
         if not os.path.isfile(gt_text_file_loc):
             print("Skipping the run as {} has not east_airflow_demo predictions".format(gt_text_file_loc))
         else:
-            print(dest_loc_dir)
+            # print(dest_loc_dir)
             crop_to_box(gt_text_file_loc, in_file_path, dest_loc_dir)
 
 
