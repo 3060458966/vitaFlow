@@ -29,13 +29,24 @@
 ```
    git clone https://github.com/Imaginea/vitaFlow/
    cd vitaFlow/
-   conda create -n vf python=3.5
+   conda create -n vf python=3.6
    conda activate vf
    export SLUGIFY_USES_TEXT_UNIDECODE=yes
    pip install -r requirements.txt
 ```
 
 
+**Training & Testing**
+
+```shell script
+python vitaflow/bin/vf_engine.py --config_file=vitaflow/config/east_torch_version.gin
+
+python vitaflow/bin/vf_serving.py \
+--config_file=vitaflow/config/east_torch_version.gin \
+--serving_class_name=east_torch_serving \
+--file_path=/opt/vlab/icdar-2019-data/test/X00016469671.jpg \
+--out_file_path=test_out.jpg
+```
 
 ---------------------------------------------------------------------------------------------------------
 
@@ -102,3 +113,5 @@ UI : http://localhost:8001
 cd annotation_tools
 for f in *.txt; do touch "${f%.}.ann"; done
 ```
+
+

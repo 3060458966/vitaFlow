@@ -12,13 +12,14 @@ VitaFlowEngine.experiment_name = "STR"
 VitaFlowEngine.dataset_name="scene_text_recognition_dataset"
 VitaFlowEngine.model_name="scene_text_recognition_model"
 VitaFlowEngine.num_epochs=10
-VitaFlowEngine.save_checkpoints_steps=112
+VitaFlowEngine.store_model_interval_steps=112
 VitaFlowEngine.keep_checkpoint_max=5
 VitaFlowEngine.save_summary_steps=5
 VitaFlowEngine.log_step_count_steps=2
 VitaFlowEngine.max_steps_without_decrease = 100000
 VitaFlowEngine.num_max_steps = 300000
 VitaFlowEngine.validation_interval_steps = 2000
+VitaFlowEngine.experiment_root_dir = "store/"
 
 
 #path to training dataset
@@ -58,9 +59,9 @@ SceneTextRecognitionModel.sequence_modeling_stage = "BiLSTM"
 SceneTextRecognitionModel.prediction_stage = "Attn"
 SceneTextRecognitionModel.img_width = %IMAGE_WIDTH
 SceneTextRecognitionModel.img_height = %IMAGE_HEIGHT
-#the number of input channel of Feature extractor
+#the number of input channel of Feature Extractor
 SceneTextRecognitionModel.input_channel = 1 #depends on SceneTextRecognitionDataset.is_rgb
-#the number of output channel of Feature extractor
+#the number of output channel of Feature Extractor
 SceneTextRecognitionModel.output_channel = 512
 #number of fiducial points of TPS-STN
 SceneTextRecognitionModel.num_fiducial = 20

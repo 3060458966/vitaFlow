@@ -1,18 +1,19 @@
 import vitaflow.config.east_imports
 
-
 #VitaFlowEngine
 VitaFlowEngine.experiment_name="east_torch"
 VitaFlowEngine.dataset_name="icdar_dataset_v1"
 VitaFlowEngine.model_name="east_torch_model"
 VitaFlowEngine.num_epochs = 10
-VitaFlowEngine.save_checkpoints_steps = 112
+VitaFlowEngine.store_model_interval_steps = 112
+VitaFlowEngine.store_model_epoch_interval = 1
 VitaFlowEngine.keep_checkpoint_max = 5
 VitaFlowEngine.save_summary_steps = 5
 VitaFlowEngine.log_step_count_steps = 2
 VitaFlowEngine.max_steps_without_decrease = 2000
 VitaFlowEngine.num_max_steps = 13600
 VitaFlowEngine.validation_interval_steps = 100
+VitaFlowEngine.experiment_root_dir = "store/"
 
 
 ICDARDatasetV1.data_in_dir = "/opt/vlab/icdar-2019-data"
@@ -22,10 +23,11 @@ ICDARDatasetV1.is_preprocess=False
 ICDARDatasetV1.num_cores=4
 
 #EASTTorchModel
-EASTTorchModel.experiment_name = "east_torch"
-EASTTorchModel.model_root_directory = "store"
-EASTTorchModel.num_epochs = 5
 EASTTorchModel.learning_rate = 0.01
-EASTTorchModel.experiment_name="east_torch_model"
 EASTTorchModel.model_root_directory="store/east_torch/"
 EASTTorchModel.pretrained=False
+
+#EastTorchServing
+EastTorchServing.dataset_name="icdar_dataset_v1"
+EastTorchServing.model_name="east_torch_model"
+EastTorchServing.model_store_path="store/east_torch/east_torch_model/"

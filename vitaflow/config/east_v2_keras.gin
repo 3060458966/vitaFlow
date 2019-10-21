@@ -27,5 +27,5 @@ ICDARDataset.prefetch_size=16
 
 #EASTV2Keras
 EASTV2Keras.experiment_name="east_v2_keras"
-EASTV2Keras.model_root_directory="/opt/tmp/vitaflow/east_v2_keras/model/"
+EASTV2Keras.model_root_directory="/opt/tmp/vitaflow/east_v2_keras/run/"
 
