@@ -71,9 +71,9 @@ class VGG(nn.Module):
         return x
 
 
-class extractor(nn.Module):
+class Extractor(nn.Module):
     def __init__(self, pretrained):
-        super(extractor, self).__init__()
+        super(Extractor, self).__init__()
         vgg16_bn = VGG(make_layers(cfg, batch_norm=True))
         if pretrained:
             vgg16_bn.load_state_dict(torch.load('./pths/vgg16_bn-6c64b313.pth'))
@@ -209,59 +209,71 @@ class Loss(nn.Module):
         return geo_loss + classify_loss
 
 
-@register_model
-@gin.configurable
-class EASTTorchModel(ITorchModel):
-    def __init__(self,
-                 dataset,
-                 num_epochs,
-                 learning_rate,
-                 experiment_name="east_torch_model",
-                 model_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/", "EASTTorchModel"),
-                 pretrained=True):
-        super(EASTTorchModel, self).__init__(model_root_directory=model_root_directory,
-                                             dataset=dataset,
-                                             experiment_name=experiment_name,
-                                             learning_rate=learning_rate,
-                                             num_epochs=num_epochs)
-        self.extractor = extractor(pretrained)
+class _EAST(nn.Module):
+    def __init__(self, pretrained=False):
+        super(_EAST, self).__init__()
+        self.extractor = Extractor(pretrained)
         self.merge = merge()
         self.output = output()
 
     def forward(self, x):
         return self.output(self.merge(self.extractor(x)))
 
-    def _setup(self):
+
+@register_model
+@gin.configurable
+class EASTTorchModel(ITorchModel):
+    def __init__(self,
+                 dataset=None,
+                 learning_rate=0.1,
+                 model_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/", "east_torch_model"),
+                 pretrained=False):
+        super(EASTTorchModel, self).__init__(model_root_directory=model_root_directory,
+                                             dataset=dataset,
+                                             learning_rate=learning_rate,
+                                             module=_EAST(pretrained))
+
+    @property
+    def name(self):
+        return "east_torch_model"
+
+    def compile(self, num_epochs):
         self._criterion = Loss()
-        self._optimizer = torch.optim.Adam(self.parameters(), lr=self._learning_rate)
-        self._scheduler = lr_scheduler.MultiStepLR(self._optimizer, milestones=[self._num_epochs // 2], gamma=0.1)
-        self._device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self._optimizer = torch.optim.Adam(self.module.parameters(), lr=self._learning_rate)
+        self._scheduler = lr_scheduler.MultiStepLR(self._optimizer, milestones=[num_epochs // 2], gamma=0.1)
+        # self._device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     def _train_epoch(self, epoch):
         """
         Training logic for an epoch
         :param epoch: Current epoch number
         """
-        self.train()
+        self.module.train()
         self._scheduler.step()
         epoch_loss = 0
         epoch_time = time.time()
-        for i, (img, gt_score, gt_geo, ignored_map) in enumerate(self._dataset.get_torch_train_data_loader()):
-            print_error(ignored_map.shape)
-            start_time = time.time()
-            img, gt_score, gt_geo, ignored_map = img.to(self._device), gt_score.to(self._device), gt_geo.to(self._device), ignored_map.to(
-                self._device)
-            pred_score, pred_geo = self.model_step(img)
-            loss = self._criterion(gt_score, pred_score, gt_geo, pred_geo, ignored_map)
+        for data_loader in self._dataset.get_torch_train_data_loaders():
+            for i, (img, gt_score, gt_geo, ignored_map) in enumerate(data_loader):
+                start_time = time.time()
+                img, gt_score, gt_geo, ignored_map = img.to(self._device), \
+                                                     gt_score.to(self._device), \
+                                                     gt_geo.to(self._device), \
+                                                     ignored_map.to(
+                                                         self._device)
+                pred_score, pred_geo = self.module(img)
+                loss = self._criterion(gt_score, pred_score, gt_geo, pred_geo, ignored_map)
 
-            epoch_loss += loss.item()
-            self._optimizer.zero_grad()
-            loss.backward()
-            self._optimizer.step()
+                epoch_loss += loss.item()
+                self._optimizer.zero_grad()
+                loss.backward()
+                self._optimizer.step()
 
-            print('Epoch is [{}/{}], mini-batch is [{}/{}], time consumption is {:.8f}, batch_loss is {:.8f}'.format(
-                epoch + 1, self._num_epochs, i + 1, int(self._dataset.train_samples_count / self._dataset._batch_size), time.time() - start_time, loss.item()))
-
+                print('Epoch is {}, mini-batch is [{}/{}], time consumption is {:.8f}, batch_loss is {:.8f}'.format(
+                    epoch,
+                    i + 1,
+                    int(self._dataset.train_samples_count / self._dataset._batch_size),
+                    time.time() - start_time,
+                    loss.item()))
 
     def _val_epoch(self, epoch):
         """
@@ -270,6 +282,8 @@ class EASTTorchModel(ITorchModel):
         """
         raise NotImplementedError
 
+    def predict(self, x):
+        return self.module(x)
 
 
 if __name__ == '__main__':

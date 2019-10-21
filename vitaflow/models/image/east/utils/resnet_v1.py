@@ -124,7 +124,7 @@ def resnet_v1(inputs,
     """Generator for v1 ResNet models.
 
     This function generates a family of ResNet v1 models. See the resnet_v1_*()
-    methods for specific model instantiations, obtained by selecting different
+    methods for specific _model instantiations, obtained by selecting different
     block instantiations that produce ResNets of various depths.
 
     Training for image classification on Imagenet is usually done with [224, 224]
@@ -235,7 +235,7 @@ def resnet_v1_50(inputs,
                  spatial_squeeze=True,
                  reuse=None,
                  scope='resnet_v1_50'):
-    """ResNet-50 model of [1]. See resnet_v1() for arg and return description."""
+    """ResNet-50 _model of [1]. See resnet_v1() for arg and return description."""
     blocks = [
         resnet_utils.Block(
             'block1', bottleneck, [(256, 64, 1)] * 2 + [(256, 64, 2)]),
@@ -263,7 +263,7 @@ def resnet_v1_101(inputs,
                   spatial_squeeze=True,
                   reuse=None,
                   scope='resnet_v1_101'):
-    """ResNet-101 model of [1]. See resnet_v1() for arg and return description."""
+    """ResNet-101 _model of [1]. See resnet_v1() for arg and return description."""
     blocks = [
         resnet_utils.Block(
             'block1', bottleneck, [(256, 64, 1)] * 2 + [(256, 64, 2)]),
@@ -291,7 +291,7 @@ def resnet_v1_152(inputs,
                   spatial_squeeze=True,
                   reuse=None,
                   scope='resnet_v1_152'):
-    """ResNet-152 model of [1]. See resnet_v1() for arg and return description."""
+    """ResNet-152 _model of [1]. See resnet_v1() for arg and return description."""
     blocks = [
         resnet_utils.Block(
             'block1', bottleneck, [(256, 64, 1)] * 2 + [(256, 64, 2)]),
@@ -318,7 +318,7 @@ def resnet_v1_200(inputs,
                   spatial_squeeze=True,
                   reuse=None,
                   scope='resnet_v1_200'):
-    """ResNet-200 model of [2]. See resnet_v1() for arg and return description."""
+    """ResNet-200 _model of [2]. See resnet_v1() for arg and return description."""
     blocks = [
         resnet_utils.Block(
             'block1', bottleneck, [(256, 64, 1)] * 2 + [(256, 64, 2)]),

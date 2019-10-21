@@ -16,7 +16,7 @@ experiments = {
     "dataset_class_with_path": "examples.cifar10.cifar10_dataset.Cifar10Dataset",
     "iterator_class_with_path": "examples.cifar10.cifar10_basic_iterator.Cifar10BasicIterator",
     "model_class_with_path": "vitaflow.models.image.classification.naive_convnet.NaiveConvNet",
-    "save_checkpoints_steps" : (45000 // batch_size) // 5,
+    "store_model_interval_steps" : (45000 // batch_size) // 5,
     "keep_checkpoint_max" : 5,
     "save_summary_steps" : (45000 // batch_size) // 100,
     "log_step_count_steps" : 2,
@@ -43,7 +43,7 @@ experiments = {
         "batch_size": batch_size,
     },
 
-    # data model
+    # data _model
     "vitaflow.models.image.classification.naive_convnet.NaiveConvNet" : {
         "modehparams.l_root_directory":  experiment_root_directory,
         "experiment_name": experiment_name,

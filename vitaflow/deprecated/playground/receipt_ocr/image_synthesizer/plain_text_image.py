@@ -141,7 +141,7 @@ def create_naive_receipt(file_path):
     # create Image object with the input image
     # TODO: Generated a proper text receipt & from it generated receipt
     # TODO: Generate Header, Body & Footer - as seperate regions and image-concated them
-    # TODO: Convert this to a class model
+    # TODO: Convert this to a class _model
     receipt_text = []
     _number_of_line_items = random.choice(range(5, 15))
     _image_size = (360, 250 + _number_of_line_items * 15)

@@ -1476,12 +1476,12 @@ class ProjectConfiguration(object):
             if 'tool' not in r.arguments:
                 Messager.warning('Project configuration: config error: missing tool name ("tool") for %s.' % r.storage_form())
                 continue
-            if 'model' not in r.arguments:
-                Messager.warning('Project configuration: config error: missing model name ("model") for %s.' % r.storage_form())
+            if '_model' not in r.arguments:
+                Messager.warning('Project configuration: config error: missing _model name ("_model") for %s.' % r.storage_form())
                 continue
             tool_config.append((r.storage_form(),
                                 r.arguments['tool'][0],
-                                r.arguments['model'][0],
+                                r.arguments['_model'][0],
                                 r.special_arguments['<URL>'][0]))
         return tool_config
 

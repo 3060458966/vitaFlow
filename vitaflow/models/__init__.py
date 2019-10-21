@@ -26,5 +26,5 @@
 # # pylint: enable=unused-import
 #
 #
-# def model(name):
-#     return registry.model(name)
+# def _model(name):
+#     return registry._model(name)

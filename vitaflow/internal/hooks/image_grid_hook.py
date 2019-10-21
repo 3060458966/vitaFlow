@@ -32,7 +32,7 @@ class ImageGridHook(session_run_hook.SessionRunHook):
                  path=None):
         """
 
-        :param z_image: Generator model tensor reference
+        :param z_image: Generator _model tensor reference
         :param d_loss: Discriminator loss tensor
         :param g_loss: Generator loss tensor
         :param global_Step: Tenosrfloe global step refererence

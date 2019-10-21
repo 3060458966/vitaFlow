@@ -73,6 +73,9 @@ class IDataset(object):
     def batch_size(self):
         return self._batch_size
 
+    def prepare_data(self, file_path):
+        raise NotImplementedError
+
     def dataset_to_iterator(self, dataset):
         # Create an iterator
         iterator = dataset.make_one_shot_iterator()
@@ -133,17 +136,20 @@ class IDataset(object):
     def get_tf_test_dataset(self):
         raise NotImplementedError("No implementation for TensorFlow Dataset API")
 
-    def get_torch_train_dataset(self):
-        raise NotImplementedError("No implementation for TensorFlow Dataset API")
-
-    def get_torch_val_dataset(self):
-        raise NotImplementedError("No implementation for TensorFlow Dataset API")
-
-    def get_torch_test_dataset(self):
-        raise NotImplementedError("No implementation for TensorFlow Dataset API")
-
     def get_tf_serving_dataset(self, file_or_path):
         raise NotImplementedError("No implementation for TensorFlow Dataset API")
+
+    def get_torch_train_dataset(self):
+        raise NotImplementedError("No implementation for Torch Dataset API")
+
+    def get_torch_val_dataset(self):
+        raise NotImplementedError("No implementation for Torch Dataset API")
+
+    def get_torch_test_dataset(self):
+        raise NotImplementedError("No implementation for Torch Dataset API")
+
+    def get_torch_train_data_loaders(self):
+        raise NotImplementedError("No implementation for Torch Data loaders API")
 
     def _get_num_train_samples(self):
         raise NotImplementedError("Respective inherited class should implement this routine")

@@ -32,44 +32,45 @@ __all__ = [
 class IModelBase(object):
 
     def __init__(self,
-                 experiment_name,
                  model_root_directory,
                  dataset=None):
-        self._experiment_name = experiment_name
         self._model_root_directory = model_root_directory
         self._dataset = dataset
 
     @property
     def model_dir(self):
         """
-        Returns model directory `model_root_directory`/`experiment_name`/VanillaGAN
+        Returns _model directory `model_root_directory`/`experiment_name`/VanillaGAN
         :return:
         """
         return os.path.join(self._model_root_directory,
-                            self._experiment_name,
                             type(self).__name__)
 
     @abstractmethod
     def get_inputs(self):
-        raise NotImplementedError("User model class must implement this routine")
+        raise NotImplementedError("User _model class must implement this routine")
 
     @abstractmethod
     def get_outputs(self):
-        raise NotImplementedError("User model class must implement this routine")
+        raise NotImplementedError("User _model class must implement this routine")
 
     @abstractmethod
     def get_loss(self, labels=None, logits=None):
-        raise NotImplementedError("User model class must implement this routine")
+        raise NotImplementedError("User _model class must implement this routine")
 
     @abstractmethod
     def get_optimizer(self, loss=None):
-        raise NotImplementedError("User model class must implement this routine")
+        raise NotImplementedError("User _model class must implement this routine")
+
+    @abstractmethod
+    def predict(self, x):
+        raise NotImplementedError
 
 
 class IEstimatorModel(IModelBase):
-    """Base class inherited by all model classes.
+    """Base class inherited by all _model classes.
 
-    A model class implements interfaces that are compatible with
+    A _model class implements interfaces that are compatible with
     :tf_main:`TF Estimator <estimator/Estimator>`. In particular,
     :meth:`_build` implements the
     :tf_main:`model_fn <estimator/Estimator#__init__>` interface; and
@@ -84,7 +85,6 @@ class IEstimatorModel(IModelBase):
                  experiment_name,
                  model_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/", "tf_model")):
         IModelBase.__init__(self,
-                            experiment_name=experiment_name,
                             model_root_directory=model_root_directory,
                             dataset=dataset)
 
@@ -121,7 +121,6 @@ class IKerasModel(IModelBase):
                  model_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/", "keras_model"),
                  dataset=None):
         IModelBase.__init__(self,
-                            experiment_name=experiment_name,
                             model_root_directory=model_root_directory,
                             dataset=dataset)
 
@@ -130,26 +129,33 @@ class IKerasModel(IModelBase):
         raise NotImplementedError
 
 
-class ITorchModel(IModelBase, nn.Module):
+class ITorchModel(IModelBase):
 
     def __init__(self,
                  dataset,
-                 num_epochs,
+                 module,
                  learning_rate,
-                 experiment_name,
-                 model_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/", "keras_model")):
-        nn.Module.__init__(self)
+                 device=None,
+                 model_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/", "torch_model")):
         IModelBase.__init__(self,
-                            experiment_name=experiment_name,
                             model_root_directory=model_root_directory,
                             dataset=dataset)
 
+        self.module = module
         self._dataset = dataset
-        self._num_epochs = num_epochs
         self._learning_rate = learning_rate
+        self._device = device
 
-    def model_step(self, *input, **kwargs):
-        return self.__call__(*input, **kwargs)
+
+    def set_device(self, device):
+        self._device = device
+
+    def load_module(self, module):
+        self.module = module
+
+    @property
+    def name(self):
+        raise NotImplementedError
 
     @abstractmethod
     def _train_epoch(self, epoch):
@@ -160,25 +166,16 @@ class ITorchModel(IModelBase, nn.Module):
         raise NotImplementedError
 
     @abstractmethod
-    def _setup(self):
+    def compile(self):
         self._criterion = None
         self._optimizer = None
         self._scheduler = None
         self._device = None
 
-    @abstractmethod
-    def forward(self, *inputs):
-        """
-        Forward pass logic
-
-        :return: Model output
-        """
-        raise NotImplementedError
-
     def __str__(self):
         """
         Model prints with number of trainable parameters
         """
-        model_parameters = filter(lambda p: p.requires_grad, self.parameters())
+        model_parameters = filter(lambda p: p.requires_grad, self.module.parameters())
         params = sum([np.prod(p.size()) for p in model_parameters])
         return super().__str__() + '\nTrainable parameters: {}'.format(params)

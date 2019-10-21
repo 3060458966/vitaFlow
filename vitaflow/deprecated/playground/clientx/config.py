@@ -9,7 +9,7 @@ experiments = {
     "dataset_class_with_path": "vitaflow.playground.clientx.clientx_dataset.CLIENTXDataset",
     "iterator_class_with_path": "vitaflow.iterators.text.csv_seq_to_seq_iterator.CSVSeqToSeqIterator",
     "model_class_with_path": "vitaflow.models.text.seq2seq.BiLSTMCrf",
-    "save_checkpoints_steps" : 50,
+    "store_model_interval_steps" : 50,
     "keep_checkpoint_max" : 5,
     "save_summary_steps" : 25,
     "log_step_count_steps" : 10,
@@ -44,7 +44,7 @@ experiments = {
         "use_char_embd": use_char_embd
     },
 
-    # data model
+    # data _model
     "vitaflow.models.text.seq2seq.BiLSTMCrf": {
         "model_root_directory": experiment_root_directory,
         "experiment_name": experiment_name,

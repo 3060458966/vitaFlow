@@ -32,7 +32,7 @@ def mean_image_subtraction(images, means=[123.68, 116.78, 103.94]):
 
 def model(images, text_scale=512, weight_decay=1e-5, is_training=True):
     """
-    define the model, we use slim's implemention of resnet
+    define the _model, we use slim's implemention of resnet
     """
     images = mean_image_subtraction(images)
 
@@ -216,7 +216,7 @@ class EASTSlimModel(IEstimatorModel):
         version = (tf.version.VERSION).split(".")
 
         if int(version[0]) > 1 or int(version[1]) > 13:
-            print_info("Selected model is doesn't supports current Tensorflow version. Use Tensorflow 1.13.0 or before!")
+            print_info("Selected _model is doesn't supports current Tensorflow version. Use Tensorflow 1.13.0 or before!")
             exit(0)
 
         self._model_root_directory = model_root_directory
@@ -261,7 +261,7 @@ class EASTSlimModel(IEstimatorModel):
     @property
     def model_dir(self):
         """
-        Returns model directory `model_root_directory`/`experiment_name`/VanillaGAN
+        Returns _model directory `model_root_directory`/`experiment_name`/VanillaGAN
         :return:
         """
         return os.path.join(self._model_root_directory,

@@ -22,7 +22,7 @@ class Executor(object):
             :tf_main:`Estimator <estimator/Estimator#__init__>`.
         model_hparams (optional): A `dict` or an instance of
             :class:`~shabda.hparams.HParams` containing the hyperparameters of
-            the model. If `None`, uses :attr:`model.hparams`. Used as
+            the _model. If `None`, uses :attr:`_model.hparams`. Used as
             the :attr:`params` argument of
             :tf_main:`Estimator <estimator/Estimator#__init__>`.
         train_hooks (optional): Iterable of :tf_main:`tf.train.SessionRunHook <train/SessionRunHook>`
@@ -94,12 +94,12 @@ class Executor(object):
 
     def train(self, max_steps=None):
         """
-        Trains the model. See :tf_main:`tf.estimator.Estimator.train
+        Trains the _model. See :tf_main:`tf.estimator.Estimator.train
         <estimator/Estimator#train>` for more details.
 
         Args:
             max_steps (int, optional): Total number of steps for which
-                to train model. If `None`, train forever or until the train
+                to train _model. If `None`, train forever or until the train
                 data generates the OutOfRange exception. If OutOfRange occurs
                 in the middle, training stops before :attr:`max_steps` steps.
         """
@@ -111,12 +111,12 @@ class Executor(object):
 
     def evaluate(self, steps=None, checkpoint_path=None):
         """
-        Evaluates the model. See :tf_main:`tf.estimator.Estimator.evaluate
+        Evaluates the _model. See :tf_main:`tf.estimator.Estimator.evaluate
         <estimator/Estimator#evaluate>` for more details.
 
         Args:
             steps (int, optional): Number of steps for which to evaluate
-                model. If `None`, evaluates until the eval data raises an
+                _model. If `None`, evaluates until the eval data raises an
                 OutOfRange exception.
             checkpoint_path (str, optional): Path of a specific checkpoint to
                 evaluate. If `None`, the the latest checkpoint in
@@ -133,17 +133,17 @@ class Executor(object):
 
     def train_and_evaluate(self, max_train_steps=None, eval_steps=None):
         """
-        Trains and evaluates the model. See
+        Trains and evaluates the _model. See
         :tf_main:`tf.estimator.train_and_evaluate
         <estimator/train_and_evaluate>` for more details.
 
         Args:
             max_train_steps (int, optional): Total number of steps for which
-                to train model. If `None`, train forever or until the train
+                to train _model. If `None`, train forever or until the train
                 data generates the OutOfRange exception. If OutOfRange occurs
                 in the middle, training stops before :attr:`max_steps` steps.
             eval_steps (int, optional): Number of steps for which to evaluate
-                model. If `None`, evaluates until the eval data raises an
+                _model. If `None`, evaluates until the eval data raises an
                 OutOfRange exception.
         """
         train_spec = self._get_train_spec(max_steps=max_train_steps)

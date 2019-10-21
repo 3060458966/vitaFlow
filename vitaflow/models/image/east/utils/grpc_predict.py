@@ -167,8 +167,8 @@ if __name__ == '__main__':
     parser.add_argument('--image', help='input image', type=str)
     parser.add_argument('--images_dir', help='input images', type=str)
     parser.add_argument('--output_dir', help='out dir for images', type=str)
-    parser.add_argument('--model', help='model name', type=str)
-    parser.add_argument('--signature_name', help='Signature name of saved TF model',
+    parser.add_argument('--_model', help='_model name', type=str)
+    parser.add_argument('--signature_name', help='Signature name of saved TF _model',
                         default='serving_default', type=str)
 
     args = parser.parse_args()

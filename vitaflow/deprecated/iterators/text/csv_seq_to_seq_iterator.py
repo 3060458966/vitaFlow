@@ -653,7 +653,7 @@ class CSVSeqToSeqIterator(IteratorInterface, ITextFeature):
         Runs the prediction on list of file to be tagged
         :return:
         """
-        model = executor.model
+        model = executor.run
         estimator = executor.estimator
         data_iterator = executor.data_iterator
 
@@ -777,7 +777,7 @@ class CSVSeqToSeqIterator(IteratorInterface, ITextFeature):
         :param sentence: A single sentence whose tokens are separated by space
         :return: tuple of (words_n,tags_n)
         """
-        model = executor.model
+        model = executor.run
         estimator = executor.estimator
         data_iterator = executor.data_iterator
 

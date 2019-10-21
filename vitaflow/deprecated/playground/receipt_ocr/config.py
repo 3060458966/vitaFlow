@@ -2,7 +2,7 @@ import os
 
 # user inputs
 experiment_root_directory = os.path.join(os.path.expanduser("~"), "vitaFlow")
-path_to_tensorflow_model = os.path.join(experiment_root_directory, "ObjectDetection", "model", "frozen_inference_graph.pb")
+path_to_tensorflow_model = os.path.join(experiment_root_directory, "ObjectDetection", "_model", "frozen_inference_graph.pb")
 images_src = os.path.join(experiment_root_directory, "ObjectDetection", "test_images")
 
 # user output

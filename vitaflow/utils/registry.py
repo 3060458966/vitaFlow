@@ -36,7 +36,7 @@ class MyModel(VfModel):
 
 for k in Registries.models:
   print(k)  # prints 'my_model'
-model = Registries.models['my_model'](constructor_arg)
+_model = Registries.models['my_model'](constructor_arg)
 ```
 """
 
@@ -63,8 +63,7 @@ def default_name(class_or_fn):
 default_object_name = lambda obj: default_name(type(obj))
 
 
-def _on_model_set(k, v):
-    v.REGISTERED_NAME = k
+
 
 
 def _nargs_validator(nargs, message):
@@ -150,7 +149,15 @@ def _dataset_name_validator(k, v):
             "Invalid dataset name: cannot end in %s or %s" % ("_rev", "_copy"))
 
 
+def _on_model_set(k, v):
+    v.REGISTERED_NAME = k
+
+
 def _on_dataset_set(k, v):
+    v.name = k
+
+
+def _on_serving_set(k, v):
     v.name = k
 
 
@@ -356,12 +363,17 @@ class Registries(object):
 
     datasets = Registry("datasets", validator=_dataset_name_validator, on_set=_on_dataset_set)
 
+    serving = Registry("serving", on_set=_on_serving_set)
+
+
 register_model = Registries.models.register
 list_models = lambda: sorted(Registries.models)
 
 register_dataset = Registries.datasets.register
-list_base_datasets = lambda: sorted(Registries.datasets)
+list_datasets = lambda: sorted(Registries.datasets)
 
+register_serving = Registries.serving.register
+list_serving = lambda: sorted(Registries.serving)
 
 def dataset(dataset_name):
     """Get  dataset registered in `base_registry`.
@@ -387,6 +399,18 @@ def model(model_name):
     return Registries.models[model_name]
 
 
+
+def serving(serving_class_name):
+    """Get  dataset registered in `base_registry`.
+
+    Args:
+      dataset_name: string dataset name.
+
+    Returns:
+      dataset registered in the given  registry.
+    """
+    return Registries.serving[serving_class_name]
+
 def display_list_by_prefix(names_list, starting_spaces=0):
     """Creates a help string for names_list grouped by prefix."""
     cur_prefix, result_lines = None, []
@@ -407,15 +431,19 @@ def help_string():
 Registry contents:
 ------------------
 
-  Models:
+Models:
 %s
 
-  Datasets:
+Datasets:
 %s
+
+Serving:
+%s  
 """
     lists = tuple(
         display_list_by_prefix(entries, starting_spaces=4) for entries in [  # pylint: disable=g-complex-comprehension
             list_models(),
-            list_base_datasets()
+            list_datasets(),
+            list_serving()
         ])
     return help_str % lists

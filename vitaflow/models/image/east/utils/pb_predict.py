@@ -2,7 +2,7 @@
 python pb_predict\
  --images_dir="/home/gaurishk/Desktop/preprocess/test"\
  --output_dir="/home/gaurishk/Desktop/preprocess/"\
- --model="/home/gaurishk/Projects/vitaFlow/vitaflow/annotate_server/static/data/vf_east_models/east_airflow_demo/EASTIEstimatorModel/exported/1558013588"
+ --_model="/home/gaurishk/Projects/vitaFlow/vitaflow/annotate_server/static/data/vf_east_models/east_airflow_demo/EASTIEstimatorModel/exported/1558013588"
 '''
 
 import argparse
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--images_dir', help='input images', type=str)
     parser.add_argument('--output_dir', help='out dir for images', type=str)
-    parser.add_argument('--model', help='model exported path', type=str)
+    parser.add_argument('--_model', help='_model exported path', type=str)
 
     args = parser.parse_args()
     run(input_dir=args.images_dir, output_dir=args.output_dir, model_dir=args.model)

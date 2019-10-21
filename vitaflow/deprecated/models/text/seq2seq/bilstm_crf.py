@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-A model class that uses BiLSTM word and char level embeddings
+A _model class that uses BiLSTM word and char level embeddings
 """
 
 import tensorflow as tf

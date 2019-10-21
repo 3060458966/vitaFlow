@@ -11,35 +11,31 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 
 from vitaflow.datasets.interface_dataset import IDataset
 
 class TrainerBase(object):
     def __init__(self,
-                 experiment_name,
                  model,
                  dataset,
-                 max_train_steps,
-                 validation_interval_steps,
-                 stored_model):
+                 model_store_path):
         """
         Base class training engine
         :param experiment_name: Name of the experiment
-        :param max_train_steps: Maximum number of training steps for current experimentation
-                                (step = number of samples / batch size)
-        :param validation_interval_steps: Number of training steps before running validation
-        :param stored_model: Previously trained model path
-        :param model: Respective model class that the inherited trainer can handle
+        :param model_store_path: Previously trained _model path
+        :param model: Respective _model class that the inherited trainer can handle
         :param dataset: Dataset class
         """
-        self._experiment_name = experiment_name
-        self._max_train_steps = max_train_steps
-        self._validation_interval_steps = validation_interval_steps
-        self._stored_model = stored_model
         self._model = model
         self._dataset = dataset
+        self._model_store_path = model_store_path
 
-    def train(self, max_steps=None, num_epochs=None):
+    def train(self,
+              max_steps=None,
+              num_epochs=None,
+              store_model_epoch_interval=None,
+              store_model_steps_interval=None):
         raise NotImplementedError
 
     def evaluate(self, steps=None, checkpoint_path=None):
@@ -48,10 +44,7 @@ class TrainerBase(object):
     def train_and_evaluate(self, max_train_steps=None, eval_steps=None, num_epochs=None):
         raise NotImplementedError
 
-    def predict_directory(self, in_path, out_path):
-        raise NotImplementedError
-
-    def predict_file(self, in_path, out_path):
+    def predict(self, x):
         raise NotImplementedError
 
 

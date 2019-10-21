@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Class Model: model for the deep clustering speech seperation
+Class Model: _model for the deep clustering speech seperation
 """
 
 from overrides import overrides

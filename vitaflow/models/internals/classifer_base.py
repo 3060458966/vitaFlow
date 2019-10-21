@@ -71,7 +71,7 @@ class ClassifierIEstimator(IEstimatorModel):
     #     "experiment_name" : str
     #         Name of the experiment
     #     "model_root_directory" : str
-    #         Model root directory to store the model data under it with model class name as folder name
+    #         Model root directory to store the _model data under it with _model class name as folder name
     #     "name": str
     #         Name of the classifier
     #     "out_dim":

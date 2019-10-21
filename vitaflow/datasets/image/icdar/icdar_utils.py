@@ -550,7 +550,7 @@ def generate_rbox(im_size, polys, tags, min_text_size):
 
         # ------------------------------------------------------------------------------------------------
 
-        # xy_in_poly = np.argwhere(orig_poly_mask == (poly_idx + 1)) TODO : this was commented to support EAST model
+        # xy_in_poly = np.argwhere(orig_poly_mask == (poly_idx + 1)) TODO : this was commented to support EAST _model
         xy_in_poly = np.argwhere(shrinked_poly_mask == (poly_idx + 1))
 
 

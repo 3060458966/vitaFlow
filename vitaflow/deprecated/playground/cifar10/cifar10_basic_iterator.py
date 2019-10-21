@@ -391,7 +391,7 @@ class Cifar10BasicIterator(DatasetInterface, IIteratorBase, ImageFeature):
         return dataset
 
     def predict_on_test_files(self, executor: Executor):
-        model = executor.model
+        model = executor.run
         estimator = executor.estimator
         data_iterator = executor.data_iterator
         model_predictions = []
@@ -425,4 +425,4 @@ class Cifar10BasicIterator(DatasetInterface, IIteratorBase, ImageFeature):
             self._dataset.display_image_predictions(features=test_features, labels=test_labels, predictions=predictions)
 
         else:
-            print_error("Either selected model or iterator is not supported for predictions")
+            print_error("Either selected _model or iterator is not supported for predictions")

@@ -34,13 +34,10 @@ class TFExecutor(TrainerBase):
     """
 
     def __init__(self,
-                 experiment_name,
                  model,
                  dataset,
                  config,
-                 max_train_steps,
-                 validation_interval_steps,
-                 stored_model="",
+                 model_store_path="",
                  max_steps_without_decrease=1000,
                  train_hooks=None,
                  eval_hooks=None,
@@ -54,7 +51,7 @@ class TFExecutor(TrainerBase):
         :param max_train_steps: Maximum number of training steps for current experimentation
                                 (step = number of samples / batch size)
         :param validation_interval_steps: Number of training steps before running validation
-        :param stored_model: Previously trained model path
+        :param model_store_path: Previously trained _model path
         :param max_steps_without_decrease:
         :param train_hooks:
         :param eval_hooks:
@@ -62,14 +59,10 @@ class TFExecutor(TrainerBase):
         """
 
         TrainerBase.__init__(self,
-                             experiment_name=experiment_name,
                              model=model,
                              dataset=dataset,
-                             max_train_steps=max_train_steps,
-                             validation_interval_steps=validation_interval_steps,
-                             stored_model=stored_model)
+                             model_store_path=model_store_path)
 
-        self._experiment_name = experiment_name
         self._model = model
         self._config = config
         self.dataset = dataset
@@ -116,12 +109,12 @@ class TFExecutor(TrainerBase):
 
     def train(self, max_steps=None, num_epochs=None):
         """
-        Trains the model. See :tf_main:`tf.estimator.Estimator.train
+        Trains the _model. See :tf_main:`tf.estimator.Estimator.train
         <estimator/Estimator#train>` for more details.
 
         Args:
             max_steps (int, optional): Total number of steps for which
-                to train model. If `None`, train forever or until the train
+                to train _model. If `None`, train forever or until the train
                 data generates the OutOfRange exception. If OutOfRange occurs
                 in the middle, training stops before :attr:`max_steps` steps.
         """
@@ -133,12 +126,12 @@ class TFExecutor(TrainerBase):
 
     def evaluate(self, steps=None, checkpoint_path=None):
         """
-        Evaluates the model. See :tf_main:`tf.estimator.Estimator.evaluate
+        Evaluates the _model. See :tf_main:`tf.estimator.Estimator.evaluate
         <estimator/Estimator#evaluate>` for more details.
 
         Args:
             steps (int, optional): Number of steps for which to evaluate
-                model. If `None`, evaluates until the eval data raises an
+                _model. If `None`, evaluates until the eval data raises an
                 OutOfRange exception.
             checkpoint_path (str, optional): Path of a specific checkpoint to
                 evaluate. If `None`, the the latest checkpoint in
@@ -155,17 +148,17 @@ class TFExecutor(TrainerBase):
 
     def train_and_evaluate(self, max_train_steps=None, eval_steps=None, num_epochs=None):
         """
-        Trains and evaluates the model. See
+        Trains and evaluates the _model. See
         :tf_main:`tf.estimator.train_and_evaluate
         <estimator/train_and_evaluate>` for more details.
 
         Args:
             max_train_steps (int, optional): Total number of steps for which
-                to train model. If `None`, train forever or until the train
+                to train _model. If `None`, train forever or until the train
                 data generates the OutOfRange exception. If OutOfRange occurs
                 in the middle, training stops before :attr:`max_steps` steps.
             eval_steps (int, optional): Number of steps for which to evaluate
-                model. If `None`, evaluates until the eval data raises an
+                _model. If `None`, evaluates until the eval data raises an
                 OutOfRange exception.
         """
         train_spec = self._get_train_spec(max_steps=max_train_steps, num_epochs=num_epochs)
@@ -173,7 +166,7 @@ class TFExecutor(TrainerBase):
         tf.estimator.train_and_evaluate(self._estimator, train_spec, eval_spec)
 
     def export_model(self, model_export_path):
-        logging.info("Saving model to {}".format(model_export_path))
+        logging.info("Saving _model to {}".format(model_export_path))
         if not os.path.exists(model_export_path):
             os.makedirs(model_export_path)
         self._estimator.export_saved_model(

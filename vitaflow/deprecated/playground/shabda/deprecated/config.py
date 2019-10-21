@@ -24,7 +24,7 @@ experiments = {
     "dataset_class_with_path": "examples.shabda.tedlium_dataset_spark.TEDLiumDatasetOnCloud",
     "iterator_class_with_path": "examples.shabda.tedlium_parallel_iterator_tfrecord.TEDLiumIterator",
     "model_class_with_path": "examples.shabda.deep_clustering.DeepClustering",
-    "save_checkpoints_steps": 100,
+    "store_model_interval_steps": 100,
     "keep_checkpoint_max": 5,
     "save_summary_steps": 10,
     "log_step_count_steps": 10,

@@ -30,6 +30,8 @@ logging.set_verbosity(logging.INFO)
 
 from vitaflow.datasets import datasets # pylint: disable=unused-import
 from vitaflow.models import models # pylint: disable=unused-import
+from vitaflow.serving import serving # pylint: disable=unused-import
+
 import vitaflow.utils.registry as registry
 
 

@@ -42,7 +42,7 @@ def image_annotations(path_to_tensorflow_model, category_index, images_src, imag
         image = plt.imread(image_path)
         image_expanded = np.expand_dims(image, axis=0)
 
-        # Perform the actual detection by running the model with the image as input
+        # Perform the actual detection by running the _model with the image as input
         (boxes, scores, classes, num) = sess.run(
             [detection_boxes, detection_scores, detection_classes, num_detections],
             feed_dict={image_tensor: image_expanded})

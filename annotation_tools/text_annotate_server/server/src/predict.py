@@ -47,7 +47,7 @@ class SimSemConnectionError(ProtocolError):
 
 class UnknownModelError(ProtocolError):
     def __str__(self):
-        return ('The client provided model not mentioned in `tools.conf`')
+        return ('The client provided _model not mentioned in `tools.conf`')
 
     def json(self, json_dic):
         json_dic['exception'] = 'unknownModelError'
@@ -60,7 +60,7 @@ def suggest_span_types(collection, document, start, end, text, model):
         if model_str == model:
             break
     else:
-        # We were unable to find a matching model
+        # We were unable to find a matching _model
         raise SimSemConnectionNotConfiguredError
 
     try:

@@ -60,8 +60,8 @@
 # # Python module file to inject customized logic into the TFX components. The
 # # Transform and Trainer both require user-defined functions to run successfully.
 # _east_module_file = os.path.join(_east_root, 'dags/tfx_east/east_utils.py')
-# # Path which can be listened to by the model server.  Pusher will output the
-# # trained model here.
+# # Path which can be listened to by the _model server.  Pusher will output the
+# # trained _model here.
 # _serving_model_dir = os.path.join(_east_root, 'saved_models/east_airflow_demo')
 #
 # # Directory and data locations.  This example assumes all of the chicago east_airflow_demo
@@ -116,7 +116,7 @@
 #         schema=infer_schema.outputs.output, # Step 4
 #         module_file=_east_module_file) # Step 4
 #
-#     # Uses user-provided Python function that implements a model using TF-Learn.
+#     # Uses user-provided Python function that implements a _model using TF-Learn.
 #     trainer = Trainer( # Step 5
 #         module_file=_east_module_file, # Step 5
 #         transformed_examples=transform.outputs.transformed_examples, # Step 5
@@ -125,7 +125,7 @@
 #         train_args=trainer_pb2.TrainArgs(num_steps=50), # Step 5
 #         eval_args=trainer_pb2.EvalArgs(num_steps=10)) # Step 5
 #
-#     # Uses TFMA to compute a evaluation statistics over features of a model.
+#     # Uses TFMA to compute a evaluation statistics over features of a _model.
 #     #model_analyzer = Evaluator( # Step 6
 #     #     examples=example_gen.outputs.examples, # Step 6
 #     #     model_exports=trainer.outputs.output, # Step 6
@@ -134,12 +134,12 @@
 #     #             column_for_slicing=['trip_start_hour']) # Step 6
 #     #     ])) # Step 6
 #
-#     # Performs quality validation of a candidate model (compared to a baseline).
+#     # Performs quality validation of a candidate _model (compared to a baseline).
 #     # model_validator = ModelValidator( # Step 7
 #     #     examples=example_gen.outputs.examples, # Step 7
-#     #              model=trainer.outputs.output) # Step 7
+#     #              _model=trainer.outputs.output) # Step 7
 #
-#     # Checks whether the model passed the validation steps and pushes the model
+#     # Checks whether the _model passed the validation steps and pushes the _model
 #     # to a file destination if check passed.
 #     # pusher = Pusher( # Step 7
 #     #     model_export=trainer.outputs.output, # Step 7

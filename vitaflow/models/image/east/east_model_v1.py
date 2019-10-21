@@ -172,7 +172,7 @@ def mean_image_subtraction(images, means=[123.68, 116.78, 103.94]):
 
 def model(images, text_scale=512, weight_decay=1e-5, is_training=True):
     """
-    define the model, we use Keras implemention of resnet
+    define the _model, we use Keras implemention of resnet
     """
     images = mean_image_subtraction(images)
 
@@ -466,7 +466,7 @@ class EASTTFModel(IEstimatorModel):
     #
     #         # Get both the unconditional updates (the None part)
     #         # and the input-conditional updates (the features part).
-    #         # update_ops = model.get_updates_for(None) + model.get_updates_for(features)
+    #         # update_ops = _model.get_updates_for(None) + _model.get_updates_for(features)
     #         # Compute the minimize_op.
     #         minimize_op = optimizer.get_updates(
     #             loss,
@@ -477,7 +477,7 @@ class EASTTFModel(IEstimatorModel):
     @property
     def model_dir(self):
         """
-        Returns model directory `model_root_directory`/`experiment_name`/VanillaGAN
+        Returns _model directory `model_root_directory`/`experiment_name`/VanillaGAN
         :return:
         """
         return os.path.join(self._model_root_directory,

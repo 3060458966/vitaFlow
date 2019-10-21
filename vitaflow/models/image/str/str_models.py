@@ -20,17 +20,11 @@ from vitaflow.models.image.str.modules.sequence_modeling import BidirectionalLST
 from vitaflow.models.image.str.modules.prediction import Attention
 from vitaflow.datasets.image.scene_text_recognition.utils import AttnLabelConverter, Averager, CTCLabelConverter
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-@gin.configurable
-@register_model
-class SceneTextRecognitionModel(ITorchModel):
+class SceneTextRecognitionModule(nn.Module):
 
     def __init__(self,
-                 dataset,
-                 learning_rate=0.01,
-                 num_epochs=5,
-                 model_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/", "str_model"),
+                 batch_max_length,
                  transformation_stage="TPS",
                  feature_extraction_stage="ResNet",
                  sequence_modeling_stage="BiLSTM",
@@ -43,26 +37,17 @@ class SceneTextRecognitionModel(ITorchModel):
                  hidden_size=256,
                  is_adam=True,
                  character=None,
-                 is_sensitive=True,
-                 batch_size=192,
-                 batch_max_length=25):
-        super(SceneTextRecognitionModel, self).__init__(experiment_name=transformation_stage,
-                                                        model_root_directory=model_root_directory,
-                                                        dataset=dataset,
-                                                        learning_rate=learning_rate,
-                                                        num_epochs=num_epochs)
+                 is_sensitive=True):
+        super(SceneTextRecognitionModule, self).__init__()
         self.stages = {"transformation_stage": transformation_stage,
                        "feature_extraction_stage": feature_extraction_stage,
                        "sequence_modeling_stage": sequence_modeling_stage,
                        "prediction_stage": prediction_stage}
 
+        self.batch_max_length = batch_max_length
+
         self.is_adam = is_adam
         self.character = character
-        self.batch_size = batch_size
-        self.batch_max_length = batch_max_length
-        self._model_root_directory = model_root_directory
-
-        self.grad_clip = 5 #gradient clipping value. default=5
 
         if is_sensitive:
             # opt.character += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -139,29 +124,93 @@ class SceneTextRecognitionModel(ITorchModel):
 
         return prediction
 
+
+
+@gin.configurable
+@register_model
+class SceneTextRecognitionModel(ITorchModel):
+
+    def __init__(self,
+                 dataset,
+                 learning_rate=0.01,
+                 num_epochs=5,
+                 model_root_directory=os.path.join(os.path.expanduser("~"), "vitaFlow/", "str_model"),
+                 transformation_stage="TPS",
+                 feature_extraction_stage="ResNet",
+                 sequence_modeling_stage="BiLSTM",
+                 prediction_stage="Attn",
+                 img_width=32,
+                 img_height=100,
+                 input_channel=1,
+                 output_channel=512,
+                 num_fiducial=20,
+                 hidden_size=256,
+                 is_adam=True,
+                 character=None,
+                 is_sensitive=True,
+                 batch_size=192,
+                 batch_max_length=25):
+        super(SceneTextRecognitionModel, self).__init__(model_root_directory=model_root_directory,
+                                                        dataset=dataset,
+                                                        learning_rate=learning_rate,
+                                                        module=SceneTextRecognitionModule(batch_max_length=batch_max_length,
+                                                                                          transformation_stage=transformation_stage,
+                                                                                          feature_extraction_stage=feature_extraction_stage,
+                                                                                          sequence_modeling_stage=sequence_modeling_stage,
+                                                                                          prediction_stage=prediction_stage,
+                                                                                          img_width=img_width,
+                                                                                          img_height=img_height,
+                                                                                          input_channel=input_channel,
+                                                                                          output_channel=output_channel,
+                                                                                          num_fiducial=num_fiducial,
+                                                                                          hidden_size=hidden_size,
+                                                                                          is_adam=is_adam,
+                                                                                          character=character,
+                                                                                          is_sensitive=is_sensitive))
+        self.stages = {"transformation_stage": transformation_stage,
+                       "feature_extraction_stage": feature_extraction_stage,
+                       "sequence_modeling_stage": sequence_modeling_stage,
+                       "prediction_stage": prediction_stage}
+
+        self.is_adam = is_adam
+        self.character = character
+        self.batch_size = batch_size
+        self.batch_max_length = batch_max_length
+        self._model_root_directory = model_root_directory
+
+        self.grad_clip = 5 #gradient clipping value. default=5
+
+        if is_sensitive:
+            # opt.character += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+            self.character = string.printable[:-6]
+
+    @property
+    def name(self):
+        return "scene_text_recognition_dataset"
+
     @property
     def model_dir(self):
         """
-        Returns model directory `model_root_directory`/SceneTextRecognitionModel
+        Returns _model directory `model_root_directory`/SceneTextRecognitionModel
         :return:
         """
         return os.path.join(self._model_root_directory,
                             type(self).__name__)
 
-    def _setup(self):
+    def compile(self, *args, **kargs):
         self._criterion = self.get_loss_op()
         self._optimizer = self.get_optimizer()
         # self._scheduler = lr_scheduler.MultiStepLR(self._optimizer, milestones=[self._num_epochs // 2], gamma=0.1)
-        self._device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        # self._device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") #TODO
         self._converter = self.get_converter()
 
 
     def get_loss_op(self):
         """ setup loss """
         if 'CTC' in self.stages["prediction_stage"]:
-            criterion = torch.nn.CTCLoss(zero_infinity=True).to(device)
+            criterion = torch.nn.CTCLoss(zero_infinity=True).to(self._device)
         else:
-            criterion = torch.nn.CrossEntropyLoss(ignore_index=0).to(device)  # ignore [GO] token = ignore index 0
+            criterion = torch.nn.CrossEntropyLoss(ignore_index=0).to(self._device)  # ignore [GO] token = ignore index 0
 
         return criterion
 
@@ -178,7 +227,7 @@ class SceneTextRecognitionModel(ITorchModel):
         image, text, length = features, text, length
         if 'CTC' in self.stages["prediction_stage"]:
             preds = model(image, text).log_softmax(2)
-            preds_size = torch.IntTensor([preds.size(1)] * self.batch_size).to(device)
+            preds_size = torch.IntTensor([preds.size(1)] * self.batch_size).to(self._device)
             preds = preds.permute(1, 0, 2)  # to use CTCLoss format
 
             # To avoid ctc_loss issue, disabled cudnn for the computation of the ctc_loss
@@ -195,7 +244,7 @@ class SceneTextRecognitionModel(ITorchModel):
         return cost
 
     def get_converter(self):
-        """ model configuration """
+        """ _model configuration """
         if 'CTC' in self.stages["prediction_stage"]:
             converter = CTCLabelConverter(self.character)
         else:
@@ -205,15 +254,15 @@ class SceneTextRecognitionModel(ITorchModel):
         return converter
 
     def get_optimizer(self):
-        # assert (isinstance(model, SceneTextRecognitionModel))
+        # assert (isinstance(_model, SceneTextRecognitionModel))
         # filter that only require gradient decent
         filtered_parameters = []
         params_num = []
-        for p in filter(lambda p: p.requires_grad, self.parameters()):
+        for p in filter(lambda p: p.requires_grad, self.module.parameters()):
             filtered_parameters.append(p)
             params_num.append(np.prod(p.size()))
         print('Trainable params num : ', sum(params_num))
-        # [print(name, p.numel()) for name, p in filter(lambda p: p[1].requires_grad, model.named_parameters())]
+        # [print(name, p.numel()) for name, p in filter(lambda p: p[1].requires_grad, _model.named_parameters())]
 
         # setup optimizer
         if self.is_adam:
@@ -233,8 +282,8 @@ class SceneTextRecognitionModel(ITorchModel):
         converter = self.get_converter()
 
         # For max length prediction
-        length_for_pred = torch.IntTensor([batch_max_length] * batch_size).to(device)
-        text_for_pred = torch.LongTensor(batch_size, batch_max_length + 1).fill_(0).to(device)
+        length_for_pred = torch.IntTensor([batch_max_length] * batch_size).to(self._device)
+        text_for_pred = torch.LongTensor(batch_size, batch_max_length + 1).fill_(0).to(self._device)
 
         text_for_loss, length_for_loss = converter.encode(labels, batch_max_length=batch_max_length)
 
@@ -326,13 +375,13 @@ class SceneTextRecognitionModel(ITorchModel):
         for data_loader in self._dataset.get_torch_train_data_loaders():
             for i, (image_tensors, labels) in enumerate(data_loader):
                 # image_tensors, labels = self._dataset.get_torch_train_dataset().get_batch()
-                image = image_tensors.to(device)
+                image = image_tensors.to(self._device)
                 text, length = self._converter.encode(labels, batch_max_length=self.batch_max_length)
                 batch_size = image.size(0)
-    
+
                 if 'CTC' in self.stages["prediction_stage"]:
-                    preds = self.model_step(image, text).log_softmax(2)
-                    preds_size = torch.IntTensor([preds.size(1)] * batch_size).to(device)
+                    preds = self._module(image, text).log_softmax(2)
+                    preds_size = torch.IntTensor([preds.size(1)] * batch_size).to(self._device)
                     preds = preds.permute(1, 0, 2)  # to use CTCLoss format
 
                     # To avoid ctc_loss issue, disabled cudnn for the computation of the ctc_loss
@@ -342,13 +391,13 @@ class SceneTextRecognitionModel(ITorchModel):
                     torch.backends.cudnn.enabled = True
 
                 else:
-                    preds = self.model_step(image, text[:, :-1])  # align with Attention.forward
+                    preds = self.module(image, text[:, :-1])  # align with Attention.forward
                     target = text[:, 1:]  # without [GO] Symbol
                     cost = self._criterion(preds.view(-1, preds.shape[-1]), target.contiguous().view(-1))
 
-                self.zero_grad()
+                self.module.zero_grad()
                 cost.backward()
-                torch.nn.utils.clip_grad_norm_(self.parameters(), self.grad_clip)  # gradient clipping with 5 (Default)
+                torch.nn.utils.clip_grad_norm_(self.module.parameters(), self.grad_clip)  # gradient clipping with 5 (Default)
                 self._optimizer.step()
 
                 # loss_avg.add(cost)

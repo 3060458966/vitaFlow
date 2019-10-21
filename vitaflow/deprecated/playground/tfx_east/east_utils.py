@@ -121,7 +121,7 @@ def _example_serving_receiver_fn(transform_output, schema):
     """Build the serving in inputs.
 
     Args:
-      transform_output: directory in which the tf-transform model was written
+      transform_output: directory in which the tf-transform _model was written
         during the preprocessing step.
       schema: the schema of the input data.
 
@@ -147,10 +147,10 @@ def _example_serving_receiver_fn(transform_output, schema):
 
 
 def _eval_input_receiver_fn(transform_output, schema):
-    """Build everything needed for the tf-model-analysis to run the model.
+    """Build everything needed for the tf-_model-analysis to run the _model.
 
     Args:
-      transform_output: directory in which the tf-transform model was written
+      transform_output: directory in which the tf-transform _model was written
         during the preprocessing step.
       schema: the schema of the input data.
 
@@ -197,7 +197,7 @@ def _input_fn(filenames, transform_output, batch_size=200):
 
     Args:
       filenames: [str] list of CSV files to read data from.
-      transform_output: directory in which the tf-transform model was written
+      transform_output: directory in which the tf-transform _model was written
         during the preprocessing step.
       batch_size: int First dimension size of the Tensors returned by input_fn
 
@@ -239,7 +239,7 @@ def trainer_fn(hparams, schema):
     """Build the estimator using the high level API.
 
     Args:
-      hparams: Holds hyperparameters used to train the model as name/value pairs.
+      hparams: Holds hyperparameters used to train the _model as name/value pairs.
       schema: Holds the schema of the training examples.
 
     Returns:
@@ -330,7 +330,7 @@ def mean_image_subtraction(images, means=[123.68, 116.78, 103.94]):
 
 def model(images, text_scale=512, weight_decay=1e-5, is_training=True):
     """
-    define the model, we use slim's implemention of resnet
+    define the _model, we use slim's implemention of resnet
     """
     images = mean_image_subtraction(images)
 
@@ -565,7 +565,7 @@ class EASTModel:
     @property
     def model_dir(self):
         """
-        Returns model directory `model_root_directory`/`experiment_name`/VanillaGAN
+        Returns _model directory `model_root_directory`/`experiment_name`/VanillaGAN
         :return:
         """
         return os.path.join(self._model_root_directory,

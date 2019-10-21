@@ -42,7 +42,7 @@ class CustomModelCheckpoint(Callback):
         super(CustomModelCheckpoint, self).__init__()
         self.period = period
         self.path = path
-        # We set the model (non multi gpu) under an other name
+        # We set the _model (non multi gpu) under an other name
         self.model_for_saving = model
         self.epochs_since_last_save = 0
         self.save_weights_only = save_weights_only
@@ -59,18 +59,14 @@ class CustomModelCheckpoint(Callback):
 
 class KerasTrainer(TrainerBase):
     def __init__(self,
-                 experiment_name,
                  model: IKerasModel,
                  dataset: IDataset,
-                 max_train_steps,
-                 validation_interval_steps,
                  nb_workers=4,
-                 stored_model=""):
+                 model_store_path=""):
         TrainerBase.__init__(self,
-                             experiment_name=experiment_name,
-                             max_train_steps=max_train_steps,
-                             validation_interval_steps=validation_interval_steps,
-                             stored_model=stored_model)
+                             model_store_path=model_store_path,
+                             dataset=dataset,
+                             model=model)
         assert isinstance(model, IKerasModel)
         self._model: IKerasModel = model
         self._dataset: IDataset = dataset
@@ -100,7 +96,7 @@ class KerasTrainer(TrainerBase):
 
 
         ckpt = CustomModelCheckpoint(model=self._model,
-                                     path=self._model.model_dir + '/model-{epoch:02d}.h5',
+                                     path=self._model.model_dir + '/_model-{epoch:02d}.h5',
                                      period=1, #TODO FLAGS.save_checkpoint_epochs
                                      save_weights_only=True)
 

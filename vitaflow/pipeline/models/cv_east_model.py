@@ -26,7 +26,7 @@ def localize_text_regions(image_data,
     image = cv2.resize(image_data, (newW, newH))
     (H, W) = image.shape[:2]
 
-    # define the two output layer names for the EAST detector model that
+    # define the two output layer names for the EAST detector _model that
     # we are interested -- the first is the output probabilities and the
     # second can be used to derive the bounding box coordinates of text
     layerNames = [
@@ -34,7 +34,7 @@ def localize_text_regions(image_data,
         "feature_fusion/concat_3"]
 
     # construct a blob from the image and then perform a forward pass of
-    # the model to obtain the two output layer sets
+    # the _model to obtain the two output layer sets
     blob = cv2.dnn.blobFromImage(image, 1.0, (W, H),
                                  (123.68, 116.78, 103.94),
                                  swapRB=True,

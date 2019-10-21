@@ -347,7 +347,7 @@ class TEDLiumIterator(IIteratorBase, ShabdaWavPairFeature):
     # def load_data(self, data_dir):
     #     '''
     #     Load in the audio file and transform the signal into
-    #     the formats required by the model'''
+    #     the formats required by the _model'''
     #     # loading and transformation
     #     speech_mix, _ = librosa.load(data_dir, self._hparams.sampling_rate)
     #     # fix the issue at the begining

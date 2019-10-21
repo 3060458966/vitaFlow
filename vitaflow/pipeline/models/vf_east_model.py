@@ -38,10 +38,10 @@ def run(input_dir,
         output_dir,
         model_dir):
     """
-    Predict script for EAST model
+    Predict script for EAST _model
     :param input_dir: Directory containing images
     :param output_dir: Directory to store the predictions as text file and images (with text boxes)
-    :param model_dir: EAST model directory
+    :param model_dir: EAST _model directory
     :return:
     """
 

@@ -67,10 +67,10 @@
 #         config = tf.estimator.RunConfig(
 #             model_dir=model_dir,
 #             save_summary_steps=10,
-#             save_checkpoints_steps=10,
+#             store_model_interval_steps=10,
 #             save_checkpoints_secs=None)
 #
-#         exor = Executor(model=seq2seq, data_hparams=data_hparams, config=config)
+#         exor = Executor(_model=seq2seq, data_hparams=data_hparams, config=config)
 #
 #         exor.train_and_evaluate(max_train_steps=20, eval_steps=5)
 #
