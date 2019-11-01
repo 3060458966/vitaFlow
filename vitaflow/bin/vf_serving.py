@@ -46,8 +46,8 @@ from vitaflow.serving import serving # pylint: disable=unused-import
 FLAGS = flags.FLAGS
 flags.DEFINE_string("config_file", "Google gin config file", "path/to/gin_config.gin")
 flags.DEFINE_string("serving_class_name", "", "")
-flags.DEFINE_string("file_path", "", "")
-flags.DEFINE_string("out_file_path", "", "")
+flags.DEFINE_string("in_file_or_path", "", "")
+flags.DEFINE_string("out_file_or_path", "", "")
 
 def main(argv):
     gin.parse_config_file(FLAGS.config_file)
@@ -56,7 +56,8 @@ def main(argv):
     print(' -' * 35)
     serving_instance: IServing = get_serving(FLAGS.serving_class_name)
     serving_instance = serving_instance()
-    serving_instance.predict(file_path=FLAGS.file_path, out_file_path=FLAGS.out_file_path)
+    serving_instance.predict(in_file_or_path=FLAGS.in_file_or_path,
+                             out_file_or_path=FLAGS.out_file_or_path)
     print(' -' * 35)
 
 

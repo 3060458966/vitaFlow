@@ -44,7 +44,15 @@ class IServing():
     def get_metrics(self, test_dir):
         raise NotImplementedError
 
-    def predict(self, file_path, out_file_path=None):
+    def predict(self,
+                in_file_or_path,
+                out_file_or_path):
+        """
+        Runs model prediction
+        :param in_file_or_path: Input file path or folder path
+        :param out_file_or_path: Output file path or folder path
+        :return:
+        """
         raise NotImplementedError
 
 

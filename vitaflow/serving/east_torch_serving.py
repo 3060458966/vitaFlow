@@ -16,12 +16,12 @@ class EastTorchServing(IServing):
                           model_store_path=model_store_path)
 
     def predict(self,
-                file_path,
-                out_file_path=None):
-        img = Image.open(file_path)
+                in_file_or_path,
+                out_file_or_path):
+        img = Image.open(in_file_or_path)
         boxes = detect(img, self._model.module, self._executor.device)
         plot_img = plot_boxes(img, boxes)
-        plot_img.save(out_file_path)
+        plot_img.save(out_file_or_path)
 
 
 

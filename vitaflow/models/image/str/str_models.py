@@ -167,6 +167,7 @@ class SceneTextRecognitionModel(ITorchModel):
                                                                                           is_adam=is_adam,
                                                                                           character=character,
                                                                                           is_sensitive=is_sensitive))
+        self.prediction_stage = prediction_stage
         self.stages = {"transformation_stage": transformation_stage,
                        "feature_extraction_stage": feature_extraction_stage,
                        "sequence_modeling_stage": sequence_modeling_stage,

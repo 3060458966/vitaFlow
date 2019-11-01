@@ -23,7 +23,8 @@ import tensorflow as tf
 from vitaflow.utils.print_helper import print_error
 
 MODULES = [
-    "vitaflow.serving.east_torch_serving"
+    "vitaflow.serving.east_torch_serving",
+    "vitaflow.serving.str_serving"
 ]
 
 ALL_MODULES = list(MODULES)
